@@ -9,6 +9,7 @@ import {
   Calendar,
   Settings2,
   Clock,
+  ImageIcon,
   MessageSquare,
   Star,
   LogOut,
@@ -22,6 +23,7 @@ const navItems = [
   { label: "הזמנות", href: "/admin/bookings", icon: Calendar },
   { label: "שירותים", href: "/admin/services", icon: Settings2 },
   { label: "זמינות", href: "/admin/availability", icon: Clock },
+  { label: "תמונות", href: "/admin/images", icon: ImageIcon },
   { label: "פניות", href: "/admin/leads", icon: MessageSquare },
   { label: "המלצות", href: "/admin/reviews", icon: Star },
 ];

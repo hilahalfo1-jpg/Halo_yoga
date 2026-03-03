@@ -15,7 +15,6 @@ export async function GET() {
     const [rules, exceptions] = await Promise.all([
       prisma.availabilityRule.findMany({ orderBy: { dayOfWeek: "asc" } }),
       prisma.availabilityException.findMany({
-        where: { date: { gte: new Date() } },
         orderBy: { date: "asc" },
       }),
     ]);

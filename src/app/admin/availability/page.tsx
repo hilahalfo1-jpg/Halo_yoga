@@ -1,16 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, Clock, CalendarOff, CalendarCog } from "lucide-react";
-import Card from "@/components/ui/Card";
-import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
-import Select from "@/components/ui/Select";
+import { ChevronDown, ChevronUp, Clock } from "lucide-react";
+import CalendarGrid, { type DayInfo, type DayStatus } from "@/components/admin/CalendarGrid";
+import DayDetailPanel from "@/components/admin/DayDetailPanel";
 import Modal from "@/components/ui/Modal";
-import Badge from "@/components/ui/Badge";
 import Spinner from "@/components/ui/Spinner";
-import EmptyState from "@/components/ui/EmptyState";
 import { DAYS_OF_WEEK_HE, CATEGORY_LABELS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -34,36 +30,35 @@ interface ExceptionItem {
 }
 
 const CATEGORY_TABS = [
-  { value: null, label: "כללי (הכל)" },
+  { value: null, label: "כללי" },
   { value: "MASSAGE", label: "עיסויים" },
   { value: "YOGA", label: "יוגה" },
   { value: "REHABILITATION", label: "שיקום" },
 ];
 
-const CATEGORY_FILTER_OPTIONS = [
-  { value: "ALL", label: "כל הקטגוריות" },
-  { value: "GENERAL", label: "כללי" },
-  { value: "MASSAGE", label: "עיסויים" },
-  { value: "YOGA", label: "יוגה" },
-  { value: "REHABILITATION", label: "שיקום" },
-];
+function toKey(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 
 export default function AvailabilityPage() {
   const [rules, setRules] = useState<Rule[]>([]);
   const [exceptions, setExceptions] = useState<ExceptionItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isExceptionModalOpen, setIsExceptionModalOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-
-  // Exception form
-  const [excForm, setExcForm] = useState({
-    date: "",
-    type: "BLOCKED" as "BLOCKED" | "OVERRIDE",
-    startTime: "",
-    endTime: "",
-    reason: "",
-    category: "ALL",
+  const [currentMonth, setCurrentMonth] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
   });
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [showWeeklyRules, setShowWeeklyRules] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 1024);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   const fetchData = useCallback(async () => {
     try {
@@ -82,13 +77,84 @@ export default function AvailabilityPage() {
     fetchData();
   }, [fetchData]);
 
-  // Get rules for the selected category
-  const filteredRules = rules.filter((r) =>
-    selectedCategory === null ? r.category === null : r.category === selectedCategory
-  );
+  // Compute day status map for the calendar
+  const dayInfoMap = useMemo(() => {
+    const map = new Map<string, DayInfo>();
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
 
+    // Cover the full calendar view (include edge days)
+    const start = new Date(year, month, -6);
+    const end = new Date(year, month + 1, 7);
+
+    const d = new Date(start);
+    while (d <= end) {
+      const key = toKey(d);
+      const dow = d.getDay();
+
+      // Find applicable rule
+      const catRule = selectedCategory
+        ? rules.find((r) => r.dayOfWeek === dow && r.category === selectedCategory)
+        : null;
+      const genRule = rules.find(
+        (r) => r.dayOfWeek === dow && r.category === null
+      );
+      const rule = catRule || genRule;
+
+      // Find exceptions for this date
+      const dayExceptions = exceptions.filter((e) => {
+        const excDate = new Date(e.date);
+        return toKey(excDate) === key;
+      });
+
+      const catException = dayExceptions.find(
+        (e) => e.category === selectedCategory
+      );
+      const genException = dayExceptions.find((e) => e.category === null);
+      const exception = catException || genException;
+
+      let status: DayStatus;
+      let effectiveStart: string | undefined;
+      let effectiveEnd: string | undefined;
+
+      if (exception) {
+        if (exception.type === "BLOCKED") {
+          status = "blocked";
+        } else {
+          status = "override";
+          effectiveStart = exception.startTime || undefined;
+          effectiveEnd = exception.endTime || undefined;
+        }
+      } else if (rule && rule.isActive) {
+        status = "available";
+        effectiveStart = rule.startTime;
+        effectiveEnd = rule.endTime;
+      } else {
+        status = "dayoff";
+      }
+
+      map.set(key, {
+        date: new Date(d),
+        status,
+        effectiveStart,
+        effectiveEnd,
+        hasException: dayExceptions.length > 0,
+      });
+
+      d.setDate(d.getDate() + 1);
+    }
+
+    return map;
+  }, [currentMonth, rules, exceptions, selectedCategory]);
+
+  // ─── Actions ─────────────────────────
   const updateRule = async (dayOfWeek: number, updates: Partial<Rule>) => {
-    const existing = filteredRules.find((r) => r.dayOfWeek === dayOfWeek);
+    const catRules = rules.filter((r) =>
+      selectedCategory === null
+        ? r.category === null
+        : r.category === selectedCategory
+    );
+    const existing = catRules.find((r) => r.dayOfWeek === dayOfWeek);
     const data = {
       dayOfWeek,
       startTime: updates.startTime ?? existing?.startTime ?? "09:00",
@@ -103,9 +169,8 @@ export default function AvailabilityPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type: "rule", data }),
       });
-
       if (res.ok) {
-        toast.success("הזמינות עודכנה");
+        toast.success("עודכן בהצלחה");
         fetchData();
       } else {
         const result = await res.json();
@@ -116,7 +181,14 @@ export default function AvailabilityPage() {
     }
   };
 
-  const addException = async () => {
+  const addException = async (excData: {
+    date: string;
+    type: "BLOCKED" | "OVERRIDE";
+    startTime?: string;
+    endTime?: string;
+    reason?: string;
+    category: string | null;
+  }) => {
     try {
       const res = await fetch("/api/admin/availability", {
         method: "POST",
@@ -124,20 +196,13 @@ export default function AvailabilityPage() {
         body: JSON.stringify({
           type: "exception",
           data: {
-            date: new Date(excForm.date).toISOString(),
-            type: excForm.type,
-            startTime: excForm.type === "OVERRIDE" ? excForm.startTime : undefined,
-            endTime: excForm.type === "OVERRIDE" ? excForm.endTime : undefined,
-            reason: excForm.reason || undefined,
-            category: excForm.category === "ALL" ? null : excForm.category,
+            ...excData,
+            category: excData.category,
           },
         }),
       });
-
       if (res.ok) {
-        toast.success("החריגה נוספה");
-        setIsExceptionModalOpen(false);
-        setExcForm({ date: "", type: "BLOCKED", startTime: "", endTime: "", reason: "", category: "ALL" });
+        toast.success("נשמר בהצלחה");
         fetchData();
       } else {
         const result = await res.json();
@@ -154,7 +219,7 @@ export default function AvailabilityPage() {
         method: "DELETE",
       });
       if (res.ok) {
-        toast.success("החריגה נמחקה");
+        toast.success("נמחק בהצלחה");
         fetchData();
       }
     } catch {
@@ -162,6 +227,7 @@ export default function AvailabilityPage() {
     }
   };
 
+  // ─── Render ─────────────────────────
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -170,249 +236,192 @@ export default function AvailabilityPage() {
     );
   }
 
+  const detailPanel = selectedDate ? (
+    <DayDetailPanel
+      date={selectedDate}
+      rules={rules}
+      exceptions={exceptions}
+      selectedCategory={selectedCategory}
+      onClose={() => setSelectedDate(null)}
+      onAddException={addException}
+      onDeleteException={deleteException}
+      onUpdateRule={updateRule}
+    />
+  ) : null;
+
   return (
-    <div className="space-y-8">
-      <h1 className="text-2xl font-bold text-text">ניהול זמינות</h1>
-
-      {/* Weekly Rules */}
-      <Card>
-        <div className="flex items-center gap-2 mb-4">
-          <Clock className="h-5 w-5 text-text-muted" />
-          <h2 className="text-lg font-semibold text-text">שעות פעילות שבועיות</h2>
-        </div>
-
-        {/* Category Tabs */}
-        <div className="flex flex-wrap gap-2 mb-6 p-1 bg-surface rounded-lg">
-          {CATEGORY_TABS.map((tab) => (
-            <button
-              key={tab.value ?? "general"}
-              onClick={() => setSelectedCategory(tab.value)}
-              className={cn(
-                "px-4 py-2 text-sm rounded-md transition-colors",
-                selectedCategory === tab.value
-                  ? "bg-white text-text font-medium shadow-sm"
-                  : "text-text-muted hover:text-text"
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        <p className="text-xs text-text-muted mb-4">
-          {selectedCategory
-            ? `שעות פעילות עבור ${CATEGORY_LABELS[selectedCategory]}. כללים אלו עוברים על הכללים הכלליים.`
-            : "שעות פעילות כלליות — חלות על כל סוגי השירותים אלא אם קיימים כללים ספציפיים לקטגוריה."}
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-text">ניהול זמינות</h1>
+        <p className="text-text-muted text-sm mt-1">
+          לחצו על תאריך ביומן כדי לנהל את הזמינות שלו
         </p>
+      </div>
 
-        <div className="space-y-3">
-          {[0, 1, 2, 3, 4, 5, 6].map((day) => {
-            const rule = filteredRules.find((r) => r.dayOfWeek === day);
-            const isActive = rule?.isActive ?? false;
-
-            // Check if there's a global fallback when viewing category-specific
-            const globalRule = selectedCategory
-              ? rules.find((r) => r.dayOfWeek === day && r.category === null)
-              : null;
-
-            return (
-              <div
-                key={day}
-                className={cn(
-                  "flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg border",
-                  isActive ? "border-border bg-white" : "border-transparent bg-surface/50"
-                )}
-              >
-                <div className="w-20 flex-shrink-0">
-                  <span className="font-medium text-text text-sm">
-                    {DAYS_OF_WEEK_HE[day]}
-                  </span>
-                </div>
-
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={isActive}
-                    onChange={(e) =>
-                      updateRule(day, { isActive: e.target.checked })
-                    }
-                    className="w-4 h-4 rounded border-border text-secondary focus:ring-secondary"
-                  />
-                  <span className="text-sm text-text-secondary">
-                    {isActive ? "פעיל" : "יום חופש"}
-                  </span>
-                </label>
-
-                {isActive && (
-                  <div className="flex items-center gap-2 mr-auto">
-                    <input
-                      type="time"
-                      value={rule?.startTime ?? "09:00"}
-                      onChange={(e) =>
-                        updateRule(day, { startTime: e.target.value })
-                      }
-                      className="px-2 py-1 text-sm rounded border border-border bg-white"
-                      dir="ltr"
-                    />
-                    <span className="text-text-muted">—</span>
-                    <input
-                      type="time"
-                      value={rule?.endTime ?? "18:00"}
-                      onChange={(e) =>
-                        updateRule(day, { endTime: e.target.value })
-                      }
-                      className="px-2 py-1 text-sm rounded border border-border bg-white"
-                      dir="ltr"
-                    />
-                  </div>
-                )}
-
-                {/* Show fallback indicator */}
-                {selectedCategory && !rule && globalRule?.isActive && (
-                  <span className="text-xs text-text-muted">
-                    (ירש מכללי: {globalRule.startTime}-{globalRule.endTime})
-                  </span>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </Card>
-
-      {/* Exceptions */}
-      <Card>
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <CalendarOff className="h-5 w-5 text-text-muted" />
-            <h2 className="text-lg font-semibold text-text">חריגות</h2>
-          </div>
-          <Button
-            size="sm"
-            onClick={() => setIsExceptionModalOpen(true)}
-            className="gap-1"
+      {/* Category Tabs */}
+      <div className="flex flex-wrap gap-2 p-1 bg-surface rounded-lg">
+        {CATEGORY_TABS.map((tab) => (
+          <button
+            key={tab.value ?? "general"}
+            onClick={() => setSelectedCategory(tab.value)}
+            className={cn(
+              "px-4 py-2 text-sm rounded-md transition-colors",
+              selectedCategory === tab.value
+                ? "bg-white text-text font-medium shadow-sm"
+                : "text-text-muted hover:text-text"
+            )}
           >
-            <Plus className="h-4 w-4" />
-            הוסף חריגה
-          </Button>
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Calendar + Detail Panel */}
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Calendar */}
+        <div className="flex-1">
+          <CalendarGrid
+            currentMonth={currentMonth}
+            onMonthChange={setCurrentMonth}
+            selectedDate={selectedDate}
+            onDateSelect={setSelectedDate}
+            dayInfoMap={dayInfoMap}
+          />
         </div>
 
-        {exceptions.length === 0 ? (
-          <EmptyState
-            icon={<CalendarCog className="h-10 w-10" />}
-            title="אין חריגות"
-            description="הוסיפו ימי חופש או שעות מיוחדות לתאריכים ספציפיים"
-          />
-        ) : (
-          <div className="space-y-2">
-            {exceptions.map((exc) => (
-              <div
-                key={exc.id}
-                className="flex items-center justify-between p-3 rounded-lg border border-border"
-              >
-                <div className="flex items-center gap-3">
-                  <Badge variant={exc.type === "BLOCKED" ? "error" : "warning"}>
-                    {exc.type === "BLOCKED" ? "חסימה" : "שעות מיוחדות"}
-                  </Badge>
-                  {exc.category && (
-                    <Badge className="bg-surface text-text-secondary border-border">
-                      {CATEGORY_LABELS[exc.category] || exc.category}
-                    </Badge>
-                  )}
-                  <div>
-                    <p className="text-sm font-medium text-text" dir="ltr">
-                      {new Date(exc.date).toLocaleDateString("he-IL")}
-                    </p>
-                    {exc.type === "OVERRIDE" && exc.startTime && (
-                      <p className="text-xs text-text-muted" dir="ltr">
-                        {exc.startTime} - {exc.endTime}
-                      </p>
-                    )}
-                    {exc.reason && (
-                      <p className="text-xs text-text-muted">{exc.reason}</p>
-                    )}
-                  </div>
-                </div>
-                <button
-                  onClick={() => deleteException(exc.id)}
-                  className="p-2 rounded text-error hover:bg-error/5 transition-colors"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
-
-      {/* Exception Modal */}
-      <Modal
-        isOpen={isExceptionModalOpen}
-        onClose={() => setIsExceptionModalOpen(false)}
-        title="הוספת חריגה"
-        size="sm"
-      >
-        <div className="space-y-4">
-          <Input
-            label="תאריך *"
-            type="date"
-            value={excForm.date}
-            onChange={(e) => setExcForm((p) => ({ ...p, date: e.target.value }))}
-          />
-          <Select
-            label="קטגוריה"
-            value={excForm.category}
-            onChange={(e) =>
-              setExcForm((p) => ({ ...p, category: e.target.value }))
-            }
-            options={CATEGORY_FILTER_OPTIONS}
-          />
-          <Select
-            label="סוג *"
-            value={excForm.type}
-            onChange={(e) =>
-              setExcForm((p) => ({
-                ...p,
-                type: e.target.value as "BLOCKED" | "OVERRIDE",
-              }))
-            }
-            options={[
-              { value: "BLOCKED", label: "חסימה (יום חופש)" },
-              { value: "OVERRIDE", label: "שעות מיוחדות" },
-            ]}
-          />
-          {excForm.type === "OVERRIDE" && (
-            <div className="grid grid-cols-2 gap-3">
-              <Input
-                label="שעת התחלה"
-                type="time"
-                value={excForm.startTime}
-                onChange={(e) =>
-                  setExcForm((p) => ({ ...p, startTime: e.target.value }))
-                }
-              />
-              <Input
-                label="שעת סיום"
-                type="time"
-                value={excForm.endTime}
-                onChange={(e) =>
-                  setExcForm((p) => ({ ...p, endTime: e.target.value }))
-                }
-              />
+        {/* Desktop Detail Panel */}
+        <div className="hidden lg:block lg:w-[380px] flex-shrink-0">
+          {detailPanel || (
+            <div className="bg-white rounded-xl border border-border p-8 text-center text-text-muted">
+              <Clock className="h-10 w-10 mx-auto mb-3 opacity-30" />
+              <p className="text-sm">בחרו תאריך מהיומן</p>
             </div>
           )}
-          <Input
-            label="סיבה"
-            placeholder="חג, יום אישי..."
-            value={excForm.reason}
-            onChange={(e) =>
-              setExcForm((p) => ({ ...p, reason: e.target.value }))
-            }
-          />
-          <Button fullWidth onClick={addException}>
-            הוספה
-          </Button>
         </div>
-      </Modal>
+      </div>
+
+      {/* Mobile Detail Modal */}
+      {isMobile && (
+        <Modal
+          isOpen={!!selectedDate}
+          onClose={() => setSelectedDate(null)}
+          title=""
+          size="sm"
+        >
+          {detailPanel}
+        </Modal>
+      )}
+
+      {/* Collapsible Weekly Defaults */}
+      <div className="bg-white rounded-xl border border-border overflow-hidden">
+        <button
+          onClick={() => setShowWeeklyRules(!showWeeklyRules)}
+          className="w-full flex items-center justify-between px-4 py-3 hover:bg-surface/50 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <Clock className="h-5 w-5 text-text-muted" />
+            <span className="font-medium text-text text-sm">
+              הגדרות ברירת מחדל שבועיות
+            </span>
+            {selectedCategory && (
+              <span className="text-xs text-text-muted">
+                ({CATEGORY_LABELS[selectedCategory]})
+              </span>
+            )}
+          </div>
+          {showWeeklyRules ? (
+            <ChevronUp className="h-4 w-4 text-text-muted" />
+          ) : (
+            <ChevronDown className="h-4 w-4 text-text-muted" />
+          )}
+        </button>
+
+        {showWeeklyRules && (
+          <div className="border-t border-border p-4 space-y-2">
+            <p className="text-xs text-text-muted mb-3">
+              {selectedCategory
+                ? `שעות קבועות עבור ${CATEGORY_LABELS[selectedCategory]}. גוברות על הכללי.`
+                : "שעות קבועות לכל ימות השבוע — חלות על כל סוגי השירותים."}
+            </p>
+            {[0, 1, 2, 3, 4, 5, 6].map((day) => {
+              const catRules = rules.filter((r) =>
+                selectedCategory === null
+                  ? r.category === null
+                  : r.category === selectedCategory
+              );
+              const rule = catRules.find((r) => r.dayOfWeek === day);
+              const isActive = rule?.isActive ?? false;
+
+              const globalRule = selectedCategory
+                ? rules.find(
+                    (r) => r.dayOfWeek === day && r.category === null
+                  )
+                : null;
+
+              return (
+                <div
+                  key={day}
+                  className={cn(
+                    "flex flex-col sm:flex-row sm:items-center gap-2 p-3 rounded-lg border",
+                    isActive
+                      ? "border-border bg-white"
+                      : "border-transparent bg-surface/50"
+                  )}
+                >
+                  <span className="w-16 font-medium text-text text-sm">
+                    {DAYS_OF_WEEK_HE[day]}
+                  </span>
+
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isActive}
+                      onChange={(e) =>
+                        updateRule(day, { isActive: e.target.checked })
+                      }
+                      className="w-4 h-4 rounded border-border text-secondary focus:ring-secondary"
+                    />
+                    <span className="text-sm text-text-secondary">
+                      {isActive ? "פעיל" : "חופש"}
+                    </span>
+                  </label>
+
+                  {isActive && (
+                    <div className="flex items-center gap-2 mr-auto">
+                      <input
+                        type="time"
+                        value={rule?.startTime ?? "09:00"}
+                        onChange={(e) =>
+                          updateRule(day, { startTime: e.target.value })
+                        }
+                        className="px-2 py-1 text-sm rounded border border-border bg-white"
+                        dir="ltr"
+                      />
+                      <span className="text-text-muted">—</span>
+                      <input
+                        type="time"
+                        value={rule?.endTime ?? "18:00"}
+                        onChange={(e) =>
+                          updateRule(day, { endTime: e.target.value })
+                        }
+                        className="px-2 py-1 text-sm rounded border border-border bg-white"
+                        dir="ltr"
+                      />
+                    </div>
+                  )}
+
+                  {selectedCategory && !rule && globalRule?.isActive && (
+                    <span className="text-xs text-text-muted">
+                      (כללי: {globalRule.startTime}-{globalRule.endTime})
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
