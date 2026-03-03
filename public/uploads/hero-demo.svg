@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs>
+    <linearGradient id="heroGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#566668;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#7a9a9c;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#c7d8c7;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#heroGrad)"/>
+  <!-- Decorative circles -->
+  <circle cx="300" cy="200" r="150" fill="rgba(255,255,255,0.05)"/>
+  <circle cx="1600" cy="800" r="200" fill="rgba(255,255,255,0.05)"/>
+  <circle cx="960" cy="540" r="300" fill="rgba(255,255,255,0.03)"/>
+  <!-- Lotus-like shapes -->
+  <g transform="translate(960,540)" opacity="0.08">
+    <ellipse cx="0" cy="-80" rx="40" ry="80" fill="white" transform="rotate(0)"/>
+    <ellipse cx="0" cy="-80" rx="40" ry="80" fill="white" transform="rotate(45)"/>
+    <ellipse cx="0" cy="-80" rx="40" ry="80" fill="white" transform="rotate(90)"/>
+    <ellipse cx="0" cy="-80" rx="40" ry="80" fill="white" transform="rotate(135)"/>
+    <ellipse cx="0" cy="-80" rx="40" ry="80" fill="white" transform="rotate(180)"/>
+    <ellipse cx="0" cy="-80" rx="40" ry="80" fill="white" transform="rotate(225)"/>
+    <ellipse cx="0" cy="-80" rx="40" ry="80" fill="white" transform="rotate(270)"/>
+    <ellipse cx="0" cy="-80" rx="40" ry="80" fill="white" transform="rotate(315)"/>
+  </g>
+</svg>

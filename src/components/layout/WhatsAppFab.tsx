@@ -1,0 +1,23 @@
+"use client";
+
+const WHATSAPP_COMMUNITY_URL = "https://chat.whatsapp.com/LBWIaJi6Um6IdqrEDLTutM";
+
+export default function WhatsAppFab() {
+  return (
+    <a
+      href={WHATSAPP_COMMUNITY_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="הצטרפו לקהילת הוואטסאפ שלנו"
+      className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all hover:scale-110"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 32 32"
+        className="w-7 h-7 fill-current"
+      >
+        <path d="M16.004 0h-.008C7.174 0 .002 7.174.002 16c0 3.498 1.13 6.742 3.046 9.374L1.036 31.18l5.998-1.97A15.906 15.906 0 0 0 16.004 32C24.826 32 32 24.826 32 16S24.826 0 16.004 0zm9.32 22.608c-.39 1.1-1.932 2.014-3.182 2.28-.856.182-1.972.326-5.732-1.232-4.812-1.994-7.91-6.874-8.15-7.194-.232-.32-1.944-2.59-1.944-4.94s1.23-3.504 1.666-3.984c.436-.48.952-.6 1.27-.6.316 0 .63.002.906.016.29.014.68-.11 1.064.812.39.938 1.326 3.232 1.442 3.466.116.234.194.508.038.814-.156.312-.234.506-.466.778-.232.274-.488.61-.698.82-.232.232-.474.484-.204.948.27.464 1.2 1.98 2.578 3.208 1.77 1.578 3.262 2.068 3.726 2.3.464.232.734.194 1.004-.116.27-.312 1.158-1.348 1.466-1.812.308-.464.616-.386 1.038-.232.422.156 2.674 1.262 3.136 1.492.462.232.77.348.886.54.114.192.114 1.112-.276 2.212z" />
+      </svg>
+    </a>
+  );
+}

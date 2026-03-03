@@ -1,0 +1,119 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─── AUTH ────────────────────────────────
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  hashedPassword String
+  name           String
+  role           String   @default("ADMIN")
+  createdAt      DateTime @default(now())
+}
+
+// ─── SERVICES ────────────────────────────
+model Service {
+  id                  String    @id @default(cuid())
+  slug                String    @unique
+  name                String
+  shortDesc           String
+  description         String
+  category            String    @default("MASSAGE")
+  duration            Int
+  price               Int
+  image               String?
+  sortOrder           Int       @default(0)
+  isActive            Boolean   @default(true)
+  homeVisitSurcharge  Int?
+  bookings            Booking[]
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}
+
+// ─── AVAILABILITY ────────────────────────
+model AvailabilityRule {
+  id        String   @id @default(cuid())
+  dayOfWeek Int
+  startTime String
+  endTime   String
+  isActive  Boolean  @default(true)
+  category  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AvailabilityException {
+  id        String   @id @default(cuid())
+  date      DateTime
+  type      String   @default("BLOCKED")
+  startTime String?
+  endTime   String?
+  reason    String?
+  category  String?
+  createdAt DateTime @default(now())
+}
+
+// ─── BOOKINGS ────────────────────────────
+model Booking {
+  id                 String    @id @default(cuid())
+  service            Service   @relation(fields: [serviceId], references: [id])
+  serviceId          String
+  startAt            DateTime
+  endAt              DateTime
+  status             String    @default("PENDING")
+  customerName       String
+  customerPhone      String
+  customerEmail      String?
+  notes              String?
+  adminNotes         String?
+  isHomeVisit        Boolean   @default(false)
+  homeVisitSurcharge Int?
+  cancelToken        String    @unique @default(cuid())
+  cancelledAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@unique([startAt, endAt])
+  @@index([status])
+  @@index([startAt])
+}
+
+// ─── LEADS ───────────────────────────────
+model Lead {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  email     String?
+  subject   String?
+  message   String
+  status    String   @default("NEW")
+  adminNotes String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─── SITE IMAGES ────────────────────────
+model SiteImage {
+  id        String   @id @default(cuid())
+  section   String   @unique
+  imagePath String
+  alt       String   @default("")
+  updatedAt DateTime @updatedAt
+}
+
+// ─── REVIEWS ─────────────────────────────
+model Review {
+  id         String   @id @default(cuid())
+  name       String
+  rating     Int
+  content    String
+  service    String?
+  isApproved Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
