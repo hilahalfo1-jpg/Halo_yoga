@@ -101,10 +101,13 @@ model Lead {
 // ─── SITE IMAGES ────────────────────────
 model SiteImage {
   id        String   @id @default(cuid())
-  section   String   @unique
+  section   String
   imagePath String
   alt       String   @default("")
+  sortOrder Int      @default(0)
   updatedAt DateTime @updatedAt
+
+  @@index([section])
 }
 
 // ─── REVIEWS ─────────────────────────────

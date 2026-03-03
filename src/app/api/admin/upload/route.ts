@@ -20,10 +20,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validate file size (5MB max)
-    if (file.size > 5 * 1024 * 1024) {
+    // Validate file size (25MB max)
+    if (file.size > 25 * 1024 * 1024) {
       return NextResponse.json(
-        { error: "הקובץ גדול מדי. מקסימום 5MB" },
+        { error: "הקובץ גדול מדי. מקסימום 25MB" },
         { status: 400 }
       );
     }

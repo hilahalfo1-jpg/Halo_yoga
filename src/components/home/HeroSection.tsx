@@ -1,39 +1,75 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronDown } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import { THERAPIST_TITLE, CONTACT_PHONE } from "@/lib/constants";
 
+interface HeroImage {
+  imagePath: string;
+  alt: string;
+}
+
+const SLIDE_INTERVAL = 5000; // 5 seconds
+
 export default function HeroSection() {
-  const [heroImage, setHeroImage] = useState<string | null>(null);
+  const [heroImages, setHeroImages] = useState<HeroImage[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
     fetch("/api/site-images")
       .then((r) => r.json())
       .then((json) => {
-        if (json.data?.hero?.imagePath) setHeroImage(json.data.hero.imagePath);
+        if (Array.isArray(json.data?.hero)) {
+          setHeroImages(json.data.hero);
+        }
       })
       .catch(() => {});
   }, []);
 
+  // Auto-advance carousel
+  useEffect(() => {
+    if (heroImages.length <= 1) return;
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % heroImages.length);
+    }, SLIDE_INTERVAL);
+    return () => clearInterval(timer);
+  }, [heroImages.length]);
+
+  const goToSlide = useCallback((index: number) => {
+    setCurrentIndex(index);
+  }, []);
+
+  const hasImages = heroImages.length > 0;
+
   return (
     <section className="relative min-h-[100svh] flex items-center justify-center overflow-hidden">
       {/* Background */}
-      {heroImage ? (
+      {hasImages ? (
         <>
-          <Image
-            src={heroImage}
-            alt="HALO - יוגה ועיסוי רפואי"
-            fill
-            className="object-cover"
-            priority
-          />
-          <div className="absolute inset-0 bg-black/50" />
+          <AnimatePresence mode="popLayout">
+            <motion.div
+              key={currentIndex}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1, ease: "easeInOut" }}
+              className="absolute inset-0"
+            >
+              <Image
+                src={heroImages[currentIndex].imagePath}
+                alt={heroImages[currentIndex].alt || "HALO - יוגה ועיסוי רפואי"}
+                fill
+                className="object-cover"
+                priority={currentIndex === 0}
+              />
+            </motion.div>
+          </AnimatePresence>
+          <div className="absolute inset-0 bg-black/45" />
         </>
       ) : (
         <div className="absolute inset-0 bg-gradient-to-br from-[#566668] via-[#637577] to-[#454f50]" />
@@ -89,6 +125,24 @@ export default function HeroSection() {
           </a>
         </motion.div>
       </div>
+
+      {/* Carousel Dots */}
+      {heroImages.length > 1 && (
+        <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2">
+          {heroImages.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => goToSlide(index)}
+              className={`rounded-full transition-all duration-300 ${
+                index === currentIndex
+                  ? "w-8 h-2.5 bg-white"
+                  : "w-2.5 h-2.5 bg-white/40 hover:bg-white/60"
+              }`}
+              aria-label={`תמונה ${index + 1}`}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Scroll indicator */}
       <motion.div
