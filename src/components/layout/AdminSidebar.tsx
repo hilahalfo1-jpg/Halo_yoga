@@ -10,6 +10,7 @@ import {
   Settings2,
   Clock,
   ImageIcon,
+  FileText,
   MessageSquare,
   Star,
   LogOut,
@@ -17,6 +18,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LOGO_PATH, SITE_NAME } from "@/lib/constants";
+import { useSiteImages } from "@/lib/hooks/useSiteImages";
 
 const navItems = [
   { label: "לוח בקרה", href: "/admin", icon: LayoutDashboard },
@@ -24,6 +26,7 @@ const navItems = [
   { label: "שירותים", href: "/admin/services", icon: Settings2 },
   { label: "זמינות", href: "/admin/availability", icon: Clock },
   { label: "תמונות", href: "/admin/images", icon: ImageIcon },
+  { label: "תוכן האתר", href: "/admin/content", icon: FileText },
   { label: "פניות", href: "/admin/leads", icon: MessageSquare },
   { label: "המלצות", href: "/admin/reviews", icon: Star },
 ];
@@ -35,6 +38,8 @@ interface AdminSidebarProps {
 
 export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
   const pathname = usePathname();
+  const { images } = useSiteImages();
+  const logoSrc = images.logo?.imagePath || LOGO_PATH;
 
   const isActive = (href: string) => {
     if (href === "/admin") return pathname === "/admin";
@@ -62,8 +67,8 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
         <div className="flex items-center justify-between p-4 border-b border-border">
           <Link href="/admin" className="flex items-center gap-2">
             <Image
-              src={LOGO_PATH}
-              alt={SITE_NAME}
+              src={logoSrc}
+              alt={images.logo?.alt || SITE_NAME}
               width={80}
               height={28}
               className="h-7 w-auto"

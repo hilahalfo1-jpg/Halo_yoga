@@ -25,9 +25,13 @@ export async function GET() {
       result.hero = heroImages;
     }
 
-    return NextResponse.json({ data: result });
+    return NextResponse.json({ data: result }, {
+      headers: { "Cache-Control": "no-store, no-cache, must-revalidate" },
+    });
   } catch (error) {
     console.error("[SITE_IMAGES_PUBLIC_GET]", error);
-    return NextResponse.json({ data: {} });
+    return NextResponse.json({ data: {} }, {
+      headers: { "Cache-Control": "no-store, no-cache, must-revalidate" },
+    });
   }
 }

@@ -24,8 +24,14 @@ const SINGLE_SECTIONS = [
   },
   {
     key: "logo",
-    label: "לוגו",
-    description: "הלוגו שמופיע בתפריט העליון ובפוטר",
+    label: "לוגו (בהיר)",
+    description: "הלוגו שמופיע על רקע שקוף בהירו (בדף הבית לפני גלילה)",
+    aspect: "landscape" as const,
+  },
+  {
+    key: "logo_dark",
+    label: "לוגו (כהה)",
+    description: "הלוגו שמופיע על האדר הלבן (לאחר גלילה ובשאר העמודים)",
     aspect: "landscape" as const,
   },
   {

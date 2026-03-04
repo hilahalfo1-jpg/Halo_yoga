@@ -7,18 +7,32 @@ import { ArrowLeft, Award, GraduationCap, Heart } from "lucide-react";
 import { motion } from "framer-motion";
 import Section from "@/components/ui/Section";
 import Button from "@/components/ui/Button";
+import { useSiteContent } from "@/lib/hooks/useSiteContent";
 
-const credentials = [
+const defaultCredentials = [
   { icon: <Award className="h-5 w-5" />, text: "מעסה רפואי מוסמך" },
   { icon: <GraduationCap className="h-5 w-5" />, text: "מורה ליוגה מוסמכת" },
   { icon: <Heart className="h-5 w-5" />, text: "ניסיון של למעלה מ-10 שנים" },
 ];
 
+const credentialIcons = [
+  <Award key="a" className="h-5 w-5" />,
+  <GraduationCap key="g" className="h-5 w-5" />,
+  <Heart key="h" className="h-5 w-5" />,
+];
+
 export default function AboutPreview() {
   const [aboutImage, setAboutImage] = useState<string | null>(null);
+  const { t } = useSiteContent();
+
+  const credentials = [
+    { icon: credentialIcons[0], text: t("about", "credential1", defaultCredentials[0].text) },
+    { icon: credentialIcons[1], text: t("about", "credential2", defaultCredentials[1].text) },
+    { icon: credentialIcons[2], text: t("about", "credential3", defaultCredentials[2].text) },
+  ];
 
   useEffect(() => {
-    fetch("/api/site-images")
+    fetch("/api/site-images", { cache: "no-store" })
       .then((r) => r.json())
       .then((json) => {
         if (json.data?.about?.imagePath) setAboutImage(json.data.about.imagePath);
@@ -38,13 +52,14 @@ export default function AboutPreview() {
           className="order-2 lg:order-1"
         >
           <div className="relative">
-            <div className="w-full aspect-square max-w-md mx-auto rounded-2xl bg-gradient-to-br from-primary-light/20 to-secondary/20 flex items-center justify-center overflow-hidden">
+            <div className="w-full max-w-md mx-auto rounded-2xl overflow-hidden">
               {aboutImage ? (
                 <Image
                   src={aboutImage}
                   alt="הילה - מעסה רפואית ומורה ליוגה"
-                  fill
-                  className="object-cover"
+                  width={600}
+                  height={800}
+                  className="w-full h-auto rounded-2xl"
                 />
               ) : (
                 <div className="text-center p-8">
@@ -69,22 +84,16 @@ export default function AboutPreview() {
           className="order-1 lg:order-2"
         >
           <h2 className="text-3xl md:text-4xl font-bold text-text mb-6">
-            קצת עליי
+            {t("about", "title", "קצת עליי")}
           </h2>
 
           <div className="space-y-4 text-text-secondary leading-relaxed mb-8">
-            <p>
-              שמי הילה, ואני מעסה רפואית מוסמכת ומורה ליוגה עם ניסיון של למעלה
-              מעשר שנים בתחום הטיפול הגופני והרוחני.
-            </p>
-            <p>
-              הגישה שלי משלבת ידע אנטומי מעמיק עם הקשבה אמיתית לגוף ולנפש.
-              כל טיפול מותאם אישית, כי כל גוף הוא עולם ומלואו.
-            </p>
-            <p>
-              אני מאמינה שריפוי אמיתי מתחיל כשהגוף והנפש עובדים יחד — וזה
-              בדיוק מה שאני מביאה לכל טיפול ולכל שיעור.
-            </p>
+            {t("about", "paragraph1", "שמי הילה, ואני מעסה רפואית מוסמכת ומורה ליוגה עם ניסיון של למעלה מעשר שנים בתחום הטיפול הגופני והרוחני.").split("\n\n").map((p, i) => (
+              <p key={i}>{p}</p>
+            ))}
+            {t("about", "paragraph2", "הגישה שלי משלבת ידע אנטומי מעמיק עם הקשבה אמיתית לגוף ולנפש. כל טיפול מותאם אישית, כי כל גוף הוא עולם ומלואו.").split("\n\n").map((p, i) => (
+              <p key={`p2-${i}`}>{p}</p>
+            ))}
           </div>
 
           {/* Credentials */}
@@ -102,7 +111,7 @@ export default function AboutPreview() {
 
           <Link href="/about">
             <Button variant="outline" className="gap-2">
-              קראו עוד
+              {t("about", "buttonText", "קראו עוד")}
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>

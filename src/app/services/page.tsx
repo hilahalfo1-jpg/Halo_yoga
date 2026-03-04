@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
+
+export const dynamic = "force-dynamic";
+
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import ServicesGrid from "@/components/home/ServicesGrid";
+import ServicesHero from "@/components/services/ServicesHero";
 import type { ServiceItem } from "@/types";
 
 export const metadata: Metadata = {
@@ -30,19 +34,9 @@ export default async function ServicesPage() {
     <>
       <Header />
       <main>
-        {/* Hero */}
-        <div className="relative h-[35vh] min-h-[260px] bg-gradient-to-br from-[#566668] via-[#637577] to-[#454f50] flex items-end">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 pt-24 w-full">
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
-              השירותים שלי
-            </h1>
-            <p className="text-white/70 text-lg">
-              מגוון טיפולים מקצועיים המותאמים לצרכים שלכם
-            </p>
-          </div>
-        </div>
+        <ServicesHero />
 
-        <ServicesGrid services={services} />
+        <ServicesGrid services={services} hideTitle />
       </main>
       <Footer />
     </>

@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import { THERAPIST_TITLE, CONTACT_PHONE } from "@/lib/constants";
+import { useSiteContent } from "@/lib/hooks/useSiteContent";
 
 interface HeroImage {
   imagePath: string;
@@ -19,9 +20,10 @@ const SLIDE_INTERVAL = 5000; // 5 seconds
 export default function HeroSection() {
   const [heroImages, setHeroImages] = useState<HeroImage[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const { t } = useSiteContent();
 
   useEffect(() => {
-    fetch("/api/site-images")
+    fetch("/api/site-images", { cache: "no-store" })
       .then((r) => r.json())
       .then((json) => {
         if (Array.isArray(json.data?.hero)) {
@@ -93,7 +95,7 @@ export default function HeroSection() {
           transition={{ duration: 0.6, delay: 0.15 }}
           className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight"
         >
-          ריפוי הגוף, שקט הנפש
+          {t("hero", "title", "ריפוי הגוף, שקט הנפש")}
         </motion.h1>
 
         <motion.p
@@ -102,9 +104,7 @@ export default function HeroSection() {
           transition={{ duration: 0.6, delay: 0.3 }}
           className="text-lg md:text-xl text-white/80 mb-10 max-w-2xl mx-auto leading-relaxed"
         >
-          טיפולי עיסוי רפואי מקצועיים ושיעורי יוגה מותאמים אישית.
-          <br />
-          גישה הוליסטית המשלבת מגע מרפא, תנועה ונשימה לאיזון גוף ונפש.
+          {t("hero", "subtitle", "טיפולי עיסוי רפואי מקצועיים ושיעורי יוגה מותאמים אישית. גישה הוליסטית המשלבת מגע מרפא, תנועה ונשימה לאיזון גוף ונפש.")}
         </motion.p>
 
         <motion.div
@@ -114,13 +114,13 @@ export default function HeroSection() {
           className="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
           <Link href="/booking">
-            <Button size="lg" className="text-base">
-              קביעת תור
+            <Button size="lg" className="bg-primary text-white hover:bg-primary-dark text-base">
+              {t("hero", "buttonText", "קביעת תור")}
             </Button>
           </Link>
           <a href={`tel:${CONTACT_PHONE.replace(/-/g, "")}`}>
             <Button variant="outline" size="lg" className="border-white text-white hover:bg-white hover:text-primary text-base">
-              שיחת ייעוץ
+              {t("hero", "buttonText2", "שיחת ייעוץ")}
             </Button>
           </a>
         </motion.div>

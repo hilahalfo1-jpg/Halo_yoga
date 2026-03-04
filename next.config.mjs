@@ -5,6 +5,14 @@ const nextConfig = {
       bodySizeLimit: "25mb",
     },
   },
+  async rewrites() {
+    return [
+      {
+        source: "/uploads/:path*",
+        destination: "/api/uploads/:path*",
+      },
+    ];
+  },
 };
 
 export default nextConfig;

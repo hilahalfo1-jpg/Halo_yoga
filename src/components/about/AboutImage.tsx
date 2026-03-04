@@ -8,7 +8,7 @@ export default function AboutImage() {
   const [imagePath, setImagePath] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/site-images")
+    fetch("/api/site-images", { cache: "no-store" })
       .then((r) => r.json())
       .then((json) => {
         if (json.data?.about?.imagePath) setImagePath(json.data.about.imagePath);

@@ -110,6 +110,19 @@ model SiteImage {
   @@index([section])
 }
 
+// ─── SITE CONTENT ──────────────────────────
+model SiteContent {
+  id        String   @id @default(cuid())
+  section   String
+  key       String
+  value     String
+  sortOrder Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@unique([section, key])
+  @@index([section])
+}
+
 // ─── REVIEWS ─────────────────────────────
 model Review {
   id         String   @id @default(cuid())

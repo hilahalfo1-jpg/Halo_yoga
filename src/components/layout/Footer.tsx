@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { Phone, Mail, MapPin, Clock } from "lucide-react";
@@ -12,9 +14,12 @@ import {
   CONTACT_WHATSAPP,
   WORKING_HOURS,
 } from "@/lib/constants";
+import { useSiteImages } from "@/lib/hooks/useSiteImages";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const { images } = useSiteImages();
+  const logoSrc = images.logo?.imagePath || LOGO_PATH;
 
   return (
     <footer className="bg-[#2D2D2D] text-white/80">
@@ -23,8 +28,8 @@ export default function Footer() {
           {/* Brand */}
           <div className="lg:col-span-1">
             <Image
-              src={LOGO_PATH}
-              alt={SITE_NAME}
+              src={logoSrc}
+              alt={images.logo?.alt || SITE_NAME}
               width={120}
               height={40}
               className="h-10 w-auto object-contain brightness-0 invert mb-4"

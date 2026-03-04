@@ -70,7 +70,7 @@ export default function BookingWizard({ services }: BookingWizardProps) {
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-5xl mx-auto">
       {/* Progress Bar */}
       {currentStep < 5 && (
         <div className="mb-10">

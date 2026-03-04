@@ -8,6 +8,7 @@ import Section from "@/components/ui/Section";
 import Card from "@/components/ui/Card";
 import { CATEGORY_OPTIONS } from "@/lib/constants";
 import { formatPrice } from "@/lib/utils";
+import { useSiteContent } from "@/lib/hooks/useSiteContent";
 import type { ServiceItem } from "@/types";
 
 // Map service slugs to icons
@@ -23,10 +24,12 @@ const serviceIcons: Record<string, React.ReactNode> = {
 
 interface ServicesGridProps {
   services: ServiceItem[];
+  hideTitle?: boolean;
 }
 
-export default function ServicesGrid({ services }: ServicesGridProps) {
+export default function ServicesGrid({ services, hideTitle }: ServicesGridProps) {
   const [activeCategory, setActiveCategory] = useState("ALL");
+  const { t } = useSiteContent();
 
   const filtered =
     activeCategory === "ALL"
@@ -35,14 +38,16 @@ export default function ServicesGrid({ services }: ServicesGridProps) {
 
   return (
     <Section id="services">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold text-text mb-4">
-          השירותים שלי
-        </h2>
-        <p className="text-text-secondary max-w-2xl mx-auto">
-          מגוון טיפולים מקצועיים המותאמים לצרכים האישיים שלכם
-        </p>
-      </div>
+      {!hideTitle && (
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-text mb-4">
+            {t("services", "gridTitle", "השירותים שלי")}
+          </h2>
+          <p className="text-text-secondary max-w-2xl mx-auto">
+            {t("services", "gridSubtitle", "מגוון טיפולים מקצועיים המותאמים לצרכים האישיים שלכם")}
+          </p>
+        </div>
+      )}
 
       {/* Category Tabs */}
       <div className="flex flex-wrap justify-center gap-2 mb-10">

@@ -8,6 +8,7 @@ import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NAV_LINKS, LOGO_PATH, SITE_NAME } from "@/lib/constants";
 import { useScrollDirection } from "@/lib/hooks/useScrollDirection";
+import { useSiteImages } from "@/lib/hooks/useSiteImages";
 import Button from "@/components/ui/Button";
 import MobileMenu from "./MobileMenu";
 
@@ -17,13 +18,19 @@ export default function Header() {
   const { scrollY } = useScrollDirection();
   const isScrolled = scrollY > 50;
   const isHomepage = pathname === "/";
+  const { images } = useSiteImages();
+
+  const showSolidHeader = isScrolled || !isHomepage;
+  const logoLight = images.logo?.imagePath || LOGO_PATH;
+  const logoDark = images.logo_dark?.imagePath || logoLight;
+  const logoSrc = showSolidHeader ? logoDark : logoLight;
 
   return (
     <>
       <header
         className={cn(
           "fixed top-0 inset-x-0 z-40 transition-all duration-300",
-          isScrolled || !isHomepage
+          showSolidHeader
             ? "bg-white/95 backdrop-blur-md shadow-sm border-b border-border/50"
             : "bg-transparent"
         )}
@@ -33,17 +40,17 @@ export default function Header() {
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 flex-shrink-0">
               <Image
-                src={LOGO_PATH}
-                alt={SITE_NAME}
+                src={logoSrc}
+                alt={images.logo?.alt || SITE_NAME}
                 width={120}
                 height={40}
-                className="h-10 md:h-12 w-auto object-contain"
+                className="h-8 md:h-9 w-auto object-contain transition-opacity duration-300"
                 priority
               />
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-1">
+            <nav className="hidden md:flex items-center gap-3">
               {NAV_LINKS.map((link) => (
                 <Link
                   key={link.href}
@@ -52,7 +59,7 @@ export default function Header() {
                     "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
                     pathname === link.href
                       ? "text-primary bg-primary/10"
-                      : isScrolled || !isHomepage
+                      : showSolidHeader
                         ? "text-text hover:text-primary hover:bg-surface"
                         : "text-white/90 hover:text-white hover:bg-white/10"
                   )}
@@ -65,14 +72,14 @@ export default function Header() {
             {/* CTA + Mobile Toggle */}
             <div className="flex items-center gap-3">
               <Link href="/booking" className="hidden md:block">
-                <Button size="sm">קביעת תור</Button>
+                <Button size="sm" className={showSolidHeader ? "bg-[#576769] text-white hover:bg-[#475557]" : "bg-primary text-white hover:bg-primary-dark"}>קביעת תור</Button>
               </Link>
 
               <button
                 onClick={() => setIsMobileMenuOpen(true)}
                 className={cn(
                   "md:hidden p-2 rounded-lg transition-colors",
-                  isScrolled || !isHomepage
+                  showSolidHeader
                     ? "text-text hover:bg-surface"
                     : "text-white hover:bg-white/10"
                 )}

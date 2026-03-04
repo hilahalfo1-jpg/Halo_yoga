@@ -6,9 +6,9 @@
 
 @layer base {
   :root {
-    --color-primary: #c7d8c7;
-    --color-primary-dark: #a8c0a8;
-    --color-primary-light: #dce8dc;
+    --color-primary: #9db99d;
+    --color-primary-dark: #7da07d;
+    --color-primary-light: #c7d8c7;
     --color-secondary: #566668;
     --color-secondary-dark: #454f50;
     --color-accent: #566668;

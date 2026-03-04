@@ -3,6 +3,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Section from "@/components/ui/Section";
 import ContactForm from "./ContactForm";
+import ContactHero from "@/components/contact/ContactHero";
 import { Phone, Mail, MapPin, Clock, MessageCircle } from "lucide-react";
 import {
   CONTACT_PHONE,
@@ -22,17 +23,7 @@ export default function ContactPage() {
     <>
       <Header />
       <main>
-        {/* Hero */}
-        <div className="relative h-[35vh] min-h-[260px] bg-gradient-to-br from-[#566668] via-[#637577] to-[#454f50] flex items-end">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 pt-24 w-full">
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
-              צור קשר
-            </h1>
-            <p className="text-white/70 text-lg">
-              נשמח לשמוע מכם ולענות על כל שאלה
-            </p>
-          </div>
-        </div>
+        <ContactHero />
 
         <Section>
           <div className="max-w-5xl mx-auto">

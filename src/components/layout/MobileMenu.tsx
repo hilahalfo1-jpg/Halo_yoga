@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { X, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NAV_LINKS, LOGO_PATH, SITE_NAME, CONTACT_PHONE } from "@/lib/constants";
+import { useSiteImages } from "@/lib/hooks/useSiteImages";
 import { motion, AnimatePresence } from "framer-motion";
 import Button from "@/components/ui/Button";
 
@@ -17,6 +18,8 @@ interface MobileMenuProps {
 
 export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
   const pathname = usePathname();
+  const { images } = useSiteImages();
+  const logoSrc = images.logo?.imagePath || LOGO_PATH;
 
   // Close on route change
   useEffect(() => {
@@ -61,8 +64,8 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-border">
                 <Image
-                  src={LOGO_PATH}
-                  alt={SITE_NAME}
+                  src={logoSrc}
+                  alt={images.logo?.alt || SITE_NAME}
                   width={100}
                   height={34}
                   className="h-8 w-auto object-contain"
