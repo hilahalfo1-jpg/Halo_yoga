@@ -53,7 +53,7 @@ export default function ReviewsPageClient({ reviews }: ReviewsPageClientProps) {
       {/* Actions */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
         {/* Filter tabs */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 w-full sm:w-auto justify-center sm:justify-start">
           {filters.map((f) => (
             <button
               key={f.value}
@@ -72,7 +72,7 @@ export default function ReviewsPageClient({ reviews }: ReviewsPageClientProps) {
         <Button
           variant="outline"
           onClick={() => setIsModalOpen(true)}
-          className="gap-2"
+          className="gap-2 w-full sm:w-auto"
         >
           <PenLine className="h-4 w-4" />
           כתבו המלצה
@@ -91,7 +91,7 @@ export default function ReviewsPageClient({ reviews }: ReviewsPageClientProps) {
           }
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {filtered.map((review) => (
             <Card key={review.id} className="flex flex-col">
               <StarRating rating={review.rating} size="sm" />

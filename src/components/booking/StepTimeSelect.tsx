@@ -13,6 +13,7 @@ interface StepTimeSelectProps {
   date: Date;
   selected: TimeSlot | null;
   onSelect: (slot: TimeSlot) => void;
+  onNext: () => void;
   onBack: () => void;
 }
 
@@ -21,6 +22,7 @@ export default function StepTimeSelect({
   date,
   selected,
   onSelect,
+  onNext,
   onBack,
 }: StepTimeSelectProps) {
   const [slots, setSlots] = useState<TimeSlot[]>([]);
@@ -99,9 +101,12 @@ export default function StepTimeSelect({
             ))}
           </div>
 
-          <div className="flex justify-center mt-8">
+          <div className="flex items-center justify-center gap-3 mt-8">
             <Button variant="ghost" onClick={onBack}>
               חזרה
+            </Button>
+            <Button size="lg" onClick={onNext} disabled={!selected}>
+              המשך
             </Button>
           </div>
         </>

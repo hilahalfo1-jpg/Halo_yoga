@@ -11,7 +11,7 @@ export default function ReviewsHero() {
         <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
           {t("reviews", "heroTitle", "המלצות")}
         </h1>
-        <p className="text-white/70 text-lg">
+        <p className="text-white/70 text-base md:text-lg">
           {t("reviews", "heroSubtitle", "מה הלקוחות שלנו אומרים")}
         </p>
       </div>

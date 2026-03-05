@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Check, Clock, ChevronDown } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
+import Button from "@/components/ui/Button";
 import { formatPrice, formatDuration, cn } from "@/lib/utils";
 import { CATEGORY_LABELS } from "@/lib/constants";
 import type { ServiceItem } from "@/types";
@@ -12,12 +13,14 @@ interface StepServiceSelectProps {
   services: ServiceItem[];
   selected: ServiceItem | null;
   onSelect: (service: ServiceItem) => void;
+  onNext: () => void;
 }
 
 export default function StepServiceSelect({
   services,
   selected,
   onSelect,
+  onNext,
 }: StepServiceSelectProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -134,6 +137,12 @@ export default function StepServiceSelect({
             ))}
           </div>
         )}
+      </div>
+
+      <div className="flex justify-center mt-8">
+        <Button size="lg" onClick={onNext} disabled={!selected}>
+          המשך
+        </Button>
       </div>
     </div>
   );

@@ -10,9 +10,9 @@ import Button from "@/components/ui/Button";
 import { useSiteContent } from "@/lib/hooks/useSiteContent";
 
 const defaultCredentials = [
-  { icon: <Award className="h-5 w-5" />, text: "מעסה רפואי מוסמך" },
-  { icon: <GraduationCap className="h-5 w-5" />, text: "מורה ליוגה מוסמכת" },
-  { icon: <Heart className="h-5 w-5" />, text: "ניסיון של למעלה מ-10 שנים" },
+  { icon: <Award className="h-5 w-5" />, text: "מטפלת בעיסוי תאילנדי" },
+  { icon: <GraduationCap className="h-5 w-5" />, text: "מדריכת יוגה" },
+  { icon: <Heart className="h-5 w-5" />, text: "חיבור עמוק לגוף ולאנרגיה" },
 ];
 
 const credentialIcons = [
@@ -51,7 +51,7 @@ export default function AboutPreview() {
           transition={{ duration: 0.5 }}
           className="order-2 lg:order-1"
         >
-          <div className="relative">
+          <div className="relative overflow-hidden">
             <div className="w-full max-w-md mx-auto rounded-2xl overflow-hidden">
               {aboutImage ? (
                 <Image
@@ -88,10 +88,10 @@ export default function AboutPreview() {
           </h2>
 
           <div className="space-y-4 text-text-secondary leading-relaxed mb-8">
-            {t("about", "paragraph1", "שמי הילה, ואני מעסה רפואית מוסמכת ומורה ליוגה עם ניסיון של למעלה מעשר שנים בתחום הטיפול הגופני והרוחני.").split("\n\n").map((p, i) => (
+            {t("about", "paragraph1", "אני מטפלת בעיסוי תאילנדי ומדריכת יוגה, מתוך חיבור עמוק לגוף ולאנרגיה שבו. בעיסוי אני שואפת לעזור לגוף לשחרר ולפרק אנרגיות שלא משרתות אותו, לפתוח חסימות ולהחזיר תחושת זרימה טבעית.").split("\n\n").map((p, i) => (
               <p key={i}>{p}</p>
             ))}
-            {t("about", "paragraph2", "הגישה שלי משלבת ידע אנטומי מעמיק עם הקשבה אמיתית לגוף ולנפש. כל טיפול מותאם אישית, כי כל גוף הוא עולם ומלואו.").split("\n\n").map((p, i) => (
+            {t("about", "paragraph2", "ביוגה אני מתמקדת בהכנסת אנרגיה חדשה, דרך תנועה, נשימה ונוכחות, שמחזקת ומאזנת את הגוף והנפש. עבורי, האיזון של הגוף הוא אלמנט מרכזי וחשוב מאוד בדרך לבריאות ולהרגשה טובה.").split("\n\n").map((p, i) => (
               <p key={`p2-${i}`}>{p}</p>
             ))}
           </div>

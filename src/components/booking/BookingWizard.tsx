@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { Check } from "lucide-react";
+import { Check, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import StepServiceSelect from "./StepServiceSelect";
 import StepDateSelect from "./StepDateSelect";
@@ -74,7 +74,23 @@ export default function BookingWizard({ services }: BookingWizardProps) {
       {/* Progress Bar */}
       {currentStep < 5 && (
         <div className="mb-10">
-          <div className="flex items-center justify-between">
+          {/* Mobile: simple text indicator */}
+          <div className="sm:hidden text-center mb-4">
+            <span className="text-sm font-medium text-text">
+              שלב {currentStep + 1} מתוך {STEPS.length}
+            </span>
+            <span className="text-sm text-text-muted mr-2">
+              — {STEPS[currentStep].label}
+            </span>
+            <div className="mt-2 h-1.5 bg-surface rounded-full overflow-hidden">
+              <div
+                className="h-full bg-primary rounded-full transition-all duration-300"
+                style={{ width: `${((currentStep + 1) / STEPS.length) * 100}%` }}
+              />
+            </div>
+          </div>
+          {/* Desktop: full step circles */}
+          <div className="hidden sm:flex items-center justify-between">
             {STEPS.map((step, i) => (
               <div key={i} className="flex items-center flex-1 last:flex-none">
                 <div className="flex flex-col items-center">
@@ -96,7 +112,7 @@ export default function BookingWizard({ services }: BookingWizardProps) {
                   </div>
                   <span
                     className={cn(
-                      "text-xs mt-2 hidden sm:block",
+                      "text-xs mt-2",
                       i <= currentStep ? "text-text font-medium" : "text-text-muted"
                     )}
                   >
@@ -106,7 +122,7 @@ export default function BookingWizard({ services }: BookingWizardProps) {
                 {i < STEPS.length - 1 && (
                   <div
                     className={cn(
-                      "flex-1 h-0.5 mx-2 mt-[-1rem] sm:mt-0",
+                      "flex-1 h-0.5 mx-2",
                       i < currentStep ? "bg-primary" : "bg-border"
                     )}
                   />
@@ -124,8 +140,8 @@ export default function BookingWizard({ services }: BookingWizardProps) {
           selected={data.service}
           onSelect={(service) => {
             updateData({ service, date: null, timeSlot: null });
-            goNext();
           }}
+          onNext={goNext}
         />
       )}
 
@@ -135,8 +151,8 @@ export default function BookingWizard({ services }: BookingWizardProps) {
           selected={data.date}
           onSelect={(date) => {
             updateData({ date, timeSlot: null });
-            goNext();
           }}
+          onNext={goNext}
           onBack={goBack}
         />
       )}
@@ -148,8 +164,8 @@ export default function BookingWizard({ services }: BookingWizardProps) {
           selected={data.timeSlot}
           onSelect={(timeSlot) => {
             updateData({ timeSlot });
-            goNext();
           }}
+          onNext={goNext}
           onBack={goBack}
         />
       )}
@@ -176,14 +192,14 @@ export default function BookingWizard({ services }: BookingWizardProps) {
 
       {currentStep === 5 && bookingResult && (
         <div className="text-center py-12">
-          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-success/10 flex items-center justify-center">
-            <Check className="h-10 w-10 text-success" />
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-warning/10 flex items-center justify-center">
+            <Clock className="h-10 w-10 text-warning" />
           </div>
           <h2 className="text-3xl font-bold text-text mb-3">
-            התור נקבע בהצלחה!
+            הבקשה נשלחה בהצלחה!
           </h2>
           <p className="text-text-secondary mb-6">
-            פרטי התור נשלחו. ניתן לבטל עד 24 שעות לפני המועד.
+            הבקשה שלכם התקבלה וממתינה לאישור. תקבלו עדכון ברגע שהתור יאושר.
           </p>
           <div className="bg-surface rounded-xl p-6 max-w-md mx-auto text-right space-y-2">
             <p>

@@ -49,7 +49,7 @@ export default function HeroSection() {
   const hasImages = heroImages.length > 0;
 
   return (
-    <section className="relative min-h-[100svh] flex items-center justify-center overflow-hidden">
+    <section className="relative min-h-[75svh] sm:min-h-[100svh] flex items-center justify-center overflow-hidden">
       {/* Background */}
       {hasImages ? (
         <>
@@ -66,7 +66,7 @@ export default function HeroSection() {
                 src={heroImages[currentIndex].imagePath}
                 alt={heroImages[currentIndex].alt || "HALO - יוגה ועיסוי רפואי"}
                 fill
-                className="object-cover"
+                className={`object-cover sm:object-center ${currentIndex === 0 ? "object-left" : "object-center"}`}
                 priority={currentIndex === 0}
               />
             </motion.div>
@@ -93,7 +93,7 @@ export default function HeroSection() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.15 }}
-          className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight"
+          className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight"
         >
           {t("hero", "title", "ריפוי הגוף, שקט הנפש")}
         </motion.h1>
@@ -119,7 +119,7 @@ export default function HeroSection() {
             </Button>
           </Link>
           <a href={`tel:${CONTACT_PHONE.replace(/-/g, "")}`}>
-            <Button variant="outline" size="lg" className="border-white text-white hover:bg-white hover:text-primary text-base">
+            <Button variant="outline" size="lg" className="border-0 ring-2 ring-inset ring-white text-white hover:bg-white hover:text-primary text-base">
               {t("hero", "buttonText2", "שיחת ייעוץ")}
             </Button>
           </a>

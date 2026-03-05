@@ -139,12 +139,12 @@ export default function StepDetailsForm({
           </button>
         )}
 
-        <div className="flex gap-3 pt-4">
+        <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4">
+          <Button type="button" variant="ghost" onClick={onBack} fullWidth className="sm:w-auto">
+            חזרה
+          </Button>
           <Button type="submit" fullWidth>
             המשך לאישור
-          </Button>
-          <Button type="button" variant="ghost" onClick={onBack}>
-            חזרה
           </Button>
         </div>
       </form>

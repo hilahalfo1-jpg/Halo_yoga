@@ -36,7 +36,7 @@ export default function ServicesHero() {
         <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
           {t("services", "heroTitle", "השירותים שלי")}
         </h1>
-        <p className="text-white/70 text-lg">
+        <p className="text-white/70 text-base md:text-lg">
           {t("services", "heroSubtitle", "מגוון טיפולים מקצועיים המותאמים לצרכים שלכם")}
         </p>
       </div>

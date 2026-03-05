@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import { Calendar, Phone, FileText } from "lucide-react";
+import { Calendar, Phone, FileText, CheckCircle, XCircle, Trash2 } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
@@ -86,6 +86,21 @@ export default function BookingsPage() {
       }
     } catch {
       toast.error("שגיאה בעדכון");
+    }
+  };
+
+  const deleteBooking = async (id: string) => {
+    if (!confirm("למחוק את ההזמנה לצמיתות?")) return;
+    try {
+      const res = await fetch(`/api/admin/bookings/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        toast.success("ההזמנה נמחקה");
+        fetchBookings();
+      } else {
+        toast.error("שגיאה במחיקה");
+      }
+    } catch {
+      toast.error("שגיאה במחיקה");
     }
   };
 
@@ -181,19 +196,40 @@ export default function BookingsPage() {
                   </td>
                   <td className="p-3">
                     <div className="flex items-center gap-2">
-                      <select
-                        value={booking.status}
-                        onChange={(e) =>
-                          updateStatus(booking.id, e.target.value)
-                        }
-                        className="text-xs px-2 py-1 rounded border border-border bg-white"
-                      >
-                        {STATUS_CHANGE_OPTIONS.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </select>
+                      {booking.status === "PENDING" ? (
+                        <>
+                          <button
+                            onClick={() => updateStatus(booking.id, "CONFIRMED")}
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-success/10 text-success hover:bg-success/20 text-xs font-medium transition-colors"
+                            title="אישור"
+                          >
+                            <CheckCircle className="h-3.5 w-3.5" />
+                            אישור
+                          </button>
+                          <button
+                            onClick={() => updateStatus(booking.id, "CANCELLED")}
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-error/10 text-error hover:bg-error/20 text-xs font-medium transition-colors"
+                            title="דחייה"
+                          >
+                            <XCircle className="h-3.5 w-3.5" />
+                            דחייה
+                          </button>
+                        </>
+                      ) : (
+                        <select
+                          value={booking.status}
+                          onChange={(e) =>
+                            updateStatus(booking.id, e.target.value)
+                          }
+                          className="text-xs px-2 py-1 rounded border border-border bg-white"
+                        >
+                          {STATUS_CHANGE_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                       <button
                         onClick={() => {
                           setSelectedBooking(booking);
@@ -203,6 +239,13 @@ export default function BookingsPage() {
                         title="הערות אדמין"
                       >
                         <FileText className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => deleteBooking(booking.id)}
+                        className="p-1 rounded text-text-muted hover:text-error hover:bg-error/10"
+                        title="מחיקה"
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
                   </td>

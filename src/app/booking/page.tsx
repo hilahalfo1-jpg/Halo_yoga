@@ -36,11 +36,11 @@ export default async function BookingPage() {
       <Header />
       <main>
         <div className="relative h-[30vh] min-h-[220px] w-full bg-gradient-to-br from-[#566668] via-[#637577] to-[#454f50] flex items-end">
-          <div className="w-full px-4 sm:px-6 lg:px-8 pb-12 pt-24">
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
+          <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pb-12 pt-24">
+            <h1 className="text-3xl md:text-5xl font-bold text-white mb-3">
               קביעת תור
             </h1>
-            <p className="text-white/70 text-lg">
+            <p className="text-white/70 text-base md:text-lg">
               בחרו שירות, תאריך ושעה — ואנחנו נדאג לשאר
             </p>
           </div>

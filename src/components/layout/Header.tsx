@@ -78,7 +78,7 @@ export default function Header() {
               <button
                 onClick={() => setIsMobileMenuOpen(true)}
                 className={cn(
-                  "md:hidden p-2 rounded-lg transition-colors",
+                  "md:hidden p-3 rounded-lg transition-colors",
                   showSolidHeader
                     ? "text-text hover:bg-surface"
                     : "text-white hover:bg-white/10"

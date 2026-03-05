@@ -45,7 +45,7 @@ export default function ReviewsCarousel({ reviews }: ReviewsCarouselProps) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.4, delay: index * 0.1 }}
-            className="min-w-[300px] md:min-w-[350px] snap-center flex-shrink-0"
+            className="min-w-[260px] max-w-[85vw] md:min-w-[350px] md:max-w-none snap-center flex-shrink-0"
           >
             <Card className="h-full">
               <StarRating rating={review.rating} size="sm" />

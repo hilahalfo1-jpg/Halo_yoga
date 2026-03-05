@@ -10,12 +10,14 @@ interface StepDateSelectProps {
   serviceId: string;
   selected: Date | null;
   onSelect: (date: Date) => void;
+  onNext: () => void;
   onBack: () => void;
 }
 
 export default function StepDateSelect({
   selected,
   onSelect,
+  onNext,
   onBack,
 }: StepDateSelectProps) {
   const today = new Date();
@@ -154,9 +156,12 @@ export default function StepDateSelect({
         </div>
       </div>
 
-      <div className="flex justify-center mt-6">
+      <div className="flex items-center justify-center gap-3 mt-6">
         <Button variant="ghost" onClick={onBack}>
           חזרה
+        </Button>
+        <Button size="lg" onClick={onNext} disabled={!selected}>
+          המשך
         </Button>
       </div>
     </div>

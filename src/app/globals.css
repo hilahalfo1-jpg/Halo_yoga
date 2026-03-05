@@ -25,6 +25,10 @@
     --color-info: #3B82F6;
   }
 
+  html, body {
+    overflow-x: hidden;
+  }
+
   html {
     font-family: 'Heebo', sans-serif;
     scroll-behavior: smooth;
@@ -86,5 +90,13 @@
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 }

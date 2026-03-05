@@ -48,7 +48,7 @@ export default function StepConfirmation({
       const result = await res.json();
 
       if (res.ok) {
-        toast.success("התור נקבע בהצלחה!");
+        toast.success("הבקשה נשלחה בהצלחה! ממתינה לאישור");
         onSuccess(result.data);
       } else {
         toast.error(result.error || "שגיאה בקביעת התור");
@@ -154,7 +154,10 @@ export default function StepConfirmation({
         </div>
       </Card>
 
-      <div className="flex gap-3 max-w-md mx-auto mt-6">
+      <div className="flex flex-col-reverse sm:flex-row gap-3 max-w-md mx-auto mt-6">
+        <Button variant="ghost" onClick={onBack} disabled={isLoading} fullWidth className="sm:w-auto">
+          חזרה
+        </Button>
         <Button
           onClick={handleConfirm}
           isLoading={isLoading}
@@ -162,9 +165,6 @@ export default function StepConfirmation({
           size="lg"
         >
           אישור הזמנה
-        </Button>
-        <Button variant="ghost" onClick={onBack} disabled={isLoading}>
-          חזרה
         </Button>
       </div>
     </div>
