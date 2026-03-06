@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
-import { MessageSquare, Phone, Mail, Trash2 } from "lucide-react";
+import { MessageSquare, Phone, Mail, Trash2, Search, Download } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
@@ -43,6 +43,7 @@ export default function LeadsPage() {
   const [leads, setLeads] = useState<LeadRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedLead, setSelectedLead] = useState<LeadRow | null>(null);
   const [adminNotes, setAdminNotes] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<LeadRow | null>(null);
@@ -100,6 +101,40 @@ export default function LeadsPage() {
     }
   };
 
+  const filteredLeads = useMemo(() => {
+    if (!searchQuery) return leads;
+    const q = searchQuery.toLowerCase();
+    return leads.filter(
+      (l) =>
+        l.name.toLowerCase().includes(q) ||
+        l.phone.includes(q) ||
+        (l.email && l.email.toLowerCase().includes(q)) ||
+        l.message.toLowerCase().includes(q)
+    );
+  }, [leads, searchQuery]);
+
+  const exportCSV = () => {
+    const headers = ["תאריך", "שם", "טלפון", "אימייל", "נושא", "הודעה", "סטטוס"];
+    const rows = filteredLeads.map((l) => [
+      formatDateTime(l.createdAt),
+      l.name,
+      l.phone,
+      l.email || "",
+      l.subject || "",
+      l.message,
+      LEAD_STATUS_LABELS[l.status] || l.status,
+    ]);
+    const bom = "\uFEFF";
+    const csv = bom + [headers, ...rows].map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `leads-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const deleteLead = async () => {
     if (!deleteTarget) return;
     try {
@@ -128,16 +163,34 @@ export default function LeadsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold text-text">ניהול פניות</h1>
-        <div className="w-48">
-          <Select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            options={STATUS_FILTER_OPTIONS}
-          />
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={exportCSV}>
+            <Download className="h-4 w-4 ml-1" />
+            CSV
+          </Button>
+          <div className="w-40">
+            <Select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              options={STATUS_FILTER_OPTIONS}
+            />
+          </div>
         </div>
       </div>
 
-      {leads.length === 0 ? (
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
+        <input
+          type="text"
+          placeholder="חיפוש לפי שם, טלפון, אימייל או הודעה..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pr-10 pl-3 py-2 text-sm rounded-lg border border-border bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+        />
+      </div>
+
+      {filteredLeads.length === 0 ? (
         <EmptyState
           icon={<MessageSquare className="h-12 w-12" />}
           title="אין פניות"
@@ -145,7 +198,7 @@ export default function LeadsPage() {
         />
       ) : (
         <div className="space-y-4">
-          {leads.map((lead) => (
+          {filteredLeads.map((lead) => (
             <Card key={lead.id} className="p-4">
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                 <div className="flex-1 space-y-2">

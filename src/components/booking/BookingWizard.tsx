@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { Check, Clock } from "lucide-react";
+import { Check, Clock, CalendarPlus } from "lucide-react";
+import Button from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import StepServiceSelect from "./StepServiceSelect";
 import StepDateSelect from "./StepDateSelect";
@@ -61,6 +62,19 @@ export default function BookingWizard({ services }: BookingWizardProps) {
       }
     }
   }, [searchParams, services, data.service]);
+
+  const generateCalendarUrl = () => {
+    if (!data.service || !data.date || !data.timeSlot) return "";
+    const [startH, startM] = data.timeSlot.startTime.split(":").map(Number);
+    const [endH, endM] = data.timeSlot.endTime.split(":").map(Number);
+    const start = new Date(data.date);
+    start.setHours(startH, startM, 0, 0);
+    const end = new Date(data.date);
+    end.setHours(endH, endM, 0, 0);
+    const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+    const title = encodeURIComponent(`${data.service.name} - HALO`);
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${fmt(start)}/${fmt(end)}`;
+  };
 
   const goNext = () => setCurrentStep((s) => Math.min(s + 1, STEPS.length - 1));
   const goBack = () => setCurrentStep((s) => Math.max(s - 1, 0));
@@ -223,6 +237,17 @@ export default function BookingWizard({ services }: BookingWizardProps) {
               </p>
             )}
           </div>
+          <a
+            href={generateCalendarUrl()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-6 inline-block"
+          >
+            <Button variant="outline" size="sm">
+              <CalendarPlus className="h-4 w-4 ml-2" />
+              הוסיפו ליומן Google
+            </Button>
+          </a>
         </div>
       )}
     </div>

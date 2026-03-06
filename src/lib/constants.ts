@@ -13,6 +13,8 @@ export const CONTACT_PHONE = "050-1234567";
 export const CONTACT_WHATSAPP = "972501234567";
 export const CONTACT_EMAIL = "info@healing.co.il";
 export const CONTACT_ADDRESS = "רחוב הרופא 15, תל אביב";
+export const SOCIAL_INSTAGRAM = "";
+export const SOCIAL_FACEBOOK = "";
 
 // ─── Navigation ──────────────────────────────────────
 export const NAV_LINKS: NavLink[] = [
