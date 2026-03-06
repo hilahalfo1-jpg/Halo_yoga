@@ -27,7 +27,7 @@ export default function ContactPage() {
 
         <Section>
           <div className="max-w-5xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
               {/* Form */}
               <div>
                 <h2 className="text-2xl font-bold text-text mb-6">
@@ -101,7 +101,7 @@ export default function ContactPage() {
                 </div>
 
                 {/* Working hours */}
-                <div className="bg-surface rounded-xl p-6">
+                <div className="bg-surface rounded-xl p-4 sm:p-6">
                   <div className="flex items-center gap-2 mb-4">
                     <Clock className="h-5 w-5 text-primary" />
                     <h3 className="font-semibold text-text">שעות פעילות</h3>

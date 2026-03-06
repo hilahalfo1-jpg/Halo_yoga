@@ -105,18 +105,18 @@ export default function AdminDashboard() {
       <h1 className="text-2xl font-bold text-text">לוח בקרה</h1>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {statCards.map((stat) => {
           const Icon = stat.icon;
           const content = (
-            <Card key={stat.label} className="flex items-center gap-4">
+            <Card key={stat.label} className="flex items-center gap-3 sm:gap-4">
               <div
-                className={`w-12 h-12 rounded-xl ${stat.bg} flex items-center justify-center flex-shrink-0`}
+                className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${stat.bg} flex items-center justify-center flex-shrink-0`}
               >
-                <Icon className={`h-6 w-6 ${stat.color}`} />
+                <Icon className={`h-5 w-5 sm:h-6 sm:w-6 ${stat.color}`} />
               </div>
               <div>
-                <p className="text-2xl font-bold text-text">{stat.value}</p>
+                <p className="text-xl sm:text-2xl font-bold text-text">{stat.value}</p>
                 <p className="text-sm text-text-muted">{stat.label}</p>
               </div>
             </Card>

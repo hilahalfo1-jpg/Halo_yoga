@@ -17,7 +17,7 @@ export default function Section({ children, className, id, bg = "default" }: Sec
   return (
     <section
       id={id}
-      className={cn("py-16 md:py-24", bgStyles[bg], className)}
+      className={cn("py-10 md:py-16 lg:py-24", bgStyles[bg], className)}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {children}

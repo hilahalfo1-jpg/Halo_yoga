@@ -109,7 +109,7 @@ export default function Modal({
       >
         {/* Header */}
         {title && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border">
             <h2 className="text-xl font-semibold text-text">{title}</h2>
             <button
               onClick={onClose}
@@ -122,7 +122,7 @@ export default function Modal({
         )}
 
         {/* Body */}
-        <div className={cn("px-6 py-4", !title && "pt-6")}>
+        <div className={cn("px-4 sm:px-6 py-3 sm:py-4", !title && "pt-6")}>
           {!title && (
             <button
               onClick={onClose}

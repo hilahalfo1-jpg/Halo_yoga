@@ -46,7 +46,7 @@ export default function HowItWorks() {
             className="text-center relative"
           >
             {/* Step number circle */}
-            <div className="relative inline-flex items-center justify-center w-20 h-20 rounded-full bg-white shadow-sm border border-border mb-6">
+            <div className="relative inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white shadow-sm border border-border mb-6">
               <div className="text-primary">{step.icon}</div>
               <span className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-primary text-white text-sm font-bold flex items-center justify-center">
                 {index + 1}

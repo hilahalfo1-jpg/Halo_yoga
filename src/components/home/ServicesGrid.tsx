@@ -55,7 +55,7 @@ export default function ServicesGrid({ services, hideTitle }: ServicesGridProps)
           <button
             key={cat.value}
             onClick={() => setActiveCategory(cat.value)}
-            className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+            className={`px-3 sm:px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
               activeCategory === cat.value
                 ? "bg-primary text-white shadow-sm"
                 : "bg-surface text-text-secondary hover:bg-surface-alt"
@@ -67,7 +67,7 @@ export default function ServicesGrid({ services, hideTitle }: ServicesGridProps)
       </div>
 
       {/* Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {filtered.map((service, index) => (
           <motion.div
             key={service.id}

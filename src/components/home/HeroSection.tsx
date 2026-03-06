@@ -128,7 +128,7 @@ export default function HeroSection() {
 
       {/* Carousel Dots */}
       {heroImages.length > 1 && (
-        <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2">
+        <div className="absolute bottom-16 sm:bottom-20 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2">
           {heroImages.map((_, index) => (
             <button
               key={index}

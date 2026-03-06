@@ -25,9 +25,9 @@ export default function AboutPage() {
       <Header />
       <main>
         {/* Hero */}
-        <div className="relative h-[40vh] min-h-[300px] bg-gradient-to-br from-[#566668] via-[#637577] to-[#454f50] flex items-end">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 pt-24 w-full">
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
+        <div className="relative h-[40vh] min-h-[260px] sm:min-h-[300px] bg-gradient-to-br from-[#566668] via-[#637577] to-[#454f50] flex items-end">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12 pt-20 sm:pt-24 w-full">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3">
               אודות
             </h1>
             <p className="text-white/70 text-base md:text-lg">
@@ -39,7 +39,7 @@ export default function AboutPage() {
         {/* Bio */}
         <Section>
           <div className="max-w-4xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12 items-start">
               {/* Profile Image */}
               <div className="lg:col-span-2">
                 <AboutImage />

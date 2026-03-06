@@ -42,7 +42,7 @@ export default function AboutPreview() {
 
   return (
     <Section>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
         {/* Image */}
         <motion.div
           initial={{ opacity: 0, x: 20 }}
@@ -97,7 +97,7 @@ export default function AboutPreview() {
           </div>
 
           {/* Credentials */}
-          <div className="flex flex-wrap gap-3 mb-8">
+          <div className="flex flex-wrap gap-2 sm:gap-3 mb-8">
             {credentials.map((cred, index) => (
               <div
                 key={index}

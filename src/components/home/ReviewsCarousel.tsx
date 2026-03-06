@@ -37,7 +37,7 @@ export default function ReviewsCarousel({ reviews }: ReviewsCarouselProps) {
       </div>
 
       {/* Horizontal scroll */}
-      <div className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
+      <div className="flex gap-4 md:gap-6 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
         {reviews.map((review, index) => (
           <motion.div
             key={review.id}
