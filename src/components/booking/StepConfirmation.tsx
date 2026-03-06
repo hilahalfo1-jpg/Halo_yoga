@@ -154,7 +154,12 @@ export default function StepConfirmation({
         </div>
       </Card>
 
-      <div className="flex flex-col-reverse sm:flex-row gap-3 max-w-md mx-auto mt-6">
+      {/* Cancellation policy */}
+      <p className="text-xs text-text-muted text-center max-w-md mx-auto mt-4">
+        ניתן לבטל תור עד 24 שעות לפני המועד ללא חיוב. ביטול מאוחר יותר עלול להיות כרוך בתשלום מלא.
+      </p>
+
+      <div className="flex flex-col-reverse sm:flex-row gap-3 max-w-md mx-auto mt-4">
         <Button variant="ghost" onClick={onBack} disabled={isLoading} fullWidth className="sm:w-auto">
           חזרה
         </Button>

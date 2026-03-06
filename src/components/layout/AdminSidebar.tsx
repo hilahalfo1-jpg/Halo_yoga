@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
@@ -40,6 +41,14 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
   const pathname = usePathname();
   const { images } = useSiteImages();
   const logoSrc = images.logo?.imagePath || LOGO_PATH;
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    fetch("/api/admin/bookings?status=PENDING")
+      .then((r) => r.json())
+      .then((r) => setPendingCount(r.data?.length || 0))
+      .catch(() => {});
+  }, [pathname]);
 
   const isActive = (href: string) => {
     if (href === "/admin") return pathname === "/admin";
@@ -102,6 +111,11 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
               >
                 <Icon className="h-5 w-5" strokeWidth={1.5} />
                 {item.label}
+                {item.href === "/admin/bookings" && pendingCount > 0 && (
+                  <span className="mr-auto bg-warning text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                    {pendingCount}
+                  </span>
+                )}
               </Link>
             );
           })}

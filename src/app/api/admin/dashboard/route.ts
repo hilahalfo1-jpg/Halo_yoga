@@ -17,7 +17,7 @@ export async function GET() {
     weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // Start of week (Sunday)
     const weekEnd = new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-    const [todayBookings, weekBookings, newLeads, pendingReviews, todayBookingsList, recentLeads] =
+    const [todayBookings, weekBookings, newLeads, pendingReviews, pendingBookings, todayBookingsList, recentLeads] =
       await Promise.all([
         prisma.booking.count({
           where: {
@@ -33,6 +33,7 @@ export async function GET() {
         }),
         prisma.lead.count({ where: { status: "NEW" } }),
         prisma.review.count({ where: { isApproved: false } }),
+        prisma.booking.count({ where: { status: "PENDING" } }),
         prisma.booking.findMany({
           where: {
             startAt: { gte: todayStart, lt: todayEnd },
@@ -47,9 +48,18 @@ export async function GET() {
         }),
       ]);
 
+    // Auto-mark past CONFIRMED bookings as COMPLETED
+    await prisma.booking.updateMany({
+      where: {
+        status: "CONFIRMED",
+        endAt: { lt: now },
+      },
+      data: { status: "COMPLETED" },
+    });
+
     return NextResponse.json({
       data: {
-        stats: { todayBookings, weekBookings, newLeads, pendingReviews },
+        stats: { todayBookings, weekBookings, newLeads, pendingReviews, pendingBookings },
         todayBookingsList,
         recentLeads,
       },

@@ -9,6 +9,7 @@ import {
   Star,
   Clock,
   ArrowLeft,
+  AlertCircle,
 } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
@@ -27,6 +28,7 @@ interface DashboardData {
     weekBookings: number;
     newLeads: number;
     pendingReviews: number;
+    pendingBookings: number;
   };
   todayBookingsList: Array<{
     id: string;
@@ -103,6 +105,19 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-8">
       <h1 className="text-2xl font-bold text-text">לוח בקרה</h1>
+
+      {/* Pending bookings alert */}
+      {data.stats.pendingBookings > 0 && (
+        <Link href="/admin/bookings?status=PENDING">
+          <div className="flex items-center gap-3 p-4 rounded-xl bg-warning/10 border border-warning/20 hover:bg-warning/15 transition-colors">
+            <AlertCircle className="h-5 w-5 text-warning flex-shrink-0" />
+            <p className="text-sm font-medium text-text">
+              יש {data.stats.pendingBookings} הזמנות שממתינות לאישור
+            </p>
+            <ArrowLeft className="h-4 w-4 text-warning mr-auto" />
+          </div>
+        </Link>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
