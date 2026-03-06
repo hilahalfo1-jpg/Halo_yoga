@@ -123,6 +123,20 @@ export default function ContactPage() {
                 </div>
               </div>
             </div>
+
+            {/* Map */}
+            <div className="mt-8 lg:mt-12 rounded-xl overflow-hidden border border-border">
+              <iframe
+                src={`https://maps.google.com/maps?q=${encodeURIComponent(CONTACT_ADDRESS)}&output=embed&hl=he`}
+                width="100%"
+                height="300"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="מיקום על המפה"
+              />
+            </div>
           </div>
         </Section>
       </main>

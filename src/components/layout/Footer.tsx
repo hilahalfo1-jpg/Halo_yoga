@@ -121,10 +121,24 @@ export default function Footer() {
         </div>
 
         {/* Bottom */}
-        <div className="mt-10 pt-8 border-t border-white/10 text-center">
+        <div className="mt-10 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-white/40">
             &copy; {currentYear} {SITE_NAME}. כל הזכויות שמורות.
           </p>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/privacy"
+              className="text-sm text-white/40 hover:text-white/70 transition-colors"
+            >
+              מדיניות פרטיות
+            </Link>
+            <Link
+              href="/accessibility"
+              className="text-sm text-white/40 hover:text-white/70 transition-colors"
+            >
+              הצהרת נגישות
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

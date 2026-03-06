@@ -14,6 +14,7 @@ export default function AdminLayout({
 
   return (
     <SessionProvider>
+      <meta name="robots" content="noindex, nofollow" />
       <div className="min-h-screen bg-surface flex">
         <AdminSidebar
           isOpen={sidebarOpen}
