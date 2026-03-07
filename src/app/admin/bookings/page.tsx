@@ -261,8 +261,13 @@ export default function BookingsPage() {
                     {formatTime(booking.startAt)}
                   </td>
                   <td className="p-3 text-text">{booking.service.name}</td>
-                  <td className="p-3 text-text font-medium">
-                    {booking.customerName}
+                  <td className="p-3">
+                    <p className="text-text font-medium">{booking.customerName}</p>
+                    {booking.notes && (
+                      <p className="text-xs text-text-muted mt-0.5 truncate max-w-[200px]" title={booking.notes}>
+                        {booking.notes}
+                      </p>
+                    )}
                   </td>
                   <td className="p-3">
                     <a
