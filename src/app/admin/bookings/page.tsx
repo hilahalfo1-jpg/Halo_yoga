@@ -235,115 +235,189 @@ export default function BookingsPage() {
           description="כשלקוחות יקבעו תורים, הם יופיעו כאן"
         />
       ) : (
-        <Card className="overflow-x-auto p-0">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border bg-surface/50">
-                <th className="text-right p-3 font-medium text-text-muted">תאריך</th>
-                <th className="text-right p-3 font-medium text-text-muted">שעה</th>
-                <th className="text-right p-3 font-medium text-text-muted">שירות</th>
-                <th className="text-right p-3 font-medium text-text-muted">לקוח</th>
-                <th className="text-right p-3 font-medium text-text-muted">טלפון</th>
-                <th className="text-right p-3 font-medium text-text-muted">סטטוס</th>
-                <th className="text-right p-3 font-medium text-text-muted">פעולות</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredBookings.map((booking) => (
-                <tr
-                  key={booking.id}
-                  className="border-b border-border last:border-0 hover:bg-surface/30"
+        <>
+          {/* Mobile: Card Layout */}
+          <div className="space-y-3 lg:hidden">
+            {filteredBookings.map((booking) => (
+              <Card key={booking.id} className="p-4 space-y-3">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="font-semibold text-text">{booking.customerName}</p>
+                    <p className="text-sm text-text-muted">{booking.service.name}</p>
+                  </div>
+                  <Badge className={BOOKING_STATUS_COLORS[booking.status]}>
+                    {BOOKING_STATUS_LABELS[booking.status]}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-4 text-sm text-text-muted">
+                  <span dir="ltr">{formatDateShort(booking.startAt)}</span>
+                  <span dir="ltr">{formatTime(booking.startAt)}</span>
+                </div>
+                <a
+                  href={`tel:${booking.customerPhone}`}
+                  className="text-sm text-secondary hover:underline flex items-center gap-1"
+                  dir="ltr"
                 >
-                  <td className="p-3 text-text" dir="ltr">
-                    {formatDateShort(booking.startAt)}
-                  </td>
-                  <td className="p-3 text-text" dir="ltr">
-                    {formatTime(booking.startAt)}
-                  </td>
-                  <td className="p-3 text-text">{booking.service.name}</td>
-                  <td className="p-3">
-                    <p className="text-text font-medium">{booking.customerName}</p>
-                    {booking.notes && (
-                      <p className="text-xs text-text-muted mt-0.5 truncate max-w-[200px]" title={booking.notes}>
-                        {booking.notes}
-                      </p>
-                    )}
-                  </td>
-                  <td className="p-3">
-                    <a
-                      href={`tel:${booking.customerPhone}`}
-                      className="text-secondary hover:underline flex items-center gap-1"
-                      dir="ltr"
+                  <Phone className="h-3 w-3" />
+                  {formatPhone(booking.customerPhone)}
+                </a>
+                {booking.notes && (
+                  <p className="text-xs text-text-muted bg-surface rounded-lg p-2">
+                    {booking.notes}
+                  </p>
+                )}
+                <div className="flex items-center gap-2 pt-2 border-t border-border">
+                  {booking.status === "PENDING" ? (
+                    <>
+                      <button
+                        onClick={() => updateStatus(booking.id, "CONFIRMED")}
+                        className="flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-success/10 text-success hover:bg-success/20 text-sm font-medium transition-colors"
+                      >
+                        <CheckCircle className="h-4 w-4" />
+                        אישור
+                      </button>
+                      <button
+                        onClick={() => updateStatus(booking.id, "CANCELLED")}
+                        className="flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-error/10 text-error hover:bg-error/20 text-sm font-medium transition-colors"
+                      >
+                        <XCircle className="h-4 w-4" />
+                        דחייה
+                      </button>
+                    </>
+                  ) : (
+                    <select
+                      value={booking.status}
+                      onChange={(e) => updateStatus(booking.id, e.target.value)}
+                      className="text-sm px-3 py-2 rounded-lg border border-border bg-white flex-1"
                     >
-                      <Phone className="h-3 w-3" />
-                      {formatPhone(booking.customerPhone)}
-                    </a>
-                  </td>
-                  <td className="p-3">
-                    <Badge className={BOOKING_STATUS_COLORS[booking.status]}>
-                      {BOOKING_STATUS_LABELS[booking.status]}
-                    </Badge>
-                  </td>
-                  <td className="p-3">
-                    <div className="flex items-center gap-2">
-                      {booking.status === "PENDING" ? (
-                        <>
-                          <button
-                            onClick={() => updateStatus(booking.id, "CONFIRMED")}
-                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-success/10 text-success hover:bg-success/20 text-xs font-medium transition-colors"
-                            title="אישור"
-                          >
-                            <CheckCircle className="h-3.5 w-3.5" />
-                            אישור
-                          </button>
-                          <button
-                            onClick={() => updateStatus(booking.id, "CANCELLED")}
-                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-error/10 text-error hover:bg-error/20 text-xs font-medium transition-colors"
-                            title="דחייה"
-                          >
-                            <XCircle className="h-3.5 w-3.5" />
-                            דחייה
-                          </button>
-                        </>
-                      ) : (
-                        <select
-                          value={booking.status}
-                          onChange={(e) =>
-                            updateStatus(booking.id, e.target.value)
-                          }
-                          className="text-xs px-2 py-1 rounded border border-border bg-white"
-                        >
-                          {STATUS_CHANGE_OPTIONS.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </option>
-                          ))}
-                        </select>
-                      )}
-                      <button
-                        onClick={() => {
-                          setSelectedBooking(booking);
-                          setAdminNotes(booking.adminNotes || "");
-                        }}
-                        className="p-1 rounded text-text-muted hover:text-text hover:bg-surface"
-                        title="הערות אדמין"
-                      >
-                        <FileText className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => deleteBooking(booking.id)}
-                        className="p-1 rounded text-text-muted hover:text-error hover:bg-error/10"
-                        title="מחיקה"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
+                      {STATUS_CHANGE_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                  )}
+                  <button
+                    onClick={() => {
+                      setSelectedBooking(booking);
+                      setAdminNotes(booking.adminNotes || "");
+                    }}
+                    className="p-2 rounded-lg text-text-muted hover:text-text hover:bg-surface"
+                  >
+                    <FileText className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={() => deleteBooking(booking.id)}
+                    className="p-2 rounded-lg text-text-muted hover:text-error hover:bg-error/10"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          {/* Desktop: Table Layout */}
+          <Card className="overflow-x-auto p-0 hidden lg:block">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-surface/50">
+                  <th className="text-right p-3 font-medium text-text-muted">תאריך</th>
+                  <th className="text-right p-3 font-medium text-text-muted">שעה</th>
+                  <th className="text-right p-3 font-medium text-text-muted">שירות</th>
+                  <th className="text-right p-3 font-medium text-text-muted">לקוח</th>
+                  <th className="text-right p-3 font-medium text-text-muted">טלפון</th>
+                  <th className="text-right p-3 font-medium text-text-muted">סטטוס</th>
+                  <th className="text-right p-3 font-medium text-text-muted">פעולות</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </Card>
+              </thead>
+              <tbody>
+                {filteredBookings.map((booking) => (
+                  <tr
+                    key={booking.id}
+                    className="border-b border-border last:border-0 hover:bg-surface/30"
+                  >
+                    <td className="p-3 text-text" dir="ltr">
+                      {formatDateShort(booking.startAt)}
+                    </td>
+                    <td className="p-3 text-text" dir="ltr">
+                      {formatTime(booking.startAt)}
+                    </td>
+                    <td className="p-3 text-text">{booking.service.name}</td>
+                    <td className="p-3">
+                      <p className="text-text font-medium">{booking.customerName}</p>
+                      {booking.notes && (
+                        <p className="text-xs text-text-muted mt-0.5 truncate max-w-[200px]" title={booking.notes}>
+                          {booking.notes}
+                        </p>
+                      )}
+                    </td>
+                    <td className="p-3">
+                      <a
+                        href={`tel:${booking.customerPhone}`}
+                        className="text-secondary hover:underline flex items-center gap-1"
+                        dir="ltr"
+                      >
+                        <Phone className="h-3 w-3" />
+                        {formatPhone(booking.customerPhone)}
+                      </a>
+                    </td>
+                    <td className="p-3">
+                      <Badge className={BOOKING_STATUS_COLORS[booking.status]}>
+                        {BOOKING_STATUS_LABELS[booking.status]}
+                      </Badge>
+                    </td>
+                    <td className="p-3">
+                      <div className="flex items-center gap-2">
+                        {booking.status === "PENDING" ? (
+                          <>
+                            <button
+                              onClick={() => updateStatus(booking.id, "CONFIRMED")}
+                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-success/10 text-success hover:bg-success/20 text-xs font-medium transition-colors"
+                            >
+                              <CheckCircle className="h-3.5 w-3.5" />
+                              אישור
+                            </button>
+                            <button
+                              onClick={() => updateStatus(booking.id, "CANCELLED")}
+                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-error/10 text-error hover:bg-error/20 text-xs font-medium transition-colors"
+                            >
+                              <XCircle className="h-3.5 w-3.5" />
+                              דחייה
+                            </button>
+                          </>
+                        ) : (
+                          <select
+                            value={booking.status}
+                            onChange={(e) => updateStatus(booking.id, e.target.value)}
+                            className="text-xs px-2 py-1 rounded border border-border bg-white"
+                          >
+                            {STATUS_CHANGE_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                          </select>
+                        )}
+                        <button
+                          onClick={() => {
+                            setSelectedBooking(booking);
+                            setAdminNotes(booking.adminNotes || "");
+                          }}
+                          className="p-1 rounded text-text-muted hover:text-text hover:bg-surface"
+                        >
+                          <FileText className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => deleteBooking(booking.id)}
+                          className="p-1 rounded text-text-muted hover:text-error hover:bg-error/10"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Card>
+        </>
       )}
 
       {/* Admin Notes Modal */}
