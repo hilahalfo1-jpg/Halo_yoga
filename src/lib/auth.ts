@@ -1,45 +1,13 @@
 import type { NextAuthOptions } from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
-import bcrypt from "bcryptjs";
-import { prisma } from "./prisma";
+import GoogleProvider from "next-auth/providers/google";
+
+const ALLOWED_EMAIL = "hilahalfo1@gmail.com";
 
 export const authOptions: NextAuthOptions = {
   providers: [
-    CredentialsProvider({
-      name: "credentials",
-      credentials: {
-        email: { label: "אימייל", type: "email" },
-        password: { label: "סיסמה", type: "password" },
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error("אנא הזינו אימייל וסיסמה");
-        }
-
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-        });
-
-        if (!user) {
-          throw new Error("אימייל או סיסמה שגויים");
-        }
-
-        const isValid = await bcrypt.compare(
-          credentials.password,
-          user.hashedPassword
-        );
-
-        if (!isValid) {
-          throw new Error("אימייל או סיסמה שגויים");
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-        };
-      },
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
   session: {
@@ -47,9 +15,15 @@ export const authOptions: NextAuthOptions = {
     maxAge: 24 * 60 * 60, // 24 hours
   },
   callbacks: {
+    async signIn({ account, profile }) {
+      if (account?.provider === "google") {
+        return profile?.email === ALLOWED_EMAIL;
+      }
+      return false;
+    },
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role;
+        token.role = "ADMIN";
         token.id = user.id;
       }
       return token;
@@ -64,6 +38,7 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: "/admin/login",
+    error: "/admin/login",
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
