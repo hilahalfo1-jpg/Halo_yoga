@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -11,6 +11,8 @@ import {
   ToggleLeft,
   ToggleRight,
   Layers,
+  Upload,
+  X,
 } from "lucide-react";
 import type { ServiceItem } from "@/types";
 import { serviceSchema, type ServiceFormData } from "@/lib/validations";
@@ -40,6 +42,9 @@ export default function AdminServicesPage() {
   const [deleteTarget, setDeleteTarget] = useState<ServiceItem | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isToggling, setIsToggling] = useState<string | null>(null);
 
   const {
@@ -99,12 +104,14 @@ export default function AdminServicesPage() {
       sortOrder: 0,
       homeVisitSurcharge: null,
     });
+    setImagePreview(null);
     setIsModalOpen(true);
   };
 
   // ─── Open Edit Modal ─────────────────────────────────
   const openEditModal = (service: ServiceItem) => {
     setEditingService(service);
+    setImagePreview(service.image || null);
     reset({
       name: service.name,
       slug: service.slug,
@@ -122,10 +129,37 @@ export default function AdminServicesPage() {
     setIsModalOpen(true);
   };
 
+  // ─── Upload Image ───────────────────────────────────
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/admin/upload", { method: "POST", body: formData });
+      const json = await res.json();
+      if (!res.ok) {
+        toast.error(json.error || "שגיאה בהעלאת התמונה");
+        return;
+      }
+      setImagePreview(json.path);
+      // Update form value
+      const event = { target: { name: "image", value: json.path } };
+      register("image").onChange(event as never);
+    } catch {
+      toast.error("שגיאה בהעלאת התמונה");
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   // ─── Close Modal ─────────────────────────────────────
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingService(null);
+    setImagePreview(null);
     reset();
   };
 
@@ -419,14 +453,46 @@ export default function AdminServicesPage() {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Input
-              label="קישור לתמונה (URL)"
-              type="url"
-              placeholder="https://example.com/image.jpg"
-              error={errors.image?.message}
-              {...register("image")}
+          {/* Image Upload */}
+          <div>
+            <label className="block text-sm font-medium text-text mb-1">תמונת שירות</label>
+            <input type="hidden" {...register("image")} />
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleImageUpload}
+              className="hidden"
             />
+            {imagePreview ? (
+              <div className="relative w-full h-40 rounded-lg overflow-hidden border border-border">
+                <img src={imagePreview} alt="תצוגה מקדימה" className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setImagePreview(null);
+                    const event = { target: { name: "image", value: "" } };
+                    register("image").onChange(event as never);
+                  }}
+                  className="absolute top-2 left-2 p-1 bg-white/80 rounded-full hover:bg-white"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                className="w-full h-40 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center gap-2 text-text-muted hover:text-primary transition-colors disabled:opacity-50"
+              >
+                <Upload className="h-8 w-8" />
+                <span className="text-sm">{isUploading ? "מעלה..." : "העלאת תמונה"}</span>
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
               label="סדר מיון"
               type="number"
