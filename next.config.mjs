@@ -5,13 +5,13 @@ const nextConfig = {
       bodySizeLimit: "25mb",
     },
   },
-  async rewrites() {
-    return [
+  images: {
+    remotePatterns: [
       {
-        source: "/uploads/:path*",
-        destination: "/api/uploads/:path*",
+        protocol: "https",
+        hostname: "*.public.blob.vercel-storage.com",
       },
-    ];
+    ],
   },
 };
 
