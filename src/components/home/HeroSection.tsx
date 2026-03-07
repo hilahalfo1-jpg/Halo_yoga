@@ -104,7 +104,7 @@ export default function HeroSection() {
           transition={{ duration: 0.6, delay: 0.3 }}
           className="text-lg md:text-xl text-white/80 mb-10 max-w-2xl mx-auto leading-relaxed"
         >
-          {t("hero", "subtitle", "טיפולי עיסוי רפואי מקצועיים ושיעורי יוגה מותאמים אישית. גישה הוליסטית המשלבת מגע מרפא, תנועה ונשימה לאיזון גוף ונפש.")}
+          {t("hero", "subtitle", "עיסוי תאילנדי מקצועי ושיעורי יוגה מותאמים אישית. גישה הוליסטית המשלבת מגע מרפא, תנועה ונשימה נכונה לאיזון גוף ונפש.")}
         </motion.p>
 
         <motion.div

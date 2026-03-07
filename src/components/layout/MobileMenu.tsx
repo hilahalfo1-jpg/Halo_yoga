@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -22,8 +22,12 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
   const logoSrc = images.logo?.imagePath || LOGO_PATH;
 
   // Close on route change
+  const pathnameRef = useRef(pathname);
   useEffect(() => {
-    onClose();
+    if (pathnameRef.current !== pathname) {
+      pathnameRef.current = pathname;
+      onClose();
+    }
   }, [pathname, onClose]);
 
   // Lock body scroll

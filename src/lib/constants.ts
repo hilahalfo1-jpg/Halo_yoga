@@ -6,13 +6,13 @@ export const SITE_NAME_HE = "הילה";
 export const SITE_TAGLINE = "Yoga & Massage";
 export const SITE_TAGLINE_HE = "יוגה ועיסוי";
 export const THERAPIST_NAME = "הילה";
-export const THERAPIST_TITLE = "מעסה רפואי מוסמך ומורה ליוגה";
+export const THERAPIST_TITLE = "מעסה תאילנדי מוסמכת, מדריכת יוגה ופילאטיס";
 export const LOGO_PATH = "/images/logo.png";
 
-export const CONTACT_PHONE = "050-1234567";
-export const CONTACT_WHATSAPP = "972501234567";
+export const CONTACT_PHONE = "054-3135182";
+export const CONTACT_WHATSAPP = "972543135182";
 export const CONTACT_EMAIL = "info@healing.co.il";
-export const CONTACT_ADDRESS = "רחוב הרופא 15, תל אביב";
+export const CONTACT_ADDRESS = "שכונת משולש, זבוטינסקי, ראשון לציון";
 export const SOCIAL_INSTAGRAM = "";
 export const SOCIAL_FACEBOOK = "";
 
@@ -40,14 +40,14 @@ export const ADMIN_NAV_LINKS: NavLink[] = [
 export const CATEGORY_LABELS: Record<string, string> = {
   MASSAGE: "עיסויים",
   YOGA: "יוגה",
-  REHABILITATION: "שיקום",
+  PILATES: "פילאטיס",
 };
 
 export const CATEGORY_OPTIONS = [
   { value: "ALL", label: "הכל" },
   { value: "MASSAGE", label: "עיסויים" },
   { value: "YOGA", label: "יוגה" },
-  { value: "REHABILITATION", label: "שיקום" },
+  { value: "PILATES", label: "פילאטיס" },
 ];
 
 // ─── Booking Status ──────────────────────────────────
@@ -85,7 +85,7 @@ export const CONTACT_SUBJECTS = [
   { value: "general", label: "שאלה כללית" },
   { value: "massage", label: "עיסויים" },
   { value: "yoga", label: "יוגה" },
-  { value: "rehab", label: "שיקום" },
+  { value: "pilates", label: "פילאטיס" },
   { value: "other", label: "אחר" },
 ];
 
@@ -106,40 +106,39 @@ export const SLOT_BUFFER_MINUTES = 15;
 // ─── FAQ ─────────────────────────────────────────────
 export const FAQ_ITEMS = [
   {
-    question: "כמה זמן נמשך עיסוי?",
+    question: "מה מדיניות הביטולים?",
     answer:
-      "משך הטיפול משתנה בהתאם לסוג העיסוי — בין 45 דקות לרפלקסולוגיה ועד 75 דקות לעיסוי רקמות עמוקות. בעת קביעת התור תוכלו לראות את משך הטיפול המדויק לכל שירות.",
-  },
-  {
-    question: "האם צריך הפניית רופא?",
-    answer:
-      "לא, אין צורך בהפניית רופא לעיסוי רפואי או שיעורי יוגה. עם זאת, אם יש לכם בעיה רפואית ספציפית, מומלץ להתייעץ עם הרופא המטפל לפני תחילת הטיפולים.",
-  },
-  {
-    question: "איך מבטלים תור?",
-    answer:
-      "ניתן לבטל תור דרך הקישור שנשלח אליכם בהודעת האישור, או ליצור קשר טלפוני. אנא בטלו לפחות 24 שעות מראש כדי לאפשר לאחרים לקבוע תור.",
+      "ביטול תור של פחות מ-24 שעות יהיה כרוך בתשלום מלא.",
   },
   {
     question: "האם אפשר לשלם בכרטיס אשראי?",
     answer:
-      "כן, אנחנו מקבלים תשלום במזומן, בכרטיס אשראי, בביט ובהעברה בנקאית. התשלום מתבצע בסיום הטיפול.",
+      "כרגע אי אפשר לשלם בכרטיס אשראי. ניתן לשלם במזומן, העברה בנקאית, או אפליקציית תשלום (ביט או פייבוקס).",
   },
   {
-    question: "מה ללבוש לשיעור יוגה?",
+    question: "האם השירותים מתאימים לנשים בהריון?",
     answer:
-      "מומלץ ללבוש בגדים נוחים ואלסטיים שמאפשרים טווח תנועה מלא. אין צורך בנעליים — מתרגלים יחפים או עם גרביים. מזרן יוגה מסופק, אך מוזמנים להביא משלכם.",
+      "כל השירותים מותאמים לנשים בהריון למעט פוט מאסז'. מומלץ לציין זאת בעת קביעת התור.",
   },
   {
-    question: "האם מתאים לנשים בהריון?",
+    question: "האם צריך הפניית רופא?",
     answer:
-      "חלק מהטיפולים מותאמים לנשים בהריון, כמו עיסוי שוודי בהתאמה מיוחדת ויוגה להריון. חשוב לציין זאת בעת קביעת התור כדי שנוכל להתאים את הטיפול. מומלץ להתייעץ עם רופא/ת הנשים.",
+      "לא, אין צורך בהפניית רופא. עם זאת, לעיסוי רפואי (אקוספורה תאילנדית) יש ליצור קשר לבדיקת התאמה.",
+  },
+  {
+    question: "האם יש אפשרות לטיפול בבית?",
+    answer:
+      "כן, חלק מהשירותים כוללים אפשרות להגעה לבית הלקוח, כולל ציוד מלא. פרטים נוספים בעמוד השירותים.",
   },
 ];
 
 // ─── Working Hours Display ──────────────────────────
 export const WORKING_HOURS = [
-  { day: "ראשון - חמישי", hours: "09:00 - 18:00" },
-  { day: "שישי", hours: "סגור" },
-  { day: "שבת", hours: "סגור" },
+  { day: "ראשון", hours: "11:00 - 20:00" },
+  { day: "שני", hours: "07:00 - 20:00" },
+  { day: "שלישי", hours: "סגור" },
+  { day: "רביעי", hours: "07:00 - 20:00" },
+  { day: "חמישי", hours: "07:00 - 20:00" },
+  { day: "שישי", hours: "09:00 - 17:00" },
+  { day: "שבת", hours: "11:00 - 18:30" },
 ];

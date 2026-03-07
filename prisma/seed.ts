@@ -14,7 +14,7 @@ async function main() {
     create: {
       email: "admin@healing.co.il",
       hashedPassword,
-      name: "ישראל כהן",
+      name: "הילה",
       role: "ADMIN",
     },
   });
@@ -23,81 +23,84 @@ async function main() {
   // ─── Services ───────────────────────────
   const services = [
     {
-      slug: "swedish-massage",
-      name: "עיסוי שוודי רפואי",
+      slug: "deep-tissue",
+      name: "עיסוי רקמות עמוק",
       category: "MASSAGE",
-      duration: 60,
+      duration: 70,
       price: 350,
-      shortDesc: "עיסוי קלאסי להרפיית שרירים ושיפור זרימת הדם",
-      description:
-        "עיסוי שוודי רפואי הוא טכניקת העיסוי הנפוצה והמוכרת ביותר בעולם. הטיפול משלב תנועות ארוכות וזורמות עם לחיצות עדינות עד בינוניות, המסייעות להרפיית השרירים, שיפור זרימת הדם והלימפה, והפחתת מתח ולחץ. מתאים במיוחד למי שמחפש חוויית הרפיה עמוקה ושיפור כללי בתחושת הגוף.",
+      shortDesc: "טיפול בשמן חם ממוקד בשכבות העמוקות של השריר",
+      description: "עיסוי רקמות עמוק בשמן חם, טיפול ממוקד בשכבות העמוקות של השריר. מסייע בשחרור מתחים כרוניים, הידבקויות ומגבלות תנועה.",
       sortOrder: 1,
     },
     {
-      slug: "deep-tissue",
-      name: "עיסוי רקמות עמוקות",
+      slug: "thai-massage",
+      name: "עיסוי תאילנדי",
       category: "MASSAGE",
-      duration: 75,
-      price: 400,
-      shortDesc: "טיפול ממוקד בשכבות העמוקות של השריר",
-      description:
-        "עיסוי רקמות עמוקות מתמקד בשכבות הפנימיות של רקמת השריר, הגידים והפאסיה. באמצעות לחץ ממוקד ותנועות איטיות, הטיפול מסייע בשחרור הידבקויות ומתחים כרוניים. מומלץ במיוחד לסובלים מכאבים כרוניים, מגבלות תנועה, או לאחר פציעות ספורט.",
+      duration: 70,
+      price: 300,
+      shortDesc: "עיסוי תאילנדי מסורתי – הרגעת שרירים, תנועה למפרקים ומתיחות",
+      description: "עיסוי תאילנדי מסורתי המתמקד בהרגעת השרירים, הכנסת תנועה למפרקים ומתיחות מאריכות גוף.",
       sortOrder: 2,
     },
     {
-      slug: "sports-massage",
-      name: "עיסוי ספורטאים",
+      slug: "medical-massage",
+      name: "עיסוי רפואי – אקוספורה תאילנדית",
       category: "MASSAGE",
       duration: 60,
-      price: 380,
-      shortDesc: "שיקום ומניעת פציעות ספורט",
-      description:
-        "עיסוי ספורטאים מותאם במיוחד לצרכים של אנשים פעילים גופנית. הטיפול משלב טכניקות מתקדמות לשיפור גמישות, מניעת פציעות, וזירוז תהליכי התאוששות. מתאים לספורטאים מקצועיים וחובבים כאחד, לפני או אחרי אימון, ולמניעה וטיפול בפציעות ספורט.",
+      price: 300,
+      shortDesc: "שיטה מבוססת נקודות לחיצה לבעיות ספציפיות בגוף",
+      description: "אקוספורה תאילנדית – שיטה מבוססת נקודות לחיצה לבעיות ספציפיות בגוף. מבוצעת בבתי חולים בתאילנד וניתנת לטיפול ביותר מ-60 בעיות בגוף. יש ליצור קשר לבדיקת התאמה.",
       sortOrder: 3,
     },
     {
-      slug: "reflexology",
-      name: "רפלקסולוגיה",
+      slug: "foot-massage",
+      name: "פוט מאסז׳",
       category: "MASSAGE",
-      duration: 45,
-      price: 280,
-      shortDesc: "טיפול בנקודות לחיצה בכפות הרגליים",
-      description:
-        "רפלקסולוגיה היא שיטת טיפול הוליסטית המבוססת על לחיצה ממוקדת בנקודות רפלקס בכפות הרגליים. כל נקודה מייצגת איבר או מערכת בגוף. הטיפול מסייע באיזון הגוף, שיפור זרימת האנרגיה, הפחתת מתחים, ושיפור איכות השינה.",
+      duration: 40,
+      price: 200,
+      shortDesc: "עיסוי כפות רגליים הכולל שהייה במי מלח חמים",
+      description: "עיסוי בכפות הרגליים הכולל 10 דקות של שהייה במי מלח חמים המטהרים את הגוף, עיסוי בהתמקדות על נקודות לחיצה רלוונטיות ומתיחות לאורך הרגליים.",
       sortOrder: 4,
-    },
-    {
-      slug: "group-yoga",
-      name: "שיעור יוגה קבוצתי",
-      category: "YOGA",
-      duration: 75,
-      price: 60,
-      shortDesc: "שיעור יוגה בקבוצה קטנה ואינטימית",
-      description:
-        "שיעורי יוגה קבוצתיים בקבוצות קטנות של עד 8 משתתפים, המאפשרות תשומת לב אישית לכל מתרגל. השיעורים משלבים אסאנות (תנוחות), תרגילי נשימה ומדיטציה, ומותאמים לכל הרמות. סביבה תומכת ומכילה לפיתוח הפרקטיקה האישית שלכם.",
-      sortOrder: 5,
     },
     {
       slug: "private-yoga",
       name: "שיעור יוגה פרטי",
       category: "YOGA",
       duration: 60,
-      price: 200,
-      shortDesc: "תרגול יוגה מותאם אישית",
-      description:
-        "שיעור יוגה פרטי מותאם אישית לצרכים, ליכולות ולמטרות שלכם. בין אם אתם מתחילים שרוצים ללמוד את הבסיס, או מתרגלים מנוסים שרוצים להעמיק — השיעור נבנה במיוחד עבורכם. כולל הנחיה אישית, תיקונים, והתאמות.",
+      price: 150,
+      shortDesc: "שיעור מותאם אישית הכולל ציוד, עם אפשרות הגעה לבית הלקוח",
+      description: "שיעור יוגה מותאם אישית הכולל ציוד ובמידת הצורך הגעה לבית הלקוח. מתאים לכולם – גיל שלישי, פיברומיאלגיה, הריון ועוד.",
+      sortOrder: 5,
+    },
+    {
+      slug: "wellness-retreat",
+      name: "ריטריט יום חוויתי",
+      category: "YOGA",
+      duration: 0,
+      price: 0,
+      shortDesc: "אירועי יום בסגנון Wellness לקבוצה של 8 אנשים ומעלה",
+      description: "מארגנת אירועי יום בסגנון Wellness לקבוצה של 8 אנשים ומעלה. לפרטים והתאמת אירוע אנא צרו קשר.",
       sortOrder: 6,
     },
     {
-      slug: "back-rehab",
-      name: "שיקום כאבי גב",
-      category: "REHABILITATION",
+      slug: "rehab-pilates",
+      name: "פילאטיס שיקומי",
+      category: "PILATES",
       duration: 60,
-      price: 350,
-      shortDesc: "תוכנית טיפול ייעודית לכאבי גב תחתון ועליון",
-      description:
-        "תוכנית שיקום מקיפה לכאבי גב, המשלבת טכניקות עיסוי רפואי עם תרגילים ייעודיים. הטיפול כולל הערכה מקצועית, טיפול ידני ממוקד, ובניית תוכנית תרגילים אישית להמשך עצמאי. מתאים לכאבי גב תחתון, עליון, צוואר וכתפיים.",
+      price: 180,
+      shortDesc: "שיעור פרטי בהתאמה אישית – גיל שלישי, הריון, אוסטאופורוזיס",
+      description: "שיעור פילאטיס פרטי בהתאמה אישית, מתאים לגיל השלישי, הריון, אוסטאופורוזיס, פיברומיאלגיה ועוד. כולל ציוד והגעה עד בית הלקוח.",
       sortOrder: 7,
+    },
+    {
+      slug: "sculpt-pilates",
+      name: "פילאטיס מחטב",
+      category: "PILATES",
+      duration: 60,
+      price: 140,
+      shortDesc: "שיעור קבוצתי (עד 4 משתתפים) לחיטוב וחיזוק הגוף",
+      description: "שיעור פילאטיס (עד 4 משתתפים) כולל ציוד ואופציה להגעה עד בית הלקוח. מתמקד בחיטוב הגוף, הארכה וחיזוק השרירים.",
+      sortOrder: 8,
     },
   ];
 
@@ -110,154 +113,69 @@ async function main() {
   }
   console.log(`${services.length} services created`);
 
-  // ─── Availability Rules (Sun-Thu 09:00-18:00) ─
+  // ─── Availability Rules ─────────────────
   const existingRules = await prisma.availabilityRule.count();
   if (existingRules === 0) {
-    for (const day of [0, 1, 2, 3, 4]) {
+    const rules = [
+      { dayOfWeek: 0, startTime: "11:00", endTime: "20:00" },
+      { dayOfWeek: 1, startTime: "07:00", endTime: "20:00" },
+      { dayOfWeek: 3, startTime: "07:00", endTime: "20:00" },
+      { dayOfWeek: 4, startTime: "07:00", endTime: "20:00" },
+      { dayOfWeek: 5, startTime: "09:00", endTime: "17:00" },
+      { dayOfWeek: 6, startTime: "11:00", endTime: "18:30" },
+    ];
+    for (const rule of rules) {
       await prisma.availabilityRule.create({
-        data: {
-          dayOfWeek: day,
-          startTime: "09:00",
-          endTime: "18:00",
-          isActive: true,
-        },
+        data: { ...rule, isActive: true },
       });
     }
-    console.log("Availability rules created (Sun-Thu)");
+    console.log("Availability rules created");
   }
 
   // ─── Reviews ────────────────────────────
-  const reviews = [
-    {
-      name: "שרה לוי",
-      rating: 5,
-      content:
-        "טיפול מדהים! הגעתי עם כאבי גב חזקים ואחרי שלושה טיפולים ההבדל היה דרמטי. ממליצה בחום!",
-      service: "עיסוי רקמות עמוקות",
-      isApproved: true,
-    },
-    {
-      name: "דוד כהן",
-      rating: 5,
-      content:
-        "המקצועיות והאווירה פשוט מושלמים. מרגיש שהגוף שלי מודה לי אחרי כל ביקור.",
-      service: "עיסוי שוודי",
-      isApproved: true,
-    },
-    {
-      name: "מיכל ברק",
-      rating: 4,
-      content:
-        "שיעורי היוגה הכי טובים שהיו לי. הקבוצה קטנה ויש תשומת לב אישית.",
-      service: "יוגה קבוצתית",
-      isApproved: true,
-    },
-    {
-      name: "אלון דגן",
-      rating: 5,
-      content:
-        "כספורטאי חובב, העיסוי עזר לי לחזור מפציעה מהר יותר. מקצועי ומדויק.",
-      service: "עיסוי ספורטאים",
-      isApproved: true,
-    },
-    {
-      name: "רונית שמש",
-      rating: 5,
-      content:
-        "הרפלקסולוגיה עשתה פלאים לשינה שלי. אחרי שנים של נדודי שינה, סוף סוף אני ישנה טוב.",
-      service: "רפלקסולוגיה",
-      isApproved: true,
-    },
-  ];
-
   const existingReviews = await prisma.review.count();
   if (existingReviews === 0) {
+    const reviews = [
+      {
+        name: "שרה לוי",
+        rating: 5,
+        content: "טיפול מדהים! הגעתי עם כאבי גב חזקים ואחרי שלושה טיפולים ההבדל היה דרמטי. ממליצה בחום!",
+        service: "עיסוי רקמות עמוק",
+        isApproved: true,
+      },
+      {
+        name: "דוד כהן",
+        rating: 5,
+        content: "המקצועיות והאווירה פשוט מושלמים. מרגיש שהגוף שלי מודה לי אחרי כל ביקור.",
+        service: "עיסוי תאילנדי",
+        isApproved: true,
+      },
+      {
+        name: "מיכל ברק",
+        rating: 4,
+        content: "שיעורי היוגה הכי טובים שהיו לי. תשומת לב אישית ואווירה נהדרת.",
+        service: "יוגה פרטי",
+        isApproved: true,
+      },
+      {
+        name: "אלון דגן",
+        rating: 5,
+        content: "הפילאטיס השיקומי עזר לי מאוד עם כאבי הגב. מקצועי ומדויק.",
+        service: "פילאטיס שיקומי",
+        isApproved: true,
+      },
+      {
+        name: "רונית שמש",
+        rating: 5,
+        content: "הפוט מאסז׳ היה חוויה מדהימה. ההשריה במי מלח חמים והעיסוי - מומלץ!",
+        service: "פוט מאסז׳",
+        isApproved: true,
+      },
+    ];
     for (const review of reviews) {
       await prisma.review.create({ data: review });
     }
     console.log(`${reviews.length} reviews created`);
-  }
-
-  // ─── Sample Bookings ───────────────────
-  const existingBookings = await prisma.booking.count();
-  if (existingBookings === 0) {
-    const allServices = await prisma.service.findMany();
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(10, 0, 0, 0);
-
-    const bookings = [
-      {
-        serviceId: allServices[0].id,
-        startAt: new Date(tomorrow),
-        endAt: new Date(
-          tomorrow.getTime() + allServices[0].duration * 60 * 1000
-        ),
-        status: "CONFIRMED",
-        customerName: "יעל אברהם",
-        customerPhone: "0541234567",
-        customerEmail: "yael@example.com",
-        notes: "כאבים בגב תחתון",
-      },
-      {
-        serviceId: allServices[1].id,
-        startAt: new Date(tomorrow.getTime() + 2 * 60 * 60 * 1000),
-        endAt: new Date(
-          tomorrow.getTime() +
-            2 * 60 * 60 * 1000 +
-            allServices[1].duration * 60 * 1000
-        ),
-        status: "PENDING",
-        customerName: "משה גולן",
-        customerPhone: "0529876543",
-      },
-      {
-        serviceId: allServices[4].id,
-        startAt: new Date(tomorrow.getTime() + 5 * 60 * 60 * 1000),
-        endAt: new Date(
-          tomorrow.getTime() +
-            5 * 60 * 60 * 1000 +
-            allServices[4].duration * 60 * 1000
-        ),
-        status: "CONFIRMED",
-        customerName: "נועה ישראלי",
-        customerPhone: "0507654321",
-        customerEmail: "noa@example.com",
-      },
-    ];
-
-    for (const booking of bookings) {
-      await prisma.booking.create({ data: booking });
-    }
-    console.log(`${bookings.length} sample bookings created`);
-  }
-
-  // ─── Sample Leads ──────────────────────
-  const existingLeads = await prisma.lead.count();
-  if (existingLeads === 0) {
-    await prisma.lead.createMany({
-      data: [
-        {
-          name: "רחל מזרחי",
-          phone: "0531112233",
-          email: "rachel@example.com",
-          subject: "עיסויים",
-          message:
-            "שלום, אני מתעניינת בעיסוי רפואי לכאבי צוואר כרוניים. אשמח לפרטים נוספים על סוגי הטיפולים ומחירים.",
-          status: "NEW",
-        },
-        {
-          name: "עמית ברון",
-          phone: "0544455566",
-          subject: "יוגה",
-          message:
-            "היי, אני מחפש שיעורי יוגה למתחילים. מתי יש שיעורים קבוצתיים ומה המחיר?",
-          status: "IN_PROGRESS",
-          adminNotes: "חזרתי אליו בטלפון, מעוניין להתחיל בשבוע הבא",
-        },
-      ],
-    });
-    console.log("2 sample leads created");
   }
 
   console.log("Seeding completed!");

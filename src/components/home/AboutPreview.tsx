@@ -10,9 +10,9 @@ import Button from "@/components/ui/Button";
 import { useSiteContent } from "@/lib/hooks/useSiteContent";
 
 const defaultCredentials = [
-  { icon: <Award className="h-5 w-5" />, text: "מטפלת בעיסוי תאילנדי" },
-  { icon: <GraduationCap className="h-5 w-5" />, text: "מדריכת יוגה" },
-  { icon: <Heart className="h-5 w-5" />, text: "חיבור עמוק לגוף ולאנרגיה" },
+  { icon: <Award className="h-5 w-5" />, text: "מעסה תאילנדי מוסמכת" },
+  { icon: <GraduationCap className="h-5 w-5" />, text: "מדריכת יוגה ופילאטיס" },
+  { icon: <Heart className="h-5 w-5" />, text: "גישה הוליסטית לגוף ונפש" },
 ];
 
 const credentialIcons = [
@@ -88,10 +88,10 @@ export default function AboutPreview() {
           </h2>
 
           <div className="space-y-4 text-text-secondary leading-relaxed mb-8">
-            {t("about", "paragraph1", "אני מטפלת בעיסוי תאילנדי ומדריכת יוגה, מתוך חיבור עמוק לגוף ולאנרגיה שבו. בעיסוי אני שואפת לעזור לגוף לשחרר ולפרק אנרגיות שלא משרתות אותו, לפתוח חסימות ולהחזיר תחושת זרימה טבעית.").split("\n\n").map((p, i) => (
+            {t("about", "paragraph1", "דרך פילאטיס נלמד לחזק את הגוף בלי לקצר אותו, לחבר אותנו לעבודה ממוקדת, פעולות שיסייעו לנו ביום יום וישמרו עלינו בריאים וחזקים.").split("\n\n").map((p, i) => (
               <p key={i}>{p}</p>
             ))}
-            {t("about", "paragraph2", "ביוגה אני מתמקדת בהכנסת אנרגיה חדשה, דרך תנועה, נשימה ונוכחות, שמחזקת ומאזנת את הגוף והנפש. עבורי, האיזון של הגוף הוא אלמנט מרכזי וחשוב מאוד בדרך לבריאות ולהרגשה טובה.").split("\n\n").map((p, i) => (
+            {t("about", "paragraph2", "בעיסוי אני שואפת לעזור לגוף לשחרר ולפרק אנרגיות שלא משרתות אותו, לפתוח חסימות ולהחזיר תחושת זרימה טבעית. ביוגה אני מתמקדת בהכנסת אנרגיה חדשה, דרך תנועה, נשימה ונוכחות.").split("\n\n").map((p, i) => (
               <p key={`p2-${i}`}>{p}</p>
             ))}
           </div>
