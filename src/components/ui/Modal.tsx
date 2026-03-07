@@ -86,7 +86,10 @@ export default function Modal({
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className={cn(
+        "fixed inset-0 z-50 flex items-center justify-center",
+        size === "lg" ? "p-0 sm:p-4" : "p-4"
+      )}
       onClick={(e) => {
         if (e.target === overlayRef.current) onClose();
       }}
@@ -101,9 +104,11 @@ export default function Modal({
         aria-modal="true"
         aria-label={title}
         className={cn(
-          "relative w-full max-h-[90vh] flex flex-col bg-white rounded-xl shadow-lg z-10",
+          "relative w-full flex flex-col bg-white shadow-lg z-10",
           "animate-in fade-in zoom-in-95 duration-200",
-          sizeStyles[size],
+          size === "lg"
+            ? "h-full sm:h-auto sm:max-h-[90vh] sm:rounded-xl max-w-none sm:max-w-2xl"
+            : cn("max-h-[90vh] rounded-xl", sizeStyles[size]),
           className
         )}
       >
