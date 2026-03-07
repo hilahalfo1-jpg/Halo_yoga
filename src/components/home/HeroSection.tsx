@@ -66,7 +66,7 @@ export default function HeroSection() {
                 src={heroImages[currentIndex].imagePath}
                 alt={heroImages[currentIndex].alt || "HALO - יוגה ועיסוי רפואי"}
                 fill
-                className={`object-cover sm:object-center ${currentIndex === 0 ? "object-left" : "object-center"}`}
+                className="object-cover object-center"
                 priority={currentIndex === 0}
               />
             </motion.div>
