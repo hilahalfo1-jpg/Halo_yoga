@@ -100,6 +100,40 @@ export const DAYS_OF_WEEK_HE = [
   "שבת",
 ];
 
+// ─── Service Icons ──────────────────────────────────
+export const SERVICE_ICON_OPTIONS = [
+  { value: "Hand", label: "יד (עיסוי)" },
+  { value: "Flower2", label: "פרח לוטוס" },
+  { value: "Leaf", label: "עלה" },
+  { value: "TreePine", label: "עץ" },
+  { value: "Sprout", label: "נבט" },
+  { value: "Mountain", label: "הר" },
+  { value: "Sun", label: "שמש" },
+  { value: "Moon", label: "ירח" },
+  { value: "Waves", label: "גלים" },
+  { value: "Wind", label: "רוח" },
+  { value: "Droplets", label: "טיפות" },
+  { value: "Heart", label: "לב" },
+  { value: "HeartHandshake", label: "לב ידיים" },
+  { value: "Sparkles", label: "ניצוצות" },
+  { value: "Star", label: "כוכב" },
+  { value: "Gem", label: "אבן חן" },
+  { value: "Feather", label: "נוצה" },
+  { value: "Flame", label: "להבה" },
+  { value: "Shell", label: "צדפה" },
+  { value: "Activity", label: "דופק" },
+  { value: "Dumbbell", label: "משקולת" },
+  { value: "Footprints", label: "כפות רגליים" },
+  { value: "Users", label: "קבוצה" },
+  { value: "User", label: "אדם" },
+  { value: "Baby", label: "תינוק" },
+  { value: "CloudSun", label: "שמש וענן" },
+  { value: "Sunrise", label: "זריחה" },
+  { value: "Bird", label: "ציפור" },
+  { value: "CircleDot", label: "עיגול" },
+  { value: "Orbit", label: "מסלול" },
+];
+
 // ─── Slot Configuration ─────────────────────────────
 export const SLOT_BUFFER_MINUTES = 15;
 

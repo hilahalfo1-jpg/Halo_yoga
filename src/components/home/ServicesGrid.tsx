@@ -2,25 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Hand, Dumbbell, Flower2, Footprints, Users, User, Activity } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import Section from "@/components/ui/Section";
 import Card from "@/components/ui/Card";
+import ServiceIcon from "@/components/ui/ServiceIcon";
 import { CATEGORY_OPTIONS } from "@/lib/constants";
 import { formatPrice } from "@/lib/utils";
 import { useSiteContent } from "@/lib/hooks/useSiteContent";
 import type { ServiceItem } from "@/types";
-
-// Map service slugs to icons
-const serviceIcons: Record<string, React.ReactNode> = {
-  "swedish-massage": <Hand className="h-8 w-8" strokeWidth={1.5} />,
-  "deep-tissue": <Activity className="h-8 w-8" strokeWidth={1.5} />,
-  "sports-massage": <Dumbbell className="h-8 w-8" strokeWidth={1.5} />,
-  "reflexology": <Footprints className="h-8 w-8" strokeWidth={1.5} />,
-  "group-yoga": <Users className="h-8 w-8" strokeWidth={1.5} />,
-  "private-yoga": <User className="h-8 w-8" strokeWidth={1.5} />,
-  "back-rehab": <Flower2 className="h-8 w-8" strokeWidth={1.5} />,
-};
 
 interface ServicesGridProps {
   services: ServiceItem[];
@@ -79,9 +69,7 @@ export default function ServicesGrid({ services, hideTitle }: ServicesGridProps)
             <Link href={`/services/${service.slug}`}>
               <Card hover className="h-full flex flex-col">
                 <div className="text-primary mb-4">
-                  {serviceIcons[service.slug] || (
-                    <Hand className="h-8 w-8" strokeWidth={1.5} />
-                  )}
+                  <ServiceIcon name={service.icon} />
                 </div>
                 <h3 className="text-xl font-semibold text-text mb-2">
                   {service.name}

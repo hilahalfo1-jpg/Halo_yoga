@@ -20,6 +20,7 @@ export interface ServiceItem {
   duration: number;
   price: number;
   image: string | null;
+  icon: string | null;
   suitableFor: string | null;
   sortOrder: number;
   isActive: boolean;

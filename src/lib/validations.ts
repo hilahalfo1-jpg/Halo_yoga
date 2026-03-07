@@ -74,6 +74,7 @@ export const serviceSchema = z.object({
     .max(240, "משך מקסימלי 240 דקות"),
   price: z.number().int().min(0, "מחיר חייב להיות חיובי"),
   image: z.string().url("כתובת URL לא תקינה").optional().or(z.literal("")),
+  icon: z.string().optional().or(z.literal("")),
   suitableFor: z.string().max(1000, "הטקסט ארוך מדי").optional().or(z.literal("")),
   isActive: z.boolean(),
   sortOrder: z.number().int(),

@@ -28,6 +28,7 @@ model Service {
   duration            Int
   price               Int
   image               String?
+  icon                String?
   suitableFor         String?
   sortOrder           Int       @default(0)
   isActive            Boolean   @default(true)

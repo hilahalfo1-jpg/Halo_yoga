@@ -16,7 +16,8 @@ import {
 } from "lucide-react";
 import type { ServiceItem } from "@/types";
 import { serviceSchema, type ServiceFormData } from "@/lib/validations";
-import { CATEGORY_LABELS } from "@/lib/constants";
+import { CATEGORY_LABELS, SERVICE_ICON_OPTIONS } from "@/lib/constants";
+import ServiceIcon, { iconMap } from "@/components/ui/ServiceIcon";
 import { formatPrice, formatDuration } from "@/lib/utils";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
@@ -47,10 +48,13 @@ export default function AdminServicesPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isToggling, setIsToggling] = useState<string | null>(null);
 
+  const [selectedIcon, setSelectedIcon] = useState<string>("");
+
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<ServiceFormData>({
     resolver: zodResolver(serviceSchema),
@@ -63,6 +67,7 @@ export default function AdminServicesPage() {
       duration: 60,
       price: 0,
       image: "",
+      icon: "",
       suitableFor: "",
       isActive: true,
       sortOrder: 0,
@@ -99,12 +104,14 @@ export default function AdminServicesPage() {
       duration: 60,
       price: 0,
       image: "",
+      icon: "",
       suitableFor: "",
       isActive: true,
       sortOrder: 0,
       homeVisitSurcharge: null,
     });
     setImagePreview(null);
+    setSelectedIcon("");
     setIsModalOpen(true);
   };
 
@@ -112,6 +119,7 @@ export default function AdminServicesPage() {
   const openEditModal = (service: ServiceItem) => {
     setEditingService(service);
     setImagePreview(service.image || null);
+    setSelectedIcon(service.icon || "");
     reset({
       name: service.name,
       slug: service.slug,
@@ -121,6 +129,7 @@ export default function AdminServicesPage() {
       duration: service.duration,
       price: service.price,
       image: service.image || "",
+      icon: service.icon || "",
       suitableFor: service.suitableFor || "",
       isActive: service.isActive,
       sortOrder: service.sortOrder,
@@ -160,6 +169,7 @@ export default function AdminServicesPage() {
     setIsModalOpen(false);
     setEditingService(null);
     setImagePreview(null);
+    setSelectedIcon("");
     reset();
   };
 
@@ -489,6 +499,53 @@ export default function AdminServicesPage() {
                 <Upload className="h-8 w-8" />
                 <span className="text-sm">{isUploading ? "מעלה..." : "העלאת תמונה"}</span>
               </button>
+            )}
+          </div>
+
+          {/* Icon Picker */}
+          <div>
+            <label className="block text-sm font-medium text-text mb-1">אייקון שירות</label>
+            <input type="hidden" {...register("icon")} />
+            <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-1.5">
+              {SERVICE_ICON_OPTIONS.map((opt) => {
+                const IconComp = iconMap[opt.value];
+                if (!IconComp) return null;
+                const isSelected = selectedIcon === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    title={opt.label}
+                    onClick={() => {
+                      setSelectedIcon(opt.value);
+                      setValue("icon", opt.value);
+                    }}
+                    className={`flex items-center justify-center p-2 rounded-lg border transition-all ${
+                      isSelected
+                        ? "border-primary bg-primary/10 text-primary ring-2 ring-primary/30"
+                        : "border-border text-text-muted hover:border-primary/50 hover:text-primary"
+                    }`}
+                  >
+                    <IconComp className="h-5 w-5" strokeWidth={1.5} />
+                  </button>
+                );
+              })}
+            </div>
+            {selectedIcon && (
+              <div className="flex items-center gap-2 mt-2 text-sm text-text-muted">
+                <ServiceIcon name={selectedIcon} className="h-5 w-5 text-primary" />
+                <span>{SERVICE_ICON_OPTIONS.find(o => o.value === selectedIcon)?.label}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedIcon("");
+                    setValue("icon", "");
+                  }}
+                  className="text-xs text-error hover:underline mr-auto"
+                >
+                  הסרה
+                </button>
+              </div>
             )}
           </div>
 
