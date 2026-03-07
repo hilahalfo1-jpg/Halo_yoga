@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
@@ -26,6 +26,17 @@ export default function StepDateSelect({
   const [currentMonth, setCurrentMonth] = useState(
     new Date(today.getFullYear(), today.getMonth(), 1)
   );
+  const [activeDays, setActiveDays] = useState<number[]>([]);
+
+  // Fetch available days from admin availability settings
+  useEffect(() => {
+    fetch("/api/availability-days")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.data) setActiveDays(json.data);
+      })
+      .catch(() => {});
+  }, []);
 
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
@@ -52,11 +63,11 @@ export default function StepDateSelect({
     return date < today;
   };
 
-  // Check if day has potential availability (Sun-Thu = 0-4)
+  // Check if day has availability based on admin rules
   const hasPotentialSlots = (day: number) => {
     const date = new Date(year, month, day);
     const dayOfWeek = date.getDay();
-    return dayOfWeek >= 0 && dayOfWeek <= 4; // Sun-Thu
+    return activeDays.includes(dayOfWeek);
   };
 
   const canGoPrev =
