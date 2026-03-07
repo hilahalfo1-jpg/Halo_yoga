@@ -1,14 +1,14 @@
 "use client";
 
-const WHATSAPP_COMMUNITY_URL = "https://chat.whatsapp.com/LBWIaJi6Um6IdqrEDLTutM";
+import { CONTACT_WHATSAPP } from "@/lib/constants";
 
 export default function WhatsAppFab() {
   return (
     <a
-      href={WHATSAPP_COMMUNITY_URL}
+      href={`https://wa.me/${CONTACT_WHATSAPP}`}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label="הצטרפו לקהילת הוואטסאפ שלנו"
+      aria-label="שלחו הודעה בוואטסאפ"
       className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all hover:scale-110"
     >
       <svg
