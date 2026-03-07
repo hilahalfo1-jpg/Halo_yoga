@@ -34,27 +34,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-// Who is it for — per category
-const targetAudience: Record<string, string[]> = {
-  MASSAGE: [
-    "סובלים מכאבי שרירים ומפרקים",
-    "מחפשים הרפיה עמוקה ושחרור מתחים",
-    "ספורטאים שרוצים לשפר ביצועים ולמנוע פציעות",
-    "סובלים מכאבים כרוניים בגב, צוואר או כתפיים",
-  ],
-  YOGA: [
-    "מתחילים שרוצים ללמוד יוגה בסביבה תומכת",
-    "מתרגלים מנוסים שרוצים להעמיק את הפרקטיקה",
-    "מחפשים דרך לשפר גמישות וכוח",
-    "רוצים למצוא רגיעה ואיזון בחיי היומיום",
-  ],
-  REHABILITATION: [
-    "סובלים מכאבי גב תחתון או עליון",
-    "מתאוששים מפציעות ספורט או ניתוחים",
-    "סובלים ממגבלות תנועה",
-    "מחפשים תוכנית שיקום אישית ומקצועית",
-  ],
-};
 
 export default async function ServiceDetailPage({ params }: PageProps) {
   const service = await getService(params.slug);
@@ -63,7 +42,9 @@ export default async function ServiceDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const audience = targetAudience[service.category] || targetAudience.MASSAGE;
+  const audience = service.suitableFor
+    ? service.suitableFor.split("\n").filter((line: string) => line.trim())
+    : [];
 
   return (
     <>
@@ -105,19 +86,21 @@ export default async function ServiceDetailPage({ params }: PageProps) {
                   </p>
                 </div>
 
-                <div>
-                  <h2 className="text-2xl font-bold text-text mb-4">
-                    למי מתאים?
-                  </h2>
-                  <ul className="space-y-3">
-                    {audience.map((item, i) => (
-                      <li key={i} className="flex items-start gap-3">
-                        <CheckCircle className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
-                        <span className="text-text-secondary">{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                {audience.length > 0 && (
+                  <div>
+                    <h2 className="text-2xl font-bold text-text mb-4">
+                      למי מתאים?
+                    </h2>
+                    <ul className="space-y-3">
+                      {audience.map((item: string, i: number) => (
+                        <li key={i} className="flex items-start gap-3">
+                          <CheckCircle className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
+                          <span className="text-text-secondary">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
 
               {/* Sidebar */}

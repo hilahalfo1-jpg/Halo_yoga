@@ -10,8 +10,8 @@ export const THERAPIST_TITLE = "מעסה תאילנדי מוסמכת, מדריכ
 export const LOGO_PATH = "/images/logo.png";
 
 export const CONTACT_PHONE = "054-3135182";
-export const CONTACT_WHATSAPP = "972543135182";
-export const CONTACT_EMAIL = "info@healing.co.il";
+export const CONTACT_WHATSAPP = "972502919918";
+export const CONTACT_EMAIL = "hilahalfo1@gmail.com";
 export const CONTACT_ADDRESS = "שכונת משולש, זבוטינסקי, ראשון לציון";
 export const SOCIAL_INSTAGRAM = "";
 export const SOCIAL_FACEBOOK = "";

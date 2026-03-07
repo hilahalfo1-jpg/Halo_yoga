@@ -63,6 +63,7 @@ export async function POST(req: Request) {
         duration: validated.data.duration,
         price: validated.data.price,
         image: validated.data.image || null,
+        suitableFor: validated.data.suitableFor || null,
         isActive: validated.data.isActive,
         sortOrder: validated.data.sortOrder,
       },

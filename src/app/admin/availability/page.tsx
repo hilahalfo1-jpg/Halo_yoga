@@ -33,7 +33,7 @@ const CATEGORY_TABS = [
   { value: null, label: "כללי" },
   { value: "MASSAGE", label: "עיסויים" },
   { value: "YOGA", label: "יוגה" },
-  { value: "REHABILITATION", label: "שיקום" },
+  { value: "PILATES", label: "פילאטיס" },
 ];
 
 function toKey(d: Date) {

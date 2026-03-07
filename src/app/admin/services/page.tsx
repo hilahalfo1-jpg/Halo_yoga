@@ -29,7 +29,7 @@ import EmptyState from "@/components/ui/EmptyState";
 const categoryOptions = [
   { value: "MASSAGE", label: "עיסויים" },
   { value: "YOGA", label: "יוגה" },
-  { value: "REHABILITATION", label: "שיקום" },
+  { value: "PILATES", label: "פילאטיס" },
 ];
 
 export default function AdminServicesPage() {
@@ -58,6 +58,7 @@ export default function AdminServicesPage() {
       duration: 60,
       price: 0,
       image: "",
+      suitableFor: "",
       isActive: true,
       sortOrder: 0,
     },
@@ -93,6 +94,7 @@ export default function AdminServicesPage() {
       duration: 60,
       price: 0,
       image: "",
+      suitableFor: "",
       isActive: true,
       sortOrder: 0,
       homeVisitSurcharge: null,
@@ -112,6 +114,7 @@ export default function AdminServicesPage() {
       duration: service.duration,
       price: service.price,
       image: service.image || "",
+      suitableFor: service.suitableFor || "",
       isActive: service.isActive,
       sortOrder: service.sortOrder,
       homeVisitSurcharge: service.homeVisitSurcharge ?? null,
@@ -382,6 +385,15 @@ export default function AdminServicesPage() {
             rows={4}
             error={errors.description?.message}
             {...register("description")}
+          />
+
+          <Textarea
+            label="למי מתאים?"
+            placeholder="כל פריט בשורה חדשה, לדוגמה:&#10;סובלים מכאבי גב&#10;ספורטאים&#10;נשים בהריון"
+            rows={4}
+            helperText="כל שורה תוצג כפריט נפרד בעמוד השירות"
+            error={errors.suitableFor?.message}
+            {...register("suitableFor")}
           />
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

@@ -69,6 +69,9 @@ export async function PATCH(
         ...(validated.data.image !== undefined && {
           image: validated.data.image || null,
         }),
+        ...(validated.data.suitableFor !== undefined && {
+          suitableFor: validated.data.suitableFor || null,
+        }),
         ...(validated.data.isActive !== undefined && {
           isActive: validated.data.isActive,
         }),

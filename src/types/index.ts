@@ -1,5 +1,5 @@
 // ─── Enums (mirroring Prisma, usable on client) ─────
-export type Category = "MASSAGE" | "YOGA" | "REHABILITATION";
+export type Category = "MASSAGE" | "YOGA" | "PILATES";
 export type BookingStatus =
   | "PENDING"
   | "CONFIRMED"
@@ -20,6 +20,7 @@ export interface ServiceItem {
   duration: number;
   price: number;
   image: string | null;
+  suitableFor: string | null;
   sortOrder: number;
   isActive: boolean;
   homeVisitSurcharge: number | null;
