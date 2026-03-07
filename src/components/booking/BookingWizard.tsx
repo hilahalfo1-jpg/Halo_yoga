@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { Check, Clock, CalendarPlus } from "lucide-react";
+import { Check, Clock, CalendarPlus, Download } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import StepServiceSelect from "./StepServiceSelect";
@@ -74,6 +74,34 @@ export default function BookingWizard({ services }: BookingWizardProps) {
     const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
     const title = encodeURIComponent(`${data.service.name} - HALO`);
     return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${fmt(start)}/${fmt(end)}`;
+  };
+
+  const downloadIcsFile = () => {
+    if (!data.service || !data.date || !data.timeSlot) return;
+    const [startH, startM] = data.timeSlot.startTime.split(":").map(Number);
+    const [endH, endM] = data.timeSlot.endTime.split(":").map(Number);
+    const start = new Date(data.date);
+    start.setHours(startH, startM, 0, 0);
+    const end = new Date(data.date);
+    end.setHours(endH, endM, 0, 0);
+    const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+    const ics = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "BEGIN:VEVENT",
+      `DTSTART:${fmt(start)}`,
+      `DTEND:${fmt(end)}`,
+      `SUMMARY:${data.service.name} - HALO`,
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].join("\r\n");
+    const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "booking.ics";
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const goNext = () => {
@@ -243,17 +271,22 @@ export default function BookingWizard({ services }: BookingWizardProps) {
               </p>
             )}
           </div>
-          <a
-            href={generateCalendarUrl()}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-6 inline-block"
-          >
-            <Button variant="outline" size="sm">
-              <CalendarPlus className="h-4 w-4 ml-2" />
-              הוסיפו ליומן Google
+          <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <a
+              href={generateCalendarUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button variant="outline" size="sm">
+                <CalendarPlus className="h-4 w-4 ml-2" />
+                הוסיפו ליומן Google
+              </Button>
+            </a>
+            <Button variant="outline" size="sm" onClick={downloadIcsFile}>
+              <Download className="h-4 w-4 ml-2" />
+              הוסיפו ליומן iPhone
             </Button>
-          </a>
+          </div>
         </div>
       )}
     </div>
