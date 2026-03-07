@@ -416,7 +416,7 @@ export default function AdminServicesPage() {
           <Textarea
             label="תיאור מלא"
             placeholder="תיאור מפורט של השירות..."
-            rows={4}
+            rows={3}
             error={errors.description?.message}
             {...register("description")}
           />
@@ -424,7 +424,7 @@ export default function AdminServicesPage() {
           <Textarea
             label="למי מתאים?"
             placeholder="כל פריט בשורה חדשה, לדוגמה:&#10;סובלים מכאבי גב&#10;ספורטאים&#10;נשים בהריון"
-            rows={4}
+            rows={3}
             helperText="כל שורה תוצג כפריט נפרד בעמוד השירות"
             error={errors.suitableFor?.message}
             {...register("suitableFor")}
@@ -465,7 +465,7 @@ export default function AdminServicesPage() {
               className="hidden"
             />
             {imagePreview ? (
-              <div className="relative w-full h-40 rounded-lg overflow-hidden border border-border">
+              <div className="relative w-full h-32 rounded-lg overflow-hidden border border-border">
                 <img src={imagePreview} alt="תצוגה מקדימה" className="w-full h-full object-cover" />
                 <button
                   type="button"
@@ -484,7 +484,7 @@ export default function AdminServicesPage() {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
-                className="w-full h-40 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center gap-2 text-text-muted hover:text-primary transition-colors disabled:opacity-50"
+                className="w-full h-32 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center gap-2 text-text-muted hover:text-primary transition-colors disabled:opacity-50"
               >
                 <Upload className="h-8 w-8" />
                 <span className="text-sm">{isUploading ? "מעלה..." : "העלאת תמונה"}</span>
