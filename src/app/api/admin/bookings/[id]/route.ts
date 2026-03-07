@@ -1,18 +1,15 @@
 import { NextResponse } from "next/server";
-// import { getServerSession } from "next-auth";
-// import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import {
+  sendBookingApprovedEmail,
+  sendBookingRejectedEmail,
+} from "@/lib/email";
 
 // PATCH — update booking status or admin notes
 export async function PATCH(
   req: Request,
   { params }: { params: { id: string } }
 ) {
-  // const session = await getServerSession(authOptions);
-  // if (!session) {
-  //   return NextResponse.json({ error: "לא מורשה" }, { status: 401 });
-  // }
-
   try {
     const body = await req.json();
     const { status, adminNotes } = body;
@@ -30,6 +27,23 @@ export async function PATCH(
       include: { service: true },
     });
 
+    // Send email notification on status change
+    if (status && booking.customerEmail) {
+      const emailData = {
+        customerName: booking.customerName,
+        customerEmail: booking.customerEmail,
+        serviceName: booking.service.name,
+        startAt: booking.startAt,
+        cancelToken: booking.cancelToken,
+      };
+
+      if (status === "APPROVED") {
+        sendBookingApprovedEmail(emailData);
+      } else if (status === "REJECTED" || status === "CANCELLED") {
+        sendBookingRejectedEmail(emailData);
+      }
+    }
+
     return NextResponse.json({ data: booking });
   } catch (error) {
     console.error("[ADMIN_BOOKING_PATCH]", error);
@@ -42,11 +56,6 @@ export async function DELETE(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
-  // const session = await getServerSession(authOptions);
-  // if (!session) {
-  //   return NextResponse.json({ error: "לא מורשה" }, { status: 401 });
-  // }
-
   try {
     await prisma.booking.delete({ where: { id: params.id } });
     return NextResponse.json({ success: true });
