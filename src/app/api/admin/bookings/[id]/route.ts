@@ -37,7 +37,7 @@ export async function PATCH(
         cancelToken: booking.cancelToken,
       };
 
-      if (status === "APPROVED") {
+      if (status === "CONFIRMED") {
         sendBookingApprovedEmail(emailData);
       } else if (status === "REJECTED" || status === "CANCELLED") {
         sendBookingRejectedEmail(emailData);
