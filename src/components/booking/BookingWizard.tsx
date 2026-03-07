@@ -76,8 +76,14 @@ export default function BookingWizard({ services }: BookingWizardProps) {
     return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${fmt(start)}/${fmt(end)}`;
   };
 
-  const goNext = () => setCurrentStep((s) => Math.min(s + 1, STEPS.length - 1));
-  const goBack = () => setCurrentStep((s) => Math.max(s - 1, 0));
+  const goNext = () => {
+    setCurrentStep((s) => Math.min(s + 1, STEPS.length - 1));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  const goBack = () => {
+    setCurrentStep((s) => Math.max(s - 1, 0));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const updateData = (partial: Partial<BookingData>) => {
     setData((prev) => ({ ...prev, ...partial }));
