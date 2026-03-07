@@ -564,7 +564,11 @@ export default function AdminServicesPage() {
               helperText="אם מוגדר, הלקוח יוכל לבחור ביקור בית"
               error={errors.homeVisitSurcharge?.message}
               {...register("homeVisitSurcharge", {
-                setValueAs: (v: string) => (v === "" || v === undefined ? null : parseInt(v, 10)),
+                setValueAs: (v: string) => {
+                  if (v === "" || v === undefined || v === null) return null;
+                  const n = parseInt(v, 10);
+                  return isNaN(n) ? null : n;
+                },
               })}
             />
           </div>
