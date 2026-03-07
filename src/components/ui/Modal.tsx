@@ -101,7 +101,7 @@ export default function Modal({
         aria-modal="true"
         aria-label={title}
         className={cn(
-          "relative w-full bg-white rounded-xl shadow-lg z-10",
+          "relative w-full max-h-[90vh] flex flex-col bg-white rounded-xl shadow-lg z-10",
           "animate-in fade-in zoom-in-95 duration-200",
           sizeStyles[size],
           className
@@ -122,7 +122,7 @@ export default function Modal({
         )}
 
         {/* Body */}
-        <div className={cn("px-4 sm:px-6 py-3 sm:py-4", !title && "pt-6")}>
+        <div className={cn("px-4 sm:px-6 py-3 sm:py-4 overflow-y-auto", !title && "pt-6")}>
           {!title && (
             <button
               onClick={onClose}
