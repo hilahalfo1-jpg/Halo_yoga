@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { Award, GraduationCap, Heart, Leaf } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Section from "@/components/ui/Section";
 import Button from "@/components/ui/Button";
 import AboutImage from "@/components/about/AboutImage";
+import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
   title: "אודות",
@@ -19,7 +21,11 @@ const certifications = [
   { icon: <Leaf className="h-6 w-6" />, title: "איזון גוף ונפש", year: "" },
 ];
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const certImages = await prisma.siteImage.findMany({
+    where: { section: "certifications" },
+    orderBy: { sortOrder: "asc" },
+  });
   return (
     <>
       <Header />
@@ -124,7 +130,7 @@ export default function AboutPage() {
             <h2 className="text-3xl font-bold text-text text-center mb-10">
               הכשרות והסמכות
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
               {certifications.map((cert, index) => (
                 <div
                   key={index}
@@ -140,6 +146,26 @@ export default function AboutPage() {
                 </div>
               ))}
             </div>
+
+            {/* Certificate Images */}
+            {certImages.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
+                {certImages.map((img) => (
+                  <div
+                    key={img.id}
+                    className="bg-white rounded-xl border border-border p-3 shadow-sm"
+                  >
+                    <Image
+                      src={img.imagePath}
+                      alt={img.alt || "תעודה"}
+                      width={500}
+                      height={700}
+                      className="w-full h-auto rounded-lg"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </Section>
 

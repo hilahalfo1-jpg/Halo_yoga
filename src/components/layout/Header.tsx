@@ -4,9 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu } from "lucide-react";
+import { Menu, Instagram } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { NAV_LINKS, LOGO_PATH, SITE_NAME } from "@/lib/constants";
+import { NAV_LINKS, LOGO_PATH, SITE_NAME, SOCIAL_INSTAGRAM } from "@/lib/constants";
 import { useScrollDirection } from "@/lib/hooks/useScrollDirection";
 import { useSiteImages } from "@/lib/hooks/useSiteImages";
 import Button from "@/components/ui/Button";
@@ -37,14 +37,40 @@ export default function Header() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 md:h-20">
-            {/* Logo */}
-            <Link href="/" className="flex items-center gap-2 flex-shrink-0">
+            {/* Mobile: Hamburger (right side in RTL) */}
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className={cn(
+                "md:hidden p-3 rounded-lg transition-colors",
+                showSolidHeader
+                  ? "text-text hover:bg-surface"
+                  : "text-white hover:bg-white/10"
+              )}
+              aria-label="תפריט"
+            >
+              <Menu className="h-6 w-6" />
+            </button>
+
+            {/* Desktop: Logo (left in RTL) */}
+            <Link href="/" className="hidden md:flex items-center gap-2 flex-shrink-0">
               <Image
                 src={logoSrc}
                 alt={images.logo?.alt || SITE_NAME}
                 width={120}
                 height={40}
-                className="h-8 md:h-9 w-auto object-contain transition-opacity duration-300"
+                className="h-9 w-auto object-contain transition-opacity duration-300"
+                priority
+              />
+            </Link>
+
+            {/* Mobile: Logo (centered) */}
+            <Link href="/" className="md:hidden absolute left-1/2 -translate-x-1/2">
+              <Image
+                src={logoSrc}
+                alt={images.logo?.alt || SITE_NAME}
+                width={120}
+                height={40}
+                className="h-8 w-auto object-contain transition-opacity duration-300"
                 priority
               />
             </Link>
@@ -69,24 +95,28 @@ export default function Header() {
               ))}
             </nav>
 
-            {/* CTA + Mobile Toggle */}
+            {/* Right side */}
             <div className="flex items-center gap-3">
+              {/* Desktop: CTA */}
               <Link href="/booking" className="hidden md:block">
                 <Button size="sm" className={showSolidHeader ? "bg-[#576769] text-white hover:bg-[#475557]" : "bg-primary text-white hover:bg-primary-dark"}>קביעת תור</Button>
               </Link>
 
-              <button
-                onClick={() => setIsMobileMenuOpen(true)}
+              {/* Mobile: Instagram (left side in RTL) */}
+              <a
+                href={SOCIAL_INSTAGRAM || "https://instagram.com"}
+                target="_blank"
+                rel="noopener noreferrer"
                 className={cn(
                   "md:hidden p-3 rounded-lg transition-colors",
                   showSolidHeader
                     ? "text-text hover:bg-surface"
                     : "text-white hover:bg-white/10"
                 )}
-                aria-label="תפריט"
+                aria-label="אינסטגרם"
               >
-                <Menu className="h-6 w-6" />
-              </button>
+                <Instagram className="h-5 w-5" />
+              </a>
             </div>
           </div>
         </div>
