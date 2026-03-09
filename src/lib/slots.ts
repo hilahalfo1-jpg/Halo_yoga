@@ -28,17 +28,41 @@ function formatTimeStr(date: Date): string {
 }
 
 /**
+ * Generate slots for a single time window
+ */
+function generateSlotsForWindow(
+  targetDate: Date,
+  startTime: string,
+  endTime: string,
+  slotDuration: number,
+  buffer: number
+): TimeSlot[] {
+  const slots: TimeSlot[] = [];
+  const windowStart = setTime(targetDate, startTime);
+  const windowEnd = setTime(targetDate, endTime);
+
+  let current = new Date(windowStart);
+
+  while (true) {
+    const slotEnd = new Date(current.getTime() + slotDuration * 60 * 1000);
+    if (slotEnd > windowEnd) break;
+
+    slots.push({
+      startTime: formatTimeStr(current),
+      endTime: formatTimeStr(slotEnd),
+      isAvailable: true,
+    });
+
+    current = new Date(slotEnd.getTime() + buffer * 60 * 1000);
+  }
+
+  return slots;
+}
+
+/**
  * Get available time slots for a given date and service.
  *
- * Algorithm:
- * 1. Get dayOfWeek for the date
- * 2. Check AvailabilityException for this date
- *    - BLOCKED → return []
- *    - OVERRIDE → use override hours
- * 3. If no exception → get AvailabilityRule for this dayOfWeek
- * 4. Generate consecutive slots with buffer
- * 5. Filter out existing bookings
- * 6. Filter out past slots (if today)
+ * Supports multiple time windows per day (e.g., 8:00-16:00 and 19:00-21:00).
  */
 export async function getAvailableSlots(
   date: Date,
@@ -54,7 +78,7 @@ export async function getAvailableSlots(
 
   const targetDate = new Date(date);
   targetDate.setHours(0, 0, 0, 0);
-  const dayOfWeek = targetDate.getDay(); // 0=Sunday
+  const dayOfWeek = targetDate.getDay();
 
   // 2. Check exceptions for this date (category-specific first, then global)
   const nextDay = new Date(targetDate);
@@ -73,77 +97,79 @@ export async function getAvailableSlots(
     },
   });
 
-  // Prefer category-specific exception over global
   const exception =
     exceptions.find((e) => e.category === service.category) ||
     exceptions.find((e) => !e.category) ||
     null;
 
-  let startTime: string;
-  let endTime: string;
+  // Build list of time windows
+  type TimeWindow = { start: string; end: string };
+  let windows: TimeWindow[] = [];
 
   if (exception) {
     if (exception.type === "BLOCKED") {
-      return []; // Day is blocked
+      return [];
     }
-    // OVERRIDE — use alternative hours
     if (!exception.startTime || !exception.endTime) return [];
-    startTime = exception.startTime;
-    endTime = exception.endTime;
+    windows = [{ start: exception.startTime, end: exception.endTime }];
   } else {
-    // 3. Get availability rule for this day (category-specific first, then global)
-    const rules = await prisma.availabilityRule.findMany({
+    // 3. Get ALL active rules for this day (category-specific first, then global)
+    const catRules = await prisma.availabilityRule.findMany({
       where: {
         dayOfWeek,
         isActive: true,
-        OR: [
-          { category: service.category },
-          { category: null },
-        ],
+        category: service.category,
       },
+      orderBy: { startTime: "asc" },
     });
 
-    // Prefer category-specific rule over global
-    const rule =
-      rules.find((r) => r.category === service.category) ||
-      rules.find((r) => !r.category) ||
-      null;
+    const globalRules = await prisma.availabilityRule.findMany({
+      where: {
+        dayOfWeek,
+        isActive: true,
+        category: null,
+      },
+      orderBy: { startTime: "asc" },
+    });
 
-    if (!rule) return []; // No rule = day off
+    // Use category-specific rules if any exist, otherwise fall back to global
+    const activeRules = catRules.length > 0 ? catRules : globalRules;
 
-    startTime = rule.startTime;
-    endTime = rule.endTime;
+    if (activeRules.length === 0) return [];
+
+    windows = activeRules.map((r) => ({ start: r.startTime, end: r.endTime }));
   }
 
-  // 4. Generate consecutive slots
-  const slots: TimeSlot[] = [];
+  // 4. Generate slots for all windows
   const slotDuration = service.duration;
   const buffer = SLOT_BUFFER_MINUTES;
 
-  const windowStart = setTime(targetDate, startTime);
-  const windowEnd = setTime(targetDate, endTime);
-
-  let current = new Date(windowStart);
-
-  while (true) {
-    const slotEnd = new Date(current.getTime() + slotDuration * 60 * 1000);
-
-    // Slot must fit within the working window
-    if (slotEnd > windowEnd) break;
-
-    slots.push({
-      startTime: formatTimeStr(current),
-      endTime: formatTimeStr(slotEnd),
-      isAvailable: true,
-    });
-
-    // Next slot = current end + buffer
-    current = new Date(slotEnd.getTime() + buffer * 60 * 1000);
+  let allSlots: TimeSlot[] = [];
+  for (const win of windows) {
+    const windowSlots = generateSlotsForWindow(
+      targetDate,
+      win.start,
+      win.end,
+      slotDuration,
+      buffer
+    );
+    allSlots = allSlots.concat(windowSlots);
   }
 
+  if (allSlots.length === 0) return [];
+
   // 5. Get existing bookings for this date (non-cancelled)
-  const dayStart = setTime(targetDate, startTime);
-  const dayEnd = setTime(targetDate, endTime);
+  const earliestStart = windows.reduce(
+    (min, w) => (w.start < min ? w.start : min),
+    windows[0].start
+  );
+  const latestEnd = windows.reduce(
+    (max, w) => (w.end > max ? w.end : max),
+    windows[0].end
+  );
+
+  const dayStart = setTime(targetDate, earliestStart);
+  const dayEnd = setTime(targetDate, latestEnd);
 
   const bookings = await prisma.booking.findMany({
     where: {
@@ -154,19 +180,17 @@ export async function getAvailableSlots(
     select: { startAt: true, endAt: true },
   });
 
-  // 6. Filter out occupied slots
+  // 6. Filter out occupied and past slots
   const now = new Date();
 
-  return slots.map((slot) => {
+  return allSlots.map((slot) => {
     const slotStart = setTime(targetDate, slot.startTime);
     const slotEnd = setTime(targetDate, slot.endTime);
 
-    // Check if slot is in the past
     if (slotStart <= now) {
       return { ...slot, isAvailable: false };
     }
 
-    // Check overlap with existing bookings
     const hasConflict = bookings.some((booking) => {
       return slotStart < booking.endAt && slotEnd > booking.startAt;
     });
@@ -177,7 +201,6 @@ export async function getAvailableSlots(
 
 /**
  * Check if a specific slot is still available (for booking creation).
- * Used inside a transaction to prevent overbooking.
  */
 export async function isSlotAvailable(
   startAt: Date,

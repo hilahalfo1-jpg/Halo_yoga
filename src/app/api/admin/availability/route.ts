@@ -1,19 +1,12 @@
 import { NextResponse } from "next/server";
-// import { getServerSession } from "next-auth";
-// import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { availabilityRuleSchema, availabilityExceptionSchema } from "@/lib/validations";
 
 // GET all rules + exceptions
 export async function GET() {
-  // const session = await getServerSession(authOptions);
-  // if (!session) {
-  //   return NextResponse.json({ error: "לא מורשה" }, { status: 401 });
-  // }
-
   try {
     const [rules, exceptions] = await Promise.all([
-      prisma.availabilityRule.findMany({ orderBy: { dayOfWeek: "asc" } }),
+      prisma.availabilityRule.findMany({ orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }] }),
       prisma.availabilityException.findMany({
         orderBy: { date: "asc" },
       }),
@@ -28,11 +21,6 @@ export async function GET() {
 
 // POST — create or update rule / create exception
 export async function POST(req: Request) {
-  // const session = await getServerSession(authOptions);
-  // if (!session) {
-  //   return NextResponse.json({ error: "לא מורשה" }, { status: 401 });
-  // }
-
   try {
     const body = await req.json();
     const { type: actionType } = body;
@@ -46,24 +34,18 @@ export async function POST(req: Request) {
         );
       }
 
-      // Extract category from the request (not in the Zod schema)
       const category = body.data.category ?? null;
-
-      // Upsert: find existing rule for this day + category, or create new
-      const existing = await prisma.availabilityRule.findFirst({
-        where: {
-          dayOfWeek: validated.data.dayOfWeek,
-          category,
-        },
-      });
+      const ruleId = body.data.id as string | undefined;
 
       let rule;
-      if (existing) {
+      if (ruleId) {
+        // Update existing rule by ID
         rule = await prisma.availabilityRule.update({
-          where: { id: existing.id },
+          where: { id: ruleId },
           data: { ...validated.data, category },
         });
       } else {
+        // Create new rule (allows multiple per day)
         rule = await prisma.availabilityRule.create({
           data: { ...validated.data, category },
         });

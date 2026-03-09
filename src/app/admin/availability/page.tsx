@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { toast } from "sonner";
-import { ChevronDown, ChevronUp, Clock } from "lucide-react";
+import { ChevronDown, ChevronUp, Clock, Plus, Trash2 } from "lucide-react";
 import CalendarGrid, { type DayInfo, type DayStatus } from "@/components/admin/CalendarGrid";
 import DayDetailPanel from "@/components/admin/DayDetailPanel";
 import Modal from "@/components/ui/Modal";
@@ -51,7 +51,6 @@ function TimeInput({
   const [local, setLocal] = useState(value);
   const ref = useRef<HTMLInputElement>(null);
 
-  // Sync when external value changes
   useEffect(() => {
     setLocal(value);
   }, [value]);
@@ -71,14 +70,6 @@ function TimeInput({
       dir="ltr"
     />
   );
-}
-
-// Pre-built time options every 30 minutes (used in DayDetailPanel)
-const TIME_OPTIONS: string[] = [];
-for (let h = 6; h <= 22; h++) {
-  for (const m of ["00", "30"]) {
-    TIME_OPTIONS.push(`${String(h).padStart(2, "0")}:${m}`);
-  }
 }
 
 export default function AvailabilityPage() {
@@ -124,7 +115,6 @@ export default function AvailabilityPage() {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
 
-    // Cover the full calendar view (include edge days)
     const start = new Date(year, month, -6);
     const end = new Date(year, month + 1, 7);
 
@@ -133,14 +123,14 @@ export default function AvailabilityPage() {
       const key = toKey(d);
       const dow = d.getDay();
 
-      // Find applicable rule
-      const catRule = selectedCategory
-        ? rules.find((r) => r.dayOfWeek === dow && r.category === selectedCategory)
-        : null;
-      const genRule = rules.find(
-        (r) => r.dayOfWeek === dow && r.category === null
+      // Find ALL applicable rules for this day
+      const catRules = selectedCategory
+        ? rules.filter((r) => r.dayOfWeek === dow && r.category === selectedCategory && r.isActive)
+        : [];
+      const genRules = rules.filter(
+        (r) => r.dayOfWeek === dow && r.category === null && r.isActive
       );
-      const rule = catRule || genRule;
+      const activeRules = catRules.length > 0 ? catRules : genRules;
 
       // Find exceptions for this date
       const dayExceptions = exceptions.filter((e) => {
@@ -166,10 +156,12 @@ export default function AvailabilityPage() {
           effectiveStart = exception.startTime || undefined;
           effectiveEnd = exception.endTime || undefined;
         }
-      } else if (rule && rule.isActive) {
+      } else if (activeRules.length > 0) {
         status = "available";
-        effectiveStart = rule.startTime;
-        effectiveEnd = rule.endTime;
+        // Show earliest start and latest end
+        const sorted = [...activeRules].sort((a, b) => a.startTime.localeCompare(b.startTime));
+        effectiveStart = sorted[0].startTime;
+        effectiveEnd = sorted[sorted.length - 1].endTime;
       } else {
         status = "dayoff";
       }
@@ -189,21 +181,14 @@ export default function AvailabilityPage() {
   }, [currentMonth, rules, exceptions, selectedCategory]);
 
   // ─── Actions ─────────────────────────
-  const updateRule = async (dayOfWeek: number, updates: Partial<Rule>) => {
-    const catRules = rules.filter((r) =>
-      selectedCategory === null
-        ? r.category === null
-        : r.category === selectedCategory
-    );
-    const existing = catRules.find((r) => r.dayOfWeek === dayOfWeek);
-    const data = {
-      dayOfWeek,
-      startTime: updates.startTime ?? existing?.startTime ?? "09:00",
-      endTime: updates.endTime ?? existing?.endTime ?? "18:00",
-      isActive: updates.isActive ?? existing?.isActive ?? true,
-      category: selectedCategory,
-    };
-
+  const saveRule = async (data: {
+    id?: string;
+    dayOfWeek: number;
+    startTime: string;
+    endTime: string;
+    isActive: boolean;
+    category: string | null;
+  }) => {
     try {
       const res = await fetch("/api/admin/availability", {
         method: "POST",
@@ -222,6 +207,38 @@ export default function AvailabilityPage() {
     }
   };
 
+  const deleteRule = async (id: string) => {
+    try {
+      const res = await fetch(`/api/admin/availability/${id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        toast.success("נמחק בהצלחה");
+        fetchData();
+      }
+    } catch {
+      toast.error("שגיאת שרת");
+    }
+  };
+
+  // Legacy updateRule for DayDetailPanel compatibility
+  const updateRule = async (dayOfWeek: number, updates: Partial<Rule>) => {
+    const catRules = rules.filter((r) =>
+      selectedCategory === null
+        ? r.category === null
+        : r.category === selectedCategory
+    );
+    const existing = catRules.find((r) => r.dayOfWeek === dayOfWeek);
+    await saveRule({
+      id: existing?.id,
+      dayOfWeek,
+      startTime: updates.startTime ?? existing?.startTime ?? "09:00",
+      endTime: updates.endTime ?? existing?.endTime ?? "18:00",
+      isActive: updates.isActive ?? existing?.isActive ?? true,
+      category: selectedCategory,
+    });
+  };
+
   const addException = async (excData: {
     date: string;
     type: "BLOCKED" | "OVERRIDE";
@@ -236,10 +253,7 @@ export default function AvailabilityPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           type: "exception",
-          data: {
-            ...excData,
-            category: excData.category,
-          },
+          data: { ...excData, category: excData.category },
         }),
       });
       if (res.ok) {
@@ -320,7 +334,6 @@ export default function AvailabilityPage() {
 
       {/* Calendar + Detail Panel */}
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* Calendar */}
         <div className="flex-1">
           <CalendarGrid
             currentMonth={currentMonth}
@@ -331,7 +344,6 @@ export default function AvailabilityPage() {
           />
         </div>
 
-        {/* Desktop Detail Panel */}
         <div className="hidden lg:block lg:w-[380px] flex-shrink-0">
           {detailPanel || (
             <div className="bg-white rounded-xl border border-border p-8 text-center text-text-muted">
@@ -379,73 +391,145 @@ export default function AvailabilityPage() {
         </button>
 
         {showWeeklyRules && (
-          <div className="border-t border-border p-4 space-y-2">
+          <div className="border-t border-border p-4 space-y-3">
             <p className="text-xs text-text-muted mb-3">
               {selectedCategory
                 ? `שעות קבועות עבור ${CATEGORY_LABELS[selectedCategory]}. גוברות על הכללי.`
-                : "שעות קבועות לכל ימות השבוע — חלות על כל סוגי השירותים."}
+                : "שעות קבועות לכל ימות השבוע — חלות על כל סוגי השירותים. ניתן להוסיף כמה טווחי שעות ליום."}
             </p>
             {[0, 1, 2, 3, 4, 5, 6].map((day) => {
-              const catRules = rules.filter((r) =>
-                selectedCategory === null
-                  ? r.category === null
-                  : r.category === selectedCategory
-              );
-              const rule = catRules.find((r) => r.dayOfWeek === day);
-              const isActive = rule?.isActive ?? false;
+              // Get ALL rules for this day + category
+              const dayRules = rules
+                .filter((r) =>
+                  selectedCategory === null
+                    ? r.category === null && r.dayOfWeek === day
+                    : r.category === selectedCategory && r.dayOfWeek === day
+                )
+                .sort((a, b) => a.startTime.localeCompare(b.startTime));
 
-              const globalRule = selectedCategory
-                ? rules.find(
-                    (r) => r.dayOfWeek === day && r.category === null
+              const hasActiveSlots = dayRules.some((r) => r.isActive);
+
+              const globalRules = selectedCategory
+                ? rules.filter(
+                    (r) => r.dayOfWeek === day && r.category === null && r.isActive
                   )
-                : null;
+                : [];
 
               return (
                 <div
                   key={day}
                   className={cn(
-                    "flex flex-col sm:flex-row sm:items-center gap-2 p-3 rounded-lg border",
-                    isActive
+                    "p-3 rounded-lg border",
+                    hasActiveSlots
                       ? "border-border bg-white"
                       : "border-transparent bg-surface/50"
                   )}
                 >
-                  <span className="w-16 font-medium text-text text-sm">
-                    {DAYS_OF_WEEK_HE[day]}
-                  </span>
-
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={isActive}
-                      onChange={(e) =>
-                        updateRule(day, { isActive: e.target.checked })
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium text-text text-sm">
+                      {DAYS_OF_WEEK_HE[day]}
+                    </span>
+                    <button
+                      onClick={() =>
+                        saveRule({
+                          dayOfWeek: day,
+                          startTime: "09:00",
+                          endTime: "18:00",
+                          isActive: true,
+                          category: selectedCategory,
+                        })
                       }
-                      className="w-4 h-4 rounded border-border text-secondary focus:ring-secondary"
-                    />
-                    <span className="text-sm text-text-secondary">
-                      {isActive ? "פעיל" : "חופש"}
-                    </span>
-                  </label>
+                      className="flex items-center gap-1 text-xs text-secondary hover:text-secondary-dark transition-colors"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      הוסף טווח
+                    </button>
+                  </div>
 
-                  {isActive && (
-                    <div className="flex items-center gap-2 mr-auto" dir="ltr">
-                      <TimeInput
-                        value={rule?.startTime ?? "09:00"}
-                        onSave={(v) => updateRule(day, { startTime: v })}
-                      />
-                      <span className="text-text-muted">—</span>
-                      <TimeInput
-                        value={rule?.endTime ?? "18:00"}
-                        onSave={(v) => updateRule(day, { endTime: v })}
-                      />
+                  {dayRules.length === 0 ? (
+                    <div className="text-xs text-text-muted">
+                      {selectedCategory && globalRules.length > 0 ? (
+                        <span>
+                          כללי:{" "}
+                          {globalRules
+                            .map((r) => `${r.startTime}-${r.endTime}`)
+                            .join(", ")}
+                        </span>
+                      ) : (
+                        "יום חופש — לחצו \'הוסף טווח\' להגדרת שעות"
+                      )}
                     </div>
-                  )}
+                  ) : (
+                    <div className="space-y-2">
+                      {dayRules.map((rule) => (
+                        <div
+                          key={rule.id}
+                          className={cn(
+                            "flex items-center gap-2 flex-wrap",
+                            !rule.isActive && "opacity-50"
+                          )}
+                        >
+                          <label className="flex items-center gap-1.5 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={rule.isActive}
+                              onChange={(e) =>
+                                saveRule({
+                                  id: rule.id,
+                                  dayOfWeek: day,
+                                  startTime: rule.startTime,
+                                  endTime: rule.endTime,
+                                  isActive: e.target.checked,
+                                  category: selectedCategory,
+                                })
+                              }
+                              className="w-4 h-4 rounded border-border text-secondary focus:ring-secondary"
+                            />
+                            <span className="text-xs text-text-secondary">
+                              {rule.isActive ? "פעיל" : "מושבת"}
+                            </span>
+                          </label>
 
-                  {selectedCategory && !rule && globalRule?.isActive && (
-                    <span className="text-xs text-text-muted">
-                      (כללי: {globalRule.startTime}-{globalRule.endTime})
-                    </span>
+                          <div className="flex items-center gap-1.5" dir="ltr">
+                            <TimeInput
+                              value={rule.startTime}
+                              onSave={(v) =>
+                                saveRule({
+                                  id: rule.id,
+                                  dayOfWeek: day,
+                                  startTime: v,
+                                  endTime: rule.endTime,
+                                  isActive: rule.isActive,
+                                  category: selectedCategory,
+                                })
+                              }
+                            />
+                            <span className="text-text-muted text-sm">—</span>
+                            <TimeInput
+                              value={rule.endTime}
+                              onSave={(v) =>
+                                saveRule({
+                                  id: rule.id,
+                                  dayOfWeek: day,
+                                  startTime: rule.startTime,
+                                  endTime: v,
+                                  isActive: rule.isActive,
+                                  category: selectedCategory,
+                                })
+                              }
+                            />
+                          </div>
+
+                          <button
+                            onClick={() => deleteRule(rule.id)}
+                            className="p-1 rounded text-text-muted hover:text-error hover:bg-error/10 transition-colors mr-auto"
+                            title="מחק טווח"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
               );

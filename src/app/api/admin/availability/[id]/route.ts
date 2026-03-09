@@ -1,23 +1,26 @@
 import { NextResponse } from "next/server";
-// import { getServerSession } from "next-auth";
-// import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// DELETE exception by id
+// DELETE exception or rule by id
 export async function DELETE(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
-  // const session = await getServerSession(authOptions);
-  // if (!session) {
-  //   return NextResponse.json({ error: "לא מורשה" }, { status: 401 });
-  // }
-
   try {
-    await prisma.availabilityException.delete({
+    // Try deleting as exception first
+    try {
+      await prisma.availabilityException.delete({
+        where: { id: params.id },
+      });
+      return NextResponse.json({ success: true });
+    } catch {
+      // Not an exception — try as a rule
+    }
+
+    // Try deleting as rule
+    await prisma.availabilityRule.delete({
       where: { id: params.id },
     });
-
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[AVAILABILITY_DELETE]", error);
