@@ -13,7 +13,7 @@ export const CONTACT_PHONE = "054-3135182";
 export const CONTACT_WHATSAPP = "972502919918";
 export const CONTACT_EMAIL = "hilahalfo1@gmail.com";
 export const CONTACT_ADDRESS = "שכונת משולש, זבוטינסקי, ראשון לציון";
-export const SOCIAL_INSTAGRAM = "";
+export const SOCIAL_INSTAGRAM = "https://www.instagram.com/halo.yoga.massage/";
 export const SOCIAL_FACEBOOK = "";
 
 // ─── Navigation ──────────────────────────────────────
