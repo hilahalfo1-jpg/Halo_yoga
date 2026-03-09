@@ -40,6 +40,14 @@ function toKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+// Pre-built time options every 30 minutes
+const TIME_OPTIONS: string[] = [];
+for (let h = 6; h <= 22; h++) {
+  for (const m of ["00", "30"]) {
+    TIME_OPTIONS.push(`${String(h).padStart(2, "0")}:${m}`);
+  }
+}
+
 export default function AvailabilityPage() {
   const [rules, setRules] = useState<Rule[]>([]);
   const [exceptions, setExceptions] = useState<ExceptionItem[]>([]);
@@ -389,25 +397,31 @@ export default function AvailabilityPage() {
 
                   {isActive && (
                     <div className="flex items-center gap-2 mr-auto">
-                      <input
-                        type="time"
+                      <select
                         value={rule?.startTime ?? "09:00"}
                         onChange={(e) =>
                           updateRule(day, { startTime: e.target.value })
                         }
-                        className="px-2 py-1 text-sm rounded border border-border bg-white"
+                        className="px-2 py-1.5 text-sm rounded-lg border border-border bg-white appearance-none cursor-pointer"
                         dir="ltr"
-                      />
+                      >
+                        {TIME_OPTIONS.map((t) => (
+                          <option key={`s-${t}`} value={t}>{t}</option>
+                        ))}
+                      </select>
                       <span className="text-text-muted">—</span>
-                      <input
-                        type="time"
+                      <select
                         value={rule?.endTime ?? "18:00"}
                         onChange={(e) =>
                           updateRule(day, { endTime: e.target.value })
                         }
-                        className="px-2 py-1 text-sm rounded border border-border bg-white"
+                        className="px-2 py-1.5 text-sm rounded-lg border border-border bg-white appearance-none cursor-pointer"
                         dir="ltr"
-                      />
+                      >
+                        {TIME_OPTIONS.map((t) => (
+                          <option key={`e-${t}`} value={t}>{t}</option>
+                        ))}
+                      </select>
                     </div>
                   )}
 
