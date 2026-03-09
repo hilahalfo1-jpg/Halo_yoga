@@ -217,6 +217,7 @@ export default function BookingsPage() {
             onChange={(e) => setDateFrom(e.target.value)}
             className="px-3 py-2 text-sm rounded-lg border border-border bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
             placeholder="מתאריך"
+            dir="ltr"
           />
           <input
             type="date"
@@ -224,6 +225,7 @@ export default function BookingsPage() {
             onChange={(e) => setDateTo(e.target.value)}
             className="px-3 py-2 text-sm rounded-lg border border-border bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
             placeholder="עד תאריך"
+            dir="ltr"
           />
         </div>
       </div>
@@ -288,7 +290,7 @@ export default function BookingsPage() {
                     <select
                       value={booking.status}
                       onChange={(e) => updateStatus(booking.id, e.target.value)}
-                      className="text-sm px-3 py-2 rounded-lg border border-border bg-white flex-1"
+                      className="text-sm px-3 py-2.5 rounded-lg border border-border bg-white flex-1"
                     >
                       {STATUS_CHANGE_OPTIONS.map((opt) => (
                         <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -388,7 +390,7 @@ export default function BookingsPage() {
                           <select
                             value={booking.status}
                             onChange={(e) => updateStatus(booking.id, e.target.value)}
-                            className="text-xs px-2 py-1 rounded border border-border bg-white"
+                            className="text-sm px-2.5 py-1.5 rounded border border-border bg-white"
                           >
                             {STATUS_CHANGE_OPTIONS.map((opt) => (
                               <option key={opt.value} value={opt.value}>{opt.label}</option>

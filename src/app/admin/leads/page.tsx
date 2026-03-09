@@ -257,7 +257,7 @@ export default function LeadsPage() {
                   <select
                     value={lead.status}
                     onChange={(e) => updateStatus(lead.id, e.target.value)}
-                    className="text-xs px-2 py-1 rounded border border-border bg-white"
+                    className="text-sm px-2.5 py-1.5 rounded border border-border bg-white"
                   >
                     {STATUS_CHANGE_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>
