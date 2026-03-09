@@ -32,7 +32,7 @@ export default function ReviewsPageClient({ reviews }: ReviewsPageClientProps) {
     filter === "ALL"
       ? reviews
       : reviews.filter((r) =>
-          r.service?.toLowerCase().includes(filter.toLowerCase())
+          r.service ? r.service.toLowerCase().includes(filter.toLowerCase()) : false
         );
 
   return (

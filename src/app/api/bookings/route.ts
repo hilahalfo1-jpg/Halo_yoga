@@ -49,10 +49,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const { serviceId, startAt, customerName, customerPhone, customerEmail, notes } =
+    const { serviceId, startAt, customerName, customerPhone, customerEmail, notes, isHomeVisit: homeVisitFlag } =
       validated.data;
 
-    const isHomeVisit = body.isHomeVisit === true;
+    const isHomeVisit = homeVisitFlag === true;
 
     // Get service for duration
     const service = await prisma.service.findUnique({

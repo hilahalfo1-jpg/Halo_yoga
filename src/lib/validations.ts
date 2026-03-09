@@ -16,6 +16,7 @@ export const bookingSchema = z.object({
     .optional()
     .or(z.literal("")),
   notes: z.string().max(500, "ההערה ארוכה מדי").optional(),
+  isHomeVisit: z.boolean().optional(),
 });
 
 export type BookingFormData = z.infer<typeof bookingSchema>;

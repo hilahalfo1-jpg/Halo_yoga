@@ -52,7 +52,7 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm md:hidden"
+            className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm md:hidden"
             onClick={onClose}
           />
 
@@ -62,7 +62,7 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="fixed top-0 right-0 bottom-0 z-50 w-80 max-w-[85vw] bg-white shadow-xl md:hidden"
+            className="fixed top-0 right-0 bottom-0 z-[61] w-80 max-w-[85vw] bg-white shadow-xl md:hidden"
           >
             <div className="flex flex-col h-full">
               {/* Header */}

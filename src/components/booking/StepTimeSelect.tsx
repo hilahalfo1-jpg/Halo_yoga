@@ -36,6 +36,10 @@ export default function StepTimeSelect({
         const res = await fetch(
           `/api/bookings?date=${dateStr}&serviceId=${serviceId}`
         );
+        if (!res.ok) {
+          setSlots([]);
+          return;
+        }
         const result = await res.json();
         setSlots(result.data || []);
       } catch {
