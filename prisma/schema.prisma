@@ -125,6 +125,19 @@ model SiteContent {
   @@index([section])
 }
 
+// ─── GIFT CARDS ─────────────────────────
+model GiftCard {
+  id           String   @id @default(cuid())
+  recipientName String
+  senderName    String?
+  serviceName   String
+  message       String
+  code          String   @unique @default(cuid())
+  isRedeemed    Boolean  @default(false)
+  redeemedAt    DateTime?
+  createdAt     DateTime @default(now())
+}
+
 // ─── REVIEWS ─────────────────────────────
 model Review {
   id         String   @id @default(cuid())

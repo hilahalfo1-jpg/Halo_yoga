@@ -34,6 +34,7 @@ export const ADMIN_NAV_LINKS: NavLink[] = [
   { label: "תמונות", href: "/admin/images" },
   { label: "פניות", href: "/admin/leads" },
   { label: "המלצות", href: "/admin/reviews" },
+  { label: "גיפט קארד", href: "/admin/gift-cards" },
 ];
 
 // ─── Categories ──────────────────────────────────────
