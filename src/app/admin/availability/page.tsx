@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import { ChevronDown, ChevronUp, Clock } from "lucide-react";
 import CalendarGrid, { type DayInfo, type DayStatus } from "@/components/admin/CalendarGrid";
@@ -40,7 +40,40 @@ function toKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-// Pre-built time options every 30 minutes
+// Inline time input that saves on blur only
+function TimeInput({
+  value,
+  onSave,
+}: {
+  value: string;
+  onSave: (val: string) => void;
+}) {
+  const [local, setLocal] = useState(value);
+  const ref = useRef<HTMLInputElement>(null);
+
+  // Sync when external value changes
+  useEffect(() => {
+    setLocal(value);
+  }, [value]);
+
+  return (
+    <input
+      ref={ref}
+      type="time"
+      value={local}
+      onChange={(e) => setLocal(e.target.value)}
+      onBlur={() => {
+        if (local && local !== value) {
+          onSave(local);
+        }
+      }}
+      className="px-2 py-1.5 text-sm rounded-lg border border-border bg-white cursor-pointer w-[100px] text-center"
+      dir="ltr"
+    />
+  );
+}
+
+// Pre-built time options every 30 minutes (used in DayDetailPanel)
 const TIME_OPTIONS: string[] = [];
 for (let h = 6; h <= 22; h++) {
   for (const m of ["00", "30"]) {
@@ -396,32 +429,16 @@ export default function AvailabilityPage() {
                   </label>
 
                   {isActive && (
-                    <div className="flex items-center gap-2 mr-auto">
-                      <select
+                    <div className="flex items-center gap-2 mr-auto" dir="ltr">
+                      <TimeInput
                         value={rule?.startTime ?? "09:00"}
-                        onChange={(e) =>
-                          updateRule(day, { startTime: e.target.value })
-                        }
-                        className="px-2 py-1.5 text-sm rounded-lg border border-border bg-white appearance-none cursor-pointer"
-                        dir="ltr"
-                      >
-                        {TIME_OPTIONS.map((t) => (
-                          <option key={`s-${t}`} value={t}>{t}</option>
-                        ))}
-                      </select>
+                        onSave={(v) => updateRule(day, { startTime: v })}
+                      />
                       <span className="text-text-muted">—</span>
-                      <select
+                      <TimeInput
                         value={rule?.endTime ?? "18:00"}
-                        onChange={(e) =>
-                          updateRule(day, { endTime: e.target.value })
-                        }
-                        className="px-2 py-1.5 text-sm rounded-lg border border-border bg-white appearance-none cursor-pointer"
-                        dir="ltr"
-                      >
-                        {TIME_OPTIONS.map((t) => (
-                          <option key={`e-${t}`} value={t}>{t}</option>
-                        ))}
-                      </select>
+                        onSave={(v) => updateRule(day, { endTime: v })}
+                      />
                     </div>
                   )}
 

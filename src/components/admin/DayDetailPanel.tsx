@@ -54,13 +54,6 @@ function toDateString(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-// Pre-built time options every 30 minutes
-const TIME_OPTIONS: string[] = [];
-for (let h = 6; h <= 22; h++) {
-  for (const m of ["00", "30"]) {
-    TIME_OPTIONS.push(`${String(h).padStart(2, "0")}:${m}`);
-  }
-}
 
 export default function DayDetailPanel({
   date,
@@ -316,36 +309,28 @@ export default function DayDetailPanel({
           /* Custom Hours Form */
           <div className="space-y-3">
             <p className="text-sm font-medium text-text">הגדרת שעות מיוחדות:</p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3" dir="ltr">
               <div>
-                <label className="text-xs text-text-muted block mb-1">
+                <label className="text-xs text-text-muted block mb-1 text-right">
                   שעת התחלה
                 </label>
-                <select
+                <input
+                  type="time"
                   value={customStart}
                   onChange={(e) => setCustomStart(e.target.value)}
-                  className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-white cursor-pointer"
-                  dir="ltr"
-                >
-                  {TIME_OPTIONS.map((t) => (
-                    <option key={`cs-${t}`} value={t}>{t}</option>
-                  ))}
-                </select>
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-white text-center"
+                />
               </div>
               <div>
-                <label className="text-xs text-text-muted block mb-1">
+                <label className="text-xs text-text-muted block mb-1 text-right">
                   שעת סיום
                 </label>
-                <select
+                <input
+                  type="time"
                   value={customEnd}
                   onChange={(e) => setCustomEnd(e.target.value)}
-                  className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-white cursor-pointer"
-                  dir="ltr"
-                >
-                  {TIME_OPTIONS.map((t) => (
-                    <option key={`ce-${t}`} value={t}>{t}</option>
-                  ))}
-                </select>
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-white text-center"
+                />
               </div>
             </div>
             <input
