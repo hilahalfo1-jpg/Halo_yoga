@@ -14,6 +14,7 @@ import {
   FileText,
   MessageSquare,
   Star,
+  Gift,
   LogOut,
   X,
 } from "lucide-react";
@@ -30,6 +31,7 @@ const navItems = [
   { label: "תוכן האתר", href: "/admin/content", icon: FileText },
   { label: "פניות", href: "/admin/leads", icon: MessageSquare },
   { label: "המלצות", href: "/admin/reviews", icon: Star },
+  { label: "גיפט קארד", href: "/admin/gift-cards", icon: Gift },
 ];
 
 interface AdminSidebarProps {
