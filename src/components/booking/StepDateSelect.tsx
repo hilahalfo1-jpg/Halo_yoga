@@ -27,13 +27,15 @@ export default function StepDateSelect({
     new Date(today.getFullYear(), today.getMonth(), 1)
   );
   const [activeDays, setActiveDays] = useState<number[]>([]);
+  const [blockedDates, setBlockedDates] = useState<Set<string>>(new Set());
 
-  // Fetch available days from admin availability settings
+  // Fetch available days + blocked dates from admin availability settings
   useEffect(() => {
     fetch("/api/availability-days")
       .then((res) => res.json())
       .then((json) => {
         if (json.data) setActiveDays(json.data);
+        if (json.blockedDates) setBlockedDates(new Set(json.blockedDates));
       })
       .catch(() => {});
   }, []);
@@ -63,11 +65,15 @@ export default function StepDateSelect({
     return date < today;
   };
 
-  // Check if day has availability based on admin rules
+  // Check if day has availability based on admin rules AND is not blocked
   const hasPotentialSlots = (day: number) => {
     const date = new Date(year, month, day);
     const dayOfWeek = date.getDay();
-    return activeDays.includes(dayOfWeek);
+    if (!activeDays.includes(dayOfWeek)) return false;
+    // Check if this specific date is blocked
+    const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    if (blockedDates.has(dateKey)) return false;
+    return true;
   };
 
   const canGoPrev =

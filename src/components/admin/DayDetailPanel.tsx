@@ -90,8 +90,6 @@ export default function DayDetailPanel({
     .filter((r) => r.dayOfWeek === dayOfWeek && r.category === null)
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
   const activeRules = (selectedCategory && categoryRules.length > 0) ? categoryRules : generalRules;
-  // Keep a single reference for backward compat (first active rule)
-  const activeRule = activeRules.find((r) => r.isActive) || activeRules[0] || null;
 
   // Find exceptions for this date
   const dayExceptions = exceptions.filter((e) => {
@@ -311,7 +309,7 @@ export default function DayDetailPanel({
               )}
             >
               <RotateCcw className="h-4 w-4" />
-              {activeRule?.isActive
+              {activeRules.some((r) => r.isActive)
                 ? `הפוך את כל ימי ${dayName} ליום חופש`
                 : `הפעל את כל ימי ${dayName}`}
             </button>

@@ -64,17 +64,44 @@ export async function POST(req: Request) {
       }
 
       const excCategory = body.data.category ?? null;
+      const excDate = new Date(validated.data.date);
+      // Normalize date to start of day for comparison
+      excDate.setHours(0, 0, 0, 0);
+      const nextDay = new Date(excDate);
+      nextDay.setDate(nextDay.getDate() + 1);
 
-      const exception = await prisma.availabilityException.create({
-        data: {
-          date: new Date(validated.data.date),
-          type: validated.data.type,
-          startTime: validated.data.startTime || null,
-          endTime: validated.data.endTime || null,
-          reason: validated.data.reason || null,
+      // Check for existing exception on the same date+category — replace it
+      const existing = await prisma.availabilityException.findFirst({
+        where: {
+          date: { gte: excDate, lt: nextDay },
           category: excCategory,
         },
       });
+
+      let exception;
+      if (existing) {
+        // Update existing exception instead of creating duplicate
+        exception = await prisma.availabilityException.update({
+          where: { id: existing.id },
+          data: {
+            type: validated.data.type,
+            startTime: validated.data.startTime || null,
+            endTime: validated.data.endTime || null,
+            reason: validated.data.reason || null,
+          },
+        });
+      } else {
+        exception = await prisma.availabilityException.create({
+          data: {
+            date: new Date(validated.data.date),
+            type: validated.data.type,
+            startTime: validated.data.startTime || null,
+            endTime: validated.data.endTime || null,
+            reason: validated.data.reason || null,
+            category: excCategory,
+          },
+        });
+      }
 
       return NextResponse.json({ data: exception }, { status: 201 });
     }
