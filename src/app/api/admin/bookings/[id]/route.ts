@@ -27,20 +27,25 @@ export async function PATCH(
       include: { service: true },
     });
 
-    // Send email notification on status change
+    // Send email notification on status change (fire-and-forget)
     if (status && booking.customerEmail) {
       const emailData = {
         customerName: booking.customerName,
         customerEmail: booking.customerEmail,
+        customerPhone: booking.customerPhone,
         serviceName: booking.service.name,
         startAt: booking.startAt,
         cancelToken: booking.cancelToken,
       };
 
       if (status === "CONFIRMED") {
-        sendBookingApprovedEmail(emailData);
+        sendBookingApprovedEmail(emailData).catch((e) =>
+          console.error("[EMAIL_APPROVED]", e)
+        );
       } else if (status === "REJECTED" || status === "CANCELLED") {
-        sendBookingRejectedEmail(emailData);
+        sendBookingRejectedEmail(emailData).catch((e) =>
+          console.error("[EMAIL_REJECTED]", e)
+        );
       }
     }
 

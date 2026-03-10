@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAvailableSlots, isSlotAvailable } from "@/lib/slots";
 import { bookingSchema } from "@/lib/validations";
+import { sendNewBookingAdminEmail, sendBookingReceivedEmail } from "@/lib/email";
 
 // GET available slots for a date + service
 export async function GET(req: Request) {
@@ -94,6 +95,25 @@ export async function POST(req: Request) {
       },
       include: { service: true },
     });
+
+    // Send email notifications (fire-and-forget — don't block the response)
+    const emailData = {
+      customerName,
+      customerEmail: customerEmail || "",
+      customerPhone,
+      serviceName: service.name,
+      startAt: startDate,
+      notes: notes || null,
+      isHomeVisit,
+    };
+    sendNewBookingAdminEmail(emailData).catch((e) =>
+      console.error("[EMAIL_ADMIN]", e)
+    );
+    if (customerEmail) {
+      sendBookingReceivedEmail(emailData).catch((e) =>
+        console.error("[EMAIL_CUSTOMER]", e)
+      );
+    }
 
     return NextResponse.json({ data: booking }, { status: 201 });
   } catch (error) {
