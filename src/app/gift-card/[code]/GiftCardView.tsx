@@ -1,7 +1,5 @@
 "use client";
 
-import Image from "next/image";
-
 interface GiftCardViewProps {
   recipientName: string;
   senderName: string | null;
@@ -18,105 +16,124 @@ export default function GiftCardView({
   isRedeemed,
 }: GiftCardViewProps) {
   return (
-    <div className="min-h-screen bg-surface flex items-center justify-center p-4 sm:p-8" dir="rtl">
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-8" style={{ backgroundColor: "#f5f0e8" }} dir="rtl">
       <div className="w-full max-w-2xl">
         {/* Gift Card */}
-        <div className="relative bg-white rounded-3xl shadow-2xl overflow-hidden">
-          {/* Decorative scalloped border */}
-          <div className="absolute inset-0 border-[12px] sm:border-[16px] border-primary/20 rounded-3xl pointer-events-none" />
-          <div className="absolute inset-[6px] sm:inset-[8px] border-2 border-dashed border-primary/30 rounded-[20px] pointer-events-none" />
-
-          {/* Content */}
-          <div className="relative p-8 sm:p-12">
-            {/* Header */}
-            <div className="text-center mb-8">
-              <div className="flex justify-center mb-4">
-                <Image
-                  src="/images/logo.png"
-                  alt="HALO"
-                  width={80}
-                  height={80}
-                  className="opacity-80"
-                />
+        <div className="relative overflow-hidden" style={{ backgroundColor: "#faf6ee", aspectRatio: "4/3" }}>
+          {/* Redeemed overlay */}
+          {isRedeemed && (
+            <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/10">
+              <div className="bg-white/90 backdrop-blur-sm text-gray-600 text-lg font-bold px-8 py-3 rounded-full border-2 border-gray-300 -rotate-12 shadow-lg">
+                מומש
               </div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-1">
-                Gift Card
-              </h1>
-              <p className="text-text-muted text-sm">Yoga & Massage</p>
             </div>
+          )}
 
-            {/* Recipient */}
-            <div className="text-center mb-6">
-              <p className="text-text-muted text-sm mb-1">עבור</p>
-              <p className="text-2xl sm:text-3xl font-bold text-text">
-                {recipientName}
-              </p>
-            </div>
+          {/* Left botanical decoration */}
+          <div className="absolute bottom-0 left-0 w-[35%] h-[70%] pointer-events-none">
+            <svg viewBox="0 0 200 400" fill="none" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+              {/* Main branch */}
+              <path d="M120 400 C110 350, 90 300, 80 250 C70 200, 60 150, 70 100" stroke="#8b9e7e" strokeWidth="2" fill="none" />
+              {/* Leaves */}
+              <ellipse cx="65" cy="140" rx="18" ry="28" transform="rotate(-20 65 140)" fill="#9aac8b" opacity="0.6" />
+              <ellipse cx="90" cy="180" rx="16" ry="25" transform="rotate(15 90 180)" fill="#8b9e7e" opacity="0.5" />
+              <ellipse cx="75" cy="230" rx="18" ry="26" transform="rotate(-10 75 230)" fill="#9aac8b" opacity="0.55" />
+              <ellipse cx="95" cy="280" rx="15" ry="22" transform="rotate(20 95 280)" fill="#8b9e7e" opacity="0.5" />
+              <ellipse cx="85" cy="320" rx="17" ry="24" transform="rotate(-15 85 320)" fill="#9aac8b" opacity="0.45" />
+              {/* Small branch */}
+              <path d="M80 250 C60 230, 40 220, 20 230" stroke="#8b9e7e" strokeWidth="1.5" fill="none" />
+              <ellipse cx="30" cy="225" rx="12" ry="18" transform="rotate(-30 30 225)" fill="#9aac8b" opacity="0.5" />
+              {/* Lavender flowers */}
+              <circle cx="68" cy="105" r="4" fill="#b8a9c9" opacity="0.7" />
+              <circle cx="60" cy="95" r="3.5" fill="#c4b5d4" opacity="0.6" />
+              <circle cx="72" cy="92" r="3" fill="#b8a9c9" opacity="0.5" />
+              <circle cx="64" cy="82" r="3.5" fill="#c4b5d4" opacity="0.65" />
+              <circle cx="55" cy="88" r="2.5" fill="#d4c5e4" opacity="0.5" />
+              {/* Second flower cluster */}
+              <circle cx="25" cy="218" r="3" fill="#b8a9c9" opacity="0.6" />
+              <circle cx="18" cy="210" r="2.5" fill="#c4b5d4" opacity="0.5" />
+              {/* Scattered seeds/dots */}
+              <circle cx="100" cy="160" r="1.5" fill="#c4a97d" opacity="0.4" />
+              <circle cx="110" cy="145" r="1" fill="#c4a97d" opacity="0.3" />
+              <circle cx="95" cy="115" r="1.5" fill="#c4a97d" opacity="0.35" />
+            </svg>
+          </div>
 
-            {/* Service */}
-            <div className="bg-primary/10 rounded-2xl px-6 py-4 text-center mb-6">
-              <p className="text-text-muted text-xs mb-1">שובר עבור</p>
-              <p className="text-xl font-semibold text-primary-dark">
-                {serviceName}
-              </p>
-            </div>
+          {/* Right botanical decoration (mirrored) */}
+          <div className="absolute bottom-0 right-0 w-[35%] h-[70%] pointer-events-none" style={{ transform: "scaleX(-1)" }}>
+            <svg viewBox="0 0 200 400" fill="none" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+              <path d="M120 400 C110 350, 90 300, 80 250 C70 200, 60 150, 70 100" stroke="#8b9e7e" strokeWidth="2" fill="none" />
+              <ellipse cx="65" cy="140" rx="18" ry="28" transform="rotate(-20 65 140)" fill="#9aac8b" opacity="0.6" />
+              <ellipse cx="90" cy="180" rx="16" ry="25" transform="rotate(15 90 180)" fill="#8b9e7e" opacity="0.5" />
+              <ellipse cx="75" cy="230" rx="18" ry="26" transform="rotate(-10 75 230)" fill="#9aac8b" opacity="0.55" />
+              <ellipse cx="95" cy="280" rx="15" ry="22" transform="rotate(20 95 280)" fill="#8b9e7e" opacity="0.5" />
+              <ellipse cx="85" cy="320" rx="17" ry="24" transform="rotate(-15 85 320)" fill="#9aac8b" opacity="0.45" />
+              <path d="M80 250 C60 230, 40 220, 20 230" stroke="#8b9e7e" strokeWidth="1.5" fill="none" />
+              <ellipse cx="30" cy="225" rx="12" ry="18" transform="rotate(-30 30 225)" fill="#9aac8b" opacity="0.5" />
+              <circle cx="68" cy="105" r="4" fill="#b8a9c9" opacity="0.7" />
+              <circle cx="60" cy="95" r="3.5" fill="#c4b5d4" opacity="0.6" />
+              <circle cx="72" cy="92" r="3" fill="#b8a9c9" opacity="0.5" />
+              <circle cx="64" cy="82" r="3.5" fill="#c4b5d4" opacity="0.65" />
+              <circle cx="55" cy="88" r="2.5" fill="#d4c5e4" opacity="0.5" />
+              <circle cx="25" cy="218" r="3" fill="#b8a9c9" opacity="0.6" />
+              <circle cx="18" cy="210" r="2.5" fill="#c4b5d4" opacity="0.5" />
+              <circle cx="100" cy="160" r="1.5" fill="#c4a97d" opacity="0.4" />
+              <circle cx="110" cy="145" r="1" fill="#c4a97d" opacity="0.3" />
+              <circle cx="95" cy="115" r="1.5" fill="#c4a97d" opacity="0.35" />
+            </svg>
+          </div>
+
+          {/* Center content */}
+          <div className="relative z-10 flex flex-col items-center justify-center h-full px-8 sm:px-16 py-12 sm:py-16 text-center">
+            {/* Top text */}
+            <p className="text-sm sm:text-base tracking-wide mb-2" style={{ color: "#6b6255" }}>
+              הינך מוזמנ/ת ל{serviceName}
+            </p>
+            <p className="text-sm sm:text-base mb-8 sm:mb-10" style={{ color: "#6b6255" }}>
+              מתנה
+            </p>
+
+            {/* Recipient name - large elegant serif */}
+            <h1
+              className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 sm:mb-8 leading-tight"
+              style={{
+                color: "#4a3f35",
+                fontFamily: "'Frank Ruhl Libre', 'David Libre', 'Noto Serif Hebrew', serif",
+              }}
+            >
+              {recipientName} היקר/ה
+            </h1>
 
             {/* Message */}
-            <div className="text-center mb-8">
-              <p className="text-text-secondary leading-relaxed whitespace-pre-line text-base sm:text-lg italic">
-                &ldquo;{message}&rdquo;
+            {message && (
+              <p
+                className="text-sm sm:text-base leading-relaxed max-w-md mb-6 whitespace-pre-line"
+                style={{ color: "#7a6f62" }}
+              >
+                {message}
               </p>
-            </div>
+            )}
 
             {/* Sender */}
             {senderName && (
-              <div className="text-center mb-6">
-                <p className="text-text-muted text-sm">
-                  באהבה, <span className="font-medium text-text">{senderName}</span>
-                </p>
-              </div>
+              <p className="text-sm mb-8" style={{ color: "#8a7f72" }}>
+                באהבה, {senderName}
+              </p>
             )}
 
-            {/* Yoga pose SVG decoration */}
-            <div className="flex justify-between items-end">
-              <div className="text-primary/20">
-                <svg width="80" height="80" viewBox="0 0 100 100" fill="currentColor">
-                  {/* Lotus flower */}
-                  <path d="M50 85c-3-8-15-15-25-15c5-5 15-8 22-5c-5-8-15-18-10-30c5 8 12 18 13 25c1-7 8-17 13-25c5 12-5 22-10 30c7-3 17 0 22 5c-10 0-22 7-25 15z" />
-                  <circle cx="50" cy="40" r="3" />
-                </svg>
-              </div>
-              <div className="text-primary/20">
-                <svg width="100" height="100" viewBox="0 0 120 120" fill="currentColor">
-                  {/* Yoga tree pose */}
-                  <circle cx="60" cy="18" r="8" />
-                  <path d="M60 28c0 0-2 12-2 20c-8-6-18-4-22-2c4-4 12-8 18-6c-1-4-1-8 0-12z" />
-                  <path d="M60 28c0 0 2 12 2 20c8-6 18-4 22-2c-4-4-12-8-18-6c1-4 1-8 0-12z" />
-                  <path d="M58 48v30" stroke="currentColor" strokeWidth="3" fill="none" />
-                  <path d="M62 48v30" stroke="currentColor" strokeWidth="3" fill="none" />
-                  <path d="M52 78h16" stroke="currentColor" strokeWidth="2" fill="none" />
-                  <path d="M68 55c4-8 12-10 16-8" stroke="currentColor" strokeWidth="2" fill="none" />
-                  <path d="M52 55c-4-8-12-10-16-8" stroke="currentColor" strokeWidth="2" fill="none" />
-                </svg>
-              </div>
-            </div>
-
-            {/* Redeemed badge */}
-            {isRedeemed && (
-              <div className="absolute top-6 left-6 bg-text-muted/80 text-white text-xs font-bold px-3 py-1 rounded-full -rotate-12">
-                מומש
-              </div>
-            )}
+            {/* Brand */}
+            <p
+              className="text-sm sm:text-base tracking-[0.3em] uppercase mt-auto"
+              style={{ color: "#6b6255" }}
+            >
+              HALOYOGAMASSAGE
+            </p>
           </div>
-
-          {/* Bottom decorative leaves */}
-          <div className="h-3 bg-gradient-to-l from-primary/30 via-primary/50 to-primary/30" />
         </div>
 
-        {/* Footer info */}
-        <div className="text-center mt-6 text-text-muted text-sm">
-          <p>HALO Yoga & Massage</p>
-          <p className="mt-1">haloyogamassage.com</p>
+        {/* Footer */}
+        <div className="text-center mt-6 text-sm" style={{ color: "#8a7f72" }}>
+          <p>haloyogamassage.com</p>
         </div>
       </div>
     </div>
