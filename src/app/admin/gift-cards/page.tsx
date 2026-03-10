@@ -274,7 +274,7 @@ export default function AdminGiftCardsPage() {
         title="גיפט קארד חדש"
         size="md"
       >
-        <div className="space-y-4">
+        <form onSubmit={(e) => { e.preventDefault(); handleCreate(); }} className="space-y-4">
           <Input
             label="שם המקבל/ת *"
             placeholder="למי מיועד הגיפט קארד?"
@@ -304,16 +304,17 @@ export default function AdminGiftCardsPage() {
             <Button
               variant="ghost"
               size="sm"
+              type="button"
               onClick={() => setIsModalOpen(false)}
             >
               ביטול
             </Button>
-            <Button size="sm" isLoading={isSubmitting} onClick={handleCreate}>
+            <Button size="sm" isLoading={isSubmitting} type="submit">
               <Gift className="h-4 w-4" />
               יצירת גיפט קארד
             </Button>
           </div>
-        </div>
+        </form>
       </Modal>
 
       {/* Share Modal (shown after creation) */}

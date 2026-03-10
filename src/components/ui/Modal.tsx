@@ -30,10 +30,14 @@ export default function Modal({
   const overlayRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
+  // Use ref to avoid re-creating event listeners on every render
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        onClose();
+        onCloseRef.current();
         return;
       }
 
@@ -58,7 +62,7 @@ export default function Modal({
         }
       }
     },
-    [onClose]
+    []
   );
 
   useEffect(() => {
@@ -66,13 +70,19 @@ export default function Modal({
       document.addEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "hidden";
 
-      // Focus first focusable element
-      setTimeout(() => {
+      // Focus first focusable element (only on initial open)
+      const timer = setTimeout(() => {
         const focusable = contentRef.current?.querySelector<HTMLElement>(
           'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
         );
         focusable?.focus();
       }, 100);
+
+      return () => {
+        clearTimeout(timer);
+        document.removeEventListener("keydown", handleKeyDown);
+        document.body.style.overflow = "";
+      };
     }
 
     return () => {

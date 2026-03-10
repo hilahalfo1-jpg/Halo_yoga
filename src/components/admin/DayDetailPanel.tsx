@@ -281,6 +281,7 @@ export default function DayDetailPanel({
                 <Button
                   variant="outline"
                   size="sm"
+                  type="button"
                   className="flex-1 gap-1.5 text-error border-error/20 hover:bg-error/5"
                   onClick={handleBlock}
                   isLoading={isSubmitting}
@@ -291,6 +292,7 @@ export default function DayDetailPanel({
                 <Button
                   variant="outline"
                   size="sm"
+                  type="button"
                   className="flex-1 gap-1.5"
                   onClick={() => setMode("custom-hours")}
                 >
@@ -316,7 +318,7 @@ export default function DayDetailPanel({
           </div>
         ) : (
           /* Custom Hours Form */
-          <div className="space-y-3">
+          <form onSubmit={(e) => { e.preventDefault(); handleCustomHours(); }} className="space-y-3">
             <p className="text-sm font-medium text-text">הגדרת שעות מיוחדות:</p>
             <div className="grid grid-cols-2 gap-3" dir="ltr">
               <div>
@@ -353,7 +355,7 @@ export default function DayDetailPanel({
               <Button
                 size="sm"
                 className="flex-1"
-                onClick={handleCustomHours}
+                type="submit"
                 isLoading={isSubmitting}
               >
                 שמור
@@ -361,12 +363,13 @@ export default function DayDetailPanel({
               <Button
                 variant="ghost"
                 size="sm"
+                type="button"
                 onClick={() => setMode("view")}
               >
                 ביטול
               </Button>
             </div>
-          </div>
+          </form>
         )}
       </div>
     </div>
