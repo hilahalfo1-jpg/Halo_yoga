@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-/** Normalize identifier: lowercase, strip spaces/dashes */
+/** Normalize identifier: for phones strip all non-digits, for emails lowercase+trim */
 function normalize(val: string): string {
-  return val.toLowerCase().replace(/[\s\-()]/g, "");
+  const trimmed = val.trim();
+  if (trimmed.includes("@")) {
+    return trimmed.toLowerCase();
+  }
+  // Phone: strip all non-digit characters
+  return trimmed.replace(/\D/g, "");
 }
 
 // GET — list all blacklisted entries
