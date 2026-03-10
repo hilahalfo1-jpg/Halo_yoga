@@ -38,7 +38,22 @@ const SECTIONS = [
       { key: "credential3", label: "הסמכה 3", type: "input" as const },
       { key: "paragraph1", label: "פסקה 1", type: "textarea" as const },
       { key: "paragraph2", label: "פסקה 2", type: "textarea" as const },
+      { key: "paragraph3", label: "פסקה 3", type: "textarea" as const },
       { key: "buttonText", label: "טקסט כפתור", type: "input" as const },
+    ],
+  },
+  {
+    key: "howItWorks",
+    label: "דף הבית - איך זה עובד",
+    fields: [
+      { key: "title", label: "כותרת", type: "input" as const },
+      { key: "subtitle", label: "תת כותרת", type: "input" as const },
+      { key: "step1Title", label: "שלב 1 - כותרת", type: "input" as const },
+      { key: "step1Desc", label: "שלב 1 - תיאור", type: "input" as const },
+      { key: "step2Title", label: "שלב 2 - כותרת", type: "input" as const },
+      { key: "step2Desc", label: "שלב 2 - תיאור", type: "input" as const },
+      { key: "step3Title", label: "שלב 3 - כותרת", type: "input" as const },
+      { key: "step3Desc", label: "שלב 3 - תיאור", type: "input" as const },
     ],
   },
   {
@@ -71,8 +86,16 @@ const SECTIONS = [
     key: "reviews",
     label: "המלצות",
     fields: [
-      { key: "heroTitle", label: "כותרת", type: "input" as const },
-      { key: "heroSubtitle", label: "תת כותרת", type: "input" as const },
+      { key: "title", label: "כותרת בדף הבית", type: "input" as const },
+      { key: "heroTitle", label: "כותרת עמוד המלצות", type: "input" as const },
+      { key: "heroSubtitle", label: "תת כותרת עמוד המלצות", type: "input" as const },
+    ],
+  },
+  {
+    key: "footer",
+    label: "פוטר",
+    fields: [
+      { key: "description", label: "תיאור קצר", type: "textarea" as const },
     ],
   },
   {

@@ -17,10 +17,12 @@ import {
   SOCIAL_FACEBOOK,
 } from "@/lib/constants";
 import { useSiteImages } from "@/lib/hooks/useSiteImages";
+import { useSiteContent } from "@/lib/hooks/useSiteContent";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
   const { images } = useSiteImages();
+  const { t } = useSiteContent();
   const logoSrc = images.logo?.imagePath || LOGO_PATH;
 
   return (
@@ -40,7 +42,7 @@ export default function Footer() {
               {SITE_TAGLINE}
             </p>
             <p className="text-sm text-white/60 leading-relaxed mb-4">
-              טיפולי עיסוי מקצועיים, שיעורי יוגה פרטיים וקבוצתיים, ושיקום פציעות.
+              {t("footer", "description", "טיפולי עיסוי מקצועיים, שיעורי יוגה פרטיים וקבוצתיים, ושיקום פציעות.")}
             </p>
             {(SOCIAL_INSTAGRAM || SOCIAL_FACEBOOK) && (
               <div className="flex items-center gap-3">

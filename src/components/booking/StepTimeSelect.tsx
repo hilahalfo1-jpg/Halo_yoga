@@ -6,6 +6,7 @@ import Button from "@/components/ui/Button";
 import Spinner from "@/components/ui/Spinner";
 import EmptyState from "@/components/ui/EmptyState";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import type { TimeSlot } from "@/types";
 
 interface StepTimeSelectProps {
@@ -44,6 +45,7 @@ export default function StepTimeSelect({
         setSlots(result.data || []);
       } catch {
         setSlots([]);
+        toast.error("שגיאה בטעינת זמנים פנויים");
       } finally {
         setIsLoading(false);
       }

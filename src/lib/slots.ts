@@ -201,11 +201,14 @@ export async function getAvailableSlots(
 
 /**
  * Check if a specific slot is still available (for booking creation).
+ * Checks both booking conflicts AND availability exceptions (BLOCKED dates).
  */
 export async function isSlotAvailable(
   startAt: Date,
-  endAt: Date
+  endAt: Date,
+  serviceId?: string
 ): Promise<boolean> {
+  // 1. Check for booking conflicts
   const conflicting = await prisma.booking.findFirst({
     where: {
       status: { not: "CANCELLED" },
@@ -214,5 +217,36 @@ export async function isSlotAvailable(
     },
   });
 
-  return !conflicting;
+  if (conflicting) return false;
+
+  // 2. Check for BLOCKED exceptions on this date
+  const targetDate = new Date(startAt);
+  targetDate.setHours(0, 0, 0, 0);
+  const nextDay = new Date(targetDate);
+  nextDay.setDate(nextDay.getDate() + 1);
+
+  // Get service category if serviceId provided
+  let serviceCategory: string | null = null;
+  if (serviceId) {
+    const service = await prisma.service.findUnique({
+      where: { id: serviceId },
+      select: { category: true },
+    });
+    serviceCategory = service?.category || null;
+  }
+
+  const exceptions = await prisma.availabilityException.findMany({
+    where: {
+      date: { gte: targetDate, lt: nextDay },
+      type: "BLOCKED",
+      OR: [
+        { category: serviceCategory },
+        { category: null },
+      ],
+    },
+  });
+
+  if (exceptions.length > 0) return false;
+
+  return true;
 }

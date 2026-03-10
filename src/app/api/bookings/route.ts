@@ -70,8 +70,8 @@ export async function POST(req: Request) {
     const startDate = new Date(startAt);
     const endDate = new Date(startDate.getTime() + service.duration * 60 * 1000);
 
-    // Re-check availability inside transaction
-    const available = await isSlotAvailable(startDate, endDate);
+    // Re-check availability inside transaction (includes BLOCKED date check)
+    const available = await isSlotAvailable(startDate, endDate, serviceId);
     if (!available) {
       return NextResponse.json(
         { error: "הזמן שבחרת כבר לא פנוי, אנא בחרו זמן אחר" },

@@ -7,6 +7,7 @@ import Section from "@/components/ui/Section";
 import Card from "@/components/ui/Card";
 import StarRating from "@/components/ui/StarRating";
 import Button from "@/components/ui/Button";
+import { useSiteContent } from "@/lib/hooks/useSiteContent";
 import type { ReviewItem } from "@/types";
 
 interface ReviewsCarouselProps {
@@ -14,6 +15,7 @@ interface ReviewsCarouselProps {
 }
 
 export default function ReviewsCarousel({ reviews }: ReviewsCarouselProps) {
+  const { t } = useSiteContent();
   const averageRating =
     reviews.length > 0
       ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
@@ -23,7 +25,7 @@ export default function ReviewsCarousel({ reviews }: ReviewsCarouselProps) {
     <Section bg="surface">
       <div className="text-center mb-12">
         <h2 className="text-3xl md:text-4xl font-bold text-text mb-4">
-          מה אומרים עליי
+          {t("reviews", "title", "מה אומרים עליי")}
         </h2>
         <div className="flex items-center justify-center gap-3 mb-2">
           <StarRating rating={Math.round(averageRating)} size="lg" />
