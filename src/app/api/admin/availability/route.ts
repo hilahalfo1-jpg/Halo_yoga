@@ -89,6 +89,30 @@ export async function POST(req: Request) {
         });
       } else {
         // OVERRIDE: allow multiple time ranges per date+category
+        const newStart = validated.data.startTime;
+        const newEnd = validated.data.endTime;
+
+        if (newStart && newEnd) {
+          // Check for overlap with existing OVERRIDE ranges
+          const existingOverrides = await prisma.availabilityException.findMany({
+            where: {
+              date: { gte: excDate, lt: nextDay },
+              category: excCategory,
+              type: "OVERRIDE",
+            },
+          });
+
+          const hasOverlap = existingOverrides.some(
+            (e) => e.startTime && e.endTime && newStart < e.endTime && newEnd > e.startTime
+          );
+          if (hasOverlap) {
+            return NextResponse.json(
+              { error: "טווח השעות חופף לטווח קיים" },
+              { status: 400 }
+            );
+          }
+        }
+
         // Remove any BLOCKED exception first (opening the day back up)
         await prisma.availabilityException.deleteMany({
           where: {
@@ -101,8 +125,8 @@ export async function POST(req: Request) {
           data: {
             date: new Date(validated.data.date),
             type: "OVERRIDE",
-            startTime: validated.data.startTime || null,
-            endTime: validated.data.endTime || null,
+            startTime: newStart || null,
+            endTime: newEnd || null,
             reason: validated.data.reason || null,
             category: excCategory,
           },

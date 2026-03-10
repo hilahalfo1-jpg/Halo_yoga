@@ -33,7 +33,11 @@ export default function StepTimeSelect({
     async function fetchSlots() {
       setIsLoading(true);
       try {
-        const dateStr = date.toISOString().split("T")[0];
+        // Use local date parts to avoid timezone shift (toISOString converts to UTC)
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, "0");
+        const d = String(date.getDate()).padStart(2, "0");
+        const dateStr = `${y}-${m}-${d}`;
         const res = await fetch(
           `/api/bookings?date=${dateStr}&serviceId=${serviceId}`
         );

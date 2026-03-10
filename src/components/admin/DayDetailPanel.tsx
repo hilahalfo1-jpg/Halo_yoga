@@ -8,6 +8,7 @@ import {
   Trash2,
   RotateCcw,
 } from "lucide-react";
+import { toast } from "sonner";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import { DAYS_OF_WEEK_HE, CATEGORY_LABELS } from "@/lib/constants";
@@ -152,6 +153,23 @@ export default function DayDetailPanel({
   };
 
   const handleCustomHours = async () => {
+    // Validate start < end
+    if (customStart >= customEnd) {
+      toast.error("שעת סיום חייבת להיות אחרי שעת התחלה");
+      return;
+    }
+
+    // Check for overlapping OVERRIDE ranges
+    const existingOverrides = relevantExceptions
+      .filter((e) => e.type === "OVERRIDE" && e.startTime && e.endTime);
+    const hasOverlap = existingOverrides.some((e) => {
+      return customStart < e.endTime! && customEnd > e.startTime!;
+    });
+    if (hasOverlap) {
+      toast.error("טווח השעות חופף לטווח קיים. מחקו את הקיים או בחרו שעות אחרות.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await onAddException({

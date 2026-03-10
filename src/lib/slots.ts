@@ -3,6 +3,24 @@ import { SLOT_BUFFER_MINUTES } from "./constants";
 import type { TimeSlot } from "@/types";
 
 /**
+ * Get current time in Israel timezone
+ */
+function nowInIsrael(): Date {
+  return new Date(
+    new Date().toLocaleString("en-US", { timeZone: "Asia/Jerusalem" })
+  );
+}
+
+/**
+ * Format a Date to "YYYY-MM-DD" in Israel timezone
+ */
+function toIsraelDateKey(d: Date): string {
+  return new Date(d).toLocaleDateString("en-CA", {
+    timeZone: "Asia/Jerusalem",
+  });
+}
+
+/**
  * Parse "HH:mm" string to { hours, minutes }
  */
 function parseTime(time: string): { hours: number; minutes: number } {
@@ -80,15 +98,21 @@ export async function getAvailableSlots(
   targetDate.setHours(0, 0, 0, 0);
   const dayOfWeek = targetDate.getDay();
 
-  // 2. Check exceptions for this date (category-specific first, then global)
-  const nextDay = new Date(targetDate);
-  nextDay.setDate(nextDay.getDate() + 1);
+  // Target date key for comparison (e.g., "2026-03-10")
+  const targetKey = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, "0")}-${String(targetDate.getDate()).padStart(2, "0")}`;
 
-  const exceptions = await prisma.availabilityException.findMany({
+  // 2. Check exceptions for this date (category-specific first, then global)
+  // Widen search window by ±1 day to handle timezone offsets (dates stored in IST midnight → UTC)
+  const searchStart = new Date(targetDate);
+  searchStart.setDate(searchStart.getDate() - 1);
+  const searchEnd = new Date(targetDate);
+  searchEnd.setDate(searchEnd.getDate() + 2);
+
+  const allExceptions = await prisma.availabilityException.findMany({
     where: {
       date: {
-        gte: targetDate,
-        lt: nextDay,
+        gte: searchStart,
+        lt: searchEnd,
       },
       OR: [
         { category: service.category },
@@ -96,6 +120,11 @@ export async function getAvailableSlots(
       ],
     },
   });
+
+  // Filter to only exceptions matching the target date in Israel timezone
+  const exceptions = allExceptions.filter(
+    (e) => toIsraelDateKey(e.date) === targetKey
+  );
 
   // Separate category-specific and global exceptions
   const catExceptions = exceptions.filter((e) => e.category === service.category);
@@ -188,7 +217,8 @@ export async function getAvailableSlots(
   });
 
   // 6. Filter out occupied and past slots
-  const now = new Date();
+  // Use Israel time for "now" since slot times represent Israel local times
+  const now = nowInIsrael();
 
   return allSlots.map((slot) => {
     const slotStart = setTime(targetDate, slot.startTime);
@@ -229,8 +259,13 @@ export async function isSlotAvailable(
   // 2. Check for BLOCKED exceptions on this date
   const targetDate = new Date(startAt);
   targetDate.setHours(0, 0, 0, 0);
-  const nextDay = new Date(targetDate);
-  nextDay.setDate(nextDay.getDate() + 1);
+  const targetKey = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, "0")}-${String(targetDate.getDate()).padStart(2, "0")}`;
+
+  // Widen search window by ±1 day to handle timezone offsets
+  const searchStart = new Date(targetDate);
+  searchStart.setDate(searchStart.getDate() - 1);
+  const searchEnd = new Date(targetDate);
+  searchEnd.setDate(searchEnd.getDate() + 2);
 
   // Get service category if serviceId provided
   let serviceCategory: string | null = null;
@@ -242,9 +277,9 @@ export async function isSlotAvailable(
     serviceCategory = service?.category || null;
   }
 
-  const exceptions = await prisma.availabilityException.findMany({
+  const allExceptions = await prisma.availabilityException.findMany({
     where: {
-      date: { gte: targetDate, lt: nextDay },
+      date: { gte: searchStart, lt: searchEnd },
       type: "BLOCKED",
       OR: [
         { category: serviceCategory },
@@ -253,7 +288,12 @@ export async function isSlotAvailable(
     },
   });
 
-  if (exceptions.length > 0) return false;
+  // Filter to only exceptions matching the target date in Israel timezone
+  const blockedExceptions = allExceptions.filter(
+    (e) => toIsraelDateKey(e.date) === targetKey
+  );
+
+  if (blockedExceptions.length > 0) return false;
 
   return true;
 }
