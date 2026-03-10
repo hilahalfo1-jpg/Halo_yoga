@@ -15,6 +15,7 @@ import {
   MessageSquare,
   Star,
   Gift,
+  ShieldBan,
   LogOut,
   X,
 } from "lucide-react";
@@ -32,6 +33,7 @@ const navItems = [
   { label: "פניות", href: "/admin/leads", icon: MessageSquare },
   { label: "המלצות", href: "/admin/reviews", icon: Star },
   { label: "גיפט קארד", href: "/admin/gift-cards", icon: Gift },
+  { label: "חסומים", href: "/admin/blacklist", icon: ShieldBan },
 ];
 
 interface AdminSidebarProps {

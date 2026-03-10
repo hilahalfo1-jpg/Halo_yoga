@@ -138,6 +138,15 @@ model GiftCard {
   createdAt     DateTime @default(now())
 }
 
+// ─── BLACKLIST (Shadow Ban) ─────────────
+model Blacklist {
+  id         String   @id @default(cuid())
+  identifier String   @unique // normalized phone or email
+  type       String   // "PHONE" or "EMAIL"
+  reason     String?
+  createdAt  DateTime @default(now())
+}
+
 // ─── REVIEWS ─────────────────────────────
 model Review {
   id         String   @id @default(cuid())

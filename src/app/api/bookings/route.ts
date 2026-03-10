@@ -55,6 +55,33 @@ export async function POST(req: Request) {
 
     const isHomeVisit = homeVisitFlag === true;
 
+    // Shadow ban check — silently reject blocked users with fake success
+    const normalizedPhone = customerPhone.toLowerCase().replace(/[\s\-()]/g, "");
+    const normalizedEmail = customerEmail ? customerEmail.toLowerCase().replace(/[\s\-()]/g, "") : null;
+
+    const blockedEntry = await prisma.blacklist.findFirst({
+      where: {
+        OR: [
+          { identifier: normalizedPhone },
+          ...(normalizedEmail ? [{ identifier: normalizedEmail }] : []),
+        ],
+      },
+    });
+
+    if (blockedEntry) {
+      // Return fake success — customer sees "booking confirmed" but nothing is saved
+      console.log("[SHADOW_BAN] Blocked booking attempt from:", blockedEntry.identifier);
+      return NextResponse.json({
+        data: {
+          id: `shadow_${Date.now()}`,
+          serviceId,
+          startAt,
+          customerName,
+          status: "PENDING",
+        },
+      }, { status: 201 });
+    }
+
     // Get service for duration
     const service = await prisma.service.findUnique({
       where: { id: serviceId },
