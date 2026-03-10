@@ -11,6 +11,7 @@ export interface DayInfo {
   status: DayStatus;
   effectiveStart?: string;
   effectiveEnd?: string;
+  rangesSummary?: string; // e.g. "13-15, 19-21"
   hasException: boolean;
 }
 
@@ -172,10 +173,10 @@ export default function CalendarGrid({
                 <span className="absolute top-1 left-1 w-1.5 h-1.5 rounded-full bg-warning" />
               )}
 
-              {/* Time hint */}
-              {info?.effectiveStart && !isSelected && (
+              {/* Time hint — show ranges summary if available, otherwise start time */}
+              {(info?.rangesSummary || info?.effectiveStart) && !isSelected && (
                 <span className="absolute bottom-0 text-[9px] text-text-muted/60 leading-none hidden sm:block">
-                  {info.effectiveStart}
+                  {info?.rangesSummary || info?.effectiveStart}
                 </span>
               )}
             </button>

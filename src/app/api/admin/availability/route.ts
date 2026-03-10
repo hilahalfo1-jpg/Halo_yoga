@@ -65,36 +65,42 @@ export async function POST(req: Request) {
 
       const excCategory = body.data.category ?? null;
       const excDate = new Date(validated.data.date);
-      // Normalize date to start of day for comparison
       excDate.setHours(0, 0, 0, 0);
       const nextDay = new Date(excDate);
       nextDay.setDate(nextDay.getDate() + 1);
 
-      // Check for existing exception on the same date+category — replace it
-      const existing = await prisma.availabilityException.findFirst({
-        where: {
-          date: { gte: excDate, lt: nextDay },
-          category: excCategory,
-        },
-      });
-
       let exception;
-      if (existing) {
-        // Update existing exception instead of creating duplicate
-        exception = await prisma.availabilityException.update({
-          where: { id: existing.id },
-          data: {
-            type: validated.data.type,
-            startTime: validated.data.startTime || null,
-            endTime: validated.data.endTime || null,
-            reason: validated.data.reason || null,
+
+      if (validated.data.type === "BLOCKED") {
+        // BLOCKED: replace all existing exceptions for this date+category with one BLOCKED
+        await prisma.availabilityException.deleteMany({
+          where: {
+            date: { gte: excDate, lt: nextDay },
+            category: excCategory,
           },
         });
-      } else {
         exception = await prisma.availabilityException.create({
           data: {
             date: new Date(validated.data.date),
-            type: validated.data.type,
+            type: "BLOCKED",
+            reason: validated.data.reason || null,
+            category: excCategory,
+          },
+        });
+      } else {
+        // OVERRIDE: allow multiple time ranges per date+category
+        // Remove any BLOCKED exception first (opening the day back up)
+        await prisma.availabilityException.deleteMany({
+          where: {
+            date: { gte: excDate, lt: nextDay },
+            category: excCategory,
+            type: "BLOCKED",
+          },
+        });
+        exception = await prisma.availabilityException.create({
+          data: {
+            date: new Date(validated.data.date),
+            type: "OVERRIDE",
             startTime: validated.data.startTime || null,
             endTime: validated.data.endTime || null,
             reason: validated.data.reason || null,

@@ -98,25 +98,30 @@ export default function DayDetailPanel({
     return excKey === dateKey;
   });
 
-  // Determine current status
-  const categoryException = dayExceptions.find(
+  // Determine current status — support multiple OVERRIDE ranges
+  const categoryExceptions = dayExceptions.filter(
     (e) => e.category === selectedCategory
   );
-  const generalException = dayExceptions.find((e) => e.category === null);
-  const activeException = categoryException || generalException;
+  const generalExceptions = dayExceptions.filter((e) => e.category === null);
+  const relevantExceptions = categoryExceptions.length > 0 ? categoryExceptions : generalExceptions;
 
   let statusLabel: string;
   let statusVariant: "success" | "error" | "warning" | "default";
   let effectiveHours: string | null = null;
 
-  if (activeException) {
-    if (activeException.type === "BLOCKED") {
+  if (relevantExceptions.length > 0) {
+    if (relevantExceptions.some((e) => e.type === "BLOCKED")) {
       statusLabel = "חסום";
       statusVariant = "error";
     } else {
       statusLabel = "שעות מיוחדות";
       statusVariant = "warning";
-      effectiveHours = `${activeException.startTime} - ${activeException.endTime}`;
+      const overrideRanges = relevantExceptions
+        .filter((e) => e.type === "OVERRIDE" && e.startTime && e.endTime)
+        .sort((a, b) => (a.startTime || "").localeCompare(b.startTime || ""));
+      effectiveHours = overrideRanges
+        .map((e) => `${e.startTime} - ${e.endTime}`)
+        .join(" , ");
     }
   } else if (activeRules.some((r) => r.isActive)) {
     statusLabel = "פעיל";

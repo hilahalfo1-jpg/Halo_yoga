@@ -97,21 +97,28 @@ export async function getAvailableSlots(
     },
   });
 
-  const exception =
-    exceptions.find((e) => e.category === service.category) ||
-    exceptions.find((e) => !e.category) ||
-    null;
+  // Separate category-specific and global exceptions
+  const catExceptions = exceptions.filter((e) => e.category === service.category);
+  const globalExceptions = exceptions.filter((e) => !e.category);
+  // Use category-specific if any exist, otherwise fall back to global
+  const relevantExceptions = catExceptions.length > 0 ? catExceptions : globalExceptions;
 
   // Build list of time windows
   type TimeWindow = { start: string; end: string };
   let windows: TimeWindow[] = [];
 
-  if (exception) {
-    if (exception.type === "BLOCKED") {
+  if (relevantExceptions.length > 0) {
+    // If ANY exception is BLOCKED, the day is closed
+    if (relevantExceptions.some((e) => e.type === "BLOCKED")) {
       return [];
     }
-    if (!exception.startTime || !exception.endTime) return [];
-    windows = [{ start: exception.startTime, end: exception.endTime }];
+    // Collect ALL OVERRIDE time ranges
+    const overrideWindows = relevantExceptions
+      .filter((e) => e.type === "OVERRIDE" && e.startTime && e.endTime)
+      .map((e) => ({ start: e.startTime!, end: e.endTime! }))
+      .sort((a, b) => a.start.localeCompare(b.start));
+    if (overrideWindows.length === 0) return [];
+    windows = overrideWindows;
   } else {
     // 3. Get ALL active rules for this day (category-specific first, then global)
     const catRules = await prisma.availabilityRule.findMany({

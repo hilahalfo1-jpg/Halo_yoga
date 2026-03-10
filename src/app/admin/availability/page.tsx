@@ -138,23 +138,29 @@ export default function AvailabilityPage() {
         return toKey(excDate) === key;
       });
 
-      const catException = dayExceptions.find(
+      const catExceptions = dayExceptions.filter(
         (e) => e.category === selectedCategory
       );
-      const genException = dayExceptions.find((e) => e.category === null);
-      const exception = catException || genException;
+      const genExceptions = dayExceptions.filter((e) => e.category === null);
+      const relevantExceptions = catExceptions.length > 0 ? catExceptions : genExceptions;
 
       let status: DayStatus;
       let effectiveStart: string | undefined;
       let effectiveEnd: string | undefined;
 
-      if (exception) {
-        if (exception.type === "BLOCKED") {
+      if (relevantExceptions.length > 0) {
+        if (relevantExceptions.some((e) => e.type === "BLOCKED")) {
           status = "blocked";
         } else {
           status = "override";
-          effectiveStart = exception.startTime || undefined;
-          effectiveEnd = exception.endTime || undefined;
+          // Collect all OVERRIDE ranges
+          const overrides = relevantExceptions
+            .filter((e) => e.type === "OVERRIDE" && e.startTime && e.endTime)
+            .sort((a, b) => (a.startTime || "").localeCompare(b.startTime || ""));
+          if (overrides.length > 0) {
+            effectiveStart = overrides[0].startTime || undefined;
+            effectiveEnd = overrides[overrides.length - 1].endTime || undefined;
+          }
         }
       } else if (activeRules.length > 0) {
         status = "available";
@@ -166,11 +172,30 @@ export default function AvailabilityPage() {
         status = "dayoff";
       }
 
+      // Build ranges summary for multi-range days
+      let rangesSummary: string | undefined;
+      if (status === "override" && relevantExceptions.length > 1) {
+        const overrides = relevantExceptions
+          .filter((e) => e.type === "OVERRIDE" && e.startTime && e.endTime)
+          .sort((a, b) => (a.startTime || "").localeCompare(b.startTime || ""));
+        if (overrides.length > 1) {
+          rangesSummary = overrides
+            .map((e) => `${(e.startTime || "").slice(0, 5)}-${(e.endTime || "").slice(0, 5)}`)
+            .join(", ");
+        }
+      } else if (status === "available" && activeRules.length > 1) {
+        const sorted = [...activeRules].sort((a, b) => a.startTime.localeCompare(b.startTime));
+        rangesSummary = sorted
+          .map((r) => `${r.startTime.slice(0, 5)}-${r.endTime.slice(0, 5)}`)
+          .join(", ");
+      }
+
       map.set(key, {
         date: new Date(d),
         status,
         effectiveStart,
         effectiveEnd,
+        rangesSummary,
         hasException: dayExceptions.length > 0,
       });
 
