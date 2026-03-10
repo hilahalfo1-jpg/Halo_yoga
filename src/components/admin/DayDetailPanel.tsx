@@ -6,6 +6,7 @@ import {
   Ban,
   Clock,
   Trash2,
+  Plus,
   RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -66,11 +67,11 @@ export default function DayDetailPanel({
   onDeleteException,
   onUpdateRule,
 }: DayDetailPanelProps) {
-  const [mode, setMode] = useState<"view" | "custom-hours">("view");
-  const [customStart, setCustomStart] = useState("09:00");
-  const [customEnd, setCustomEnd] = useState("18:00");
+  const [newStart, setNewStart] = useState("09:00");
+  const [newEnd, setNewEnd] = useState("18:00");
   const [reason, setReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showAddRange, setShowAddRange] = useState(false);
 
   const dayOfWeek = date.getDay();
   const dateKey = toDateString(date);
@@ -83,7 +84,7 @@ export default function DayDetailPanel({
     year: "numeric",
   });
 
-  // Find ALL rules for this day (not just one)
+  // Find ALL rules for this day
   const categoryRules = rules
     .filter((r) => r.dayOfWeek === dayOfWeek && r.category === selectedCategory)
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
@@ -99,43 +100,81 @@ export default function DayDetailPanel({
     return excKey === dateKey;
   });
 
-  // Determine current status — support multiple OVERRIDE ranges
+  // Determine current status
   const categoryExceptions = dayExceptions.filter(
     (e) => e.category === selectedCategory
   );
   const generalExceptions = dayExceptions.filter((e) => e.category === null);
   const relevantExceptions = categoryExceptions.length > 0 ? categoryExceptions : generalExceptions;
 
+  // Get existing OVERRIDE ranges for this day (sorted)
+  const overrideRanges = relevantExceptions
+    .filter((e) => e.type === "OVERRIDE" && e.startTime && e.endTime)
+    .sort((a, b) => (a.startTime || "").localeCompare(b.startTime || ""));
+
+  const isBlocked = relevantExceptions.some((e) => e.type === "BLOCKED");
+  const hasOverrides = overrideRanges.length > 0;
+  const hasActiveWeeklyRules = activeRules.some((r) => r.isActive);
+
+  // Status display
   let statusLabel: string;
   let statusVariant: "success" | "error" | "warning" | "default";
-  let effectiveHours: string | null = null;
 
-  if (relevantExceptions.length > 0) {
-    if (relevantExceptions.some((e) => e.type === "BLOCKED")) {
-      statusLabel = "חסום";
-      statusVariant = "error";
-    } else {
-      statusLabel = "שעות מיוחדות";
-      statusVariant = "warning";
-      const overrideRanges = relevantExceptions
-        .filter((e) => e.type === "OVERRIDE" && e.startTime && e.endTime)
-        .sort((a, b) => (a.startTime || "").localeCompare(b.startTime || ""));
-      effectiveHours = overrideRanges
-        .map((e) => `${e.startTime} - ${e.endTime}`)
-        .join(" , ");
-    }
-  } else if (activeRules.some((r) => r.isActive)) {
+  if (isBlocked) {
+    statusLabel = "חסום";
+    statusVariant = "error";
+  } else if (hasOverrides) {
+    statusLabel = "שעות מיוחדות";
+    statusVariant = "warning";
+  } else if (hasActiveWeeklyRules) {
     statusLabel = "פעיל";
     statusVariant = "success";
-    // Show all active time ranges
-    const activeTimeRanges = activeRules.filter((r) => r.isActive);
-    effectiveHours = activeTimeRanges
-      .map((r) => `${r.startTime} - ${r.endTime}`)
-      .join(" , ");
   } else {
     statusLabel = "יום חופש";
     statusVariant = "default";
   }
+
+  const handleAddRange = async () => {
+    if (newStart >= newEnd) {
+      toast.error("שעת סיום חייבת להיות אחרי שעת התחלה");
+      return;
+    }
+
+    // Check for overlapping ranges
+    const hasOverlap = overrideRanges.some((e) => {
+      return newStart < e.endTime! && newEnd > e.startTime!;
+    });
+    if (hasOverlap) {
+      toast.error("טווח השעות חופף לטווח קיים");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await onAddException({
+        date: new Date(date).toISOString(),
+        type: "OVERRIDE",
+        startTime: newStart,
+        endTime: newEnd,
+        reason: reason || undefined,
+        category: selectedCategory,
+      });
+      setReason("");
+      setShowAddRange(false);
+      // Smart defaults for next range — suggest after the last range
+      const allRanges = [...overrideRanges, { startTime: newStart, endTime: newEnd }]
+        .sort((a, b) => (a.startTime || "").localeCompare(b.startTime || ""));
+      const lastEnd = allRanges[allRanges.length - 1]?.endTime || "18:00";
+      const [h, m] = lastEnd.split(":").map(Number);
+      const nextHour = h + 2;
+      if (nextHour < 23) {
+        setNewStart(`${String(nextHour).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+        setNewEnd(`${String(Math.min(nextHour + 3, 23)).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleBlock = async () => {
     setIsSubmitting(true);
@@ -152,44 +191,8 @@ export default function DayDetailPanel({
     }
   };
 
-  const handleCustomHours = async () => {
-    // Validate start < end
-    if (customStart >= customEnd) {
-      toast.error("שעת סיום חייבת להיות אחרי שעת התחלה");
-      return;
-    }
-
-    // Check for overlapping OVERRIDE ranges
-    const existingOverrides = relevantExceptions
-      .filter((e) => e.type === "OVERRIDE" && e.startTime && e.endTime);
-    const hasOverlap = existingOverrides.some((e) => {
-      return customStart < e.endTime! && customEnd > e.startTime!;
-    });
-    if (hasOverlap) {
-      toast.error("טווח השעות חופף לטווח קיים. מחקו את הקיים או בחרו שעות אחרות.");
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      await onAddException({
-        date: new Date(date).toISOString(),
-        type: "OVERRIDE",
-        startTime: customStart,
-        endTime: customEnd,
-        reason: reason || undefined,
-        category: selectedCategory,
-      });
-      setMode("view");
-      setReason("");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   const handleToggleRule = async () => {
-    const newActive = !activeRules.some((r) => r.isActive);
-    // Toggle ALL rules for this day (updateRule handles multiple rules)
+    const newActive = !hasActiveWeeklyRules;
     await onUpdateRule(dayOfWeek, { isActive: newActive });
   };
 
@@ -219,19 +222,13 @@ export default function DayDetailPanel({
           <Badge variant={statusVariant} className="text-sm">
             {statusLabel}
           </Badge>
-          {effectiveHours && (
-            <span className="text-sm text-text-muted flex items-center gap-1" dir="ltr">
-              <Clock className="h-3.5 w-3.5" />
-              {effectiveHours}
-            </span>
-          )}
         </div>
 
         {/* Default Rule Info */}
         {activeRules.length > 0 && (
           <div className="text-xs text-text-muted bg-surface/50 rounded-lg px-3 py-2">
             ברירת מחדל ליום {dayName}:{" "}
-            {activeRules.some((r) => r.isActive)
+            {hasActiveWeeklyRules
               ? activeRules
                   .filter((r) => r.isActive)
                   .map((r) => `${r.startTime} - ${r.endTime}`)
@@ -240,92 +237,203 @@ export default function DayDetailPanel({
           </div>
         )}
 
-        {/* Existing Exceptions */}
-        {dayExceptions.length > 0 && (
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-text-muted">חריגות ביום זה:</p>
-            {dayExceptions.map((exc) => (
-              <div
-                key={exc.id}
-                className="flex items-center justify-between bg-surface/50 rounded-lg px-3 py-2"
-              >
-                <div className="flex items-center gap-2">
-                  <Badge
-                    variant={exc.type === "BLOCKED" ? "error" : "warning"}
-                    className="text-xs"
-                  >
-                    {exc.type === "BLOCKED" ? "חסום" : "מיוחד"}
-                  </Badge>
-                  {exc.category && (
-                    <span className="text-xs text-text-muted">
-                      {CATEGORY_LABELS[exc.category]}
-                    </span>
-                  )}
-                  {exc.type === "OVERRIDE" && (
-                    <span className="text-xs" dir="ltr">
-                      {exc.startTime}-{exc.endTime}
-                    </span>
-                  )}
-                  {exc.reason && (
-                    <span className="text-xs text-text-muted">
-                      ({exc.reason})
-                    </span>
-                  )}
-                </div>
-                <button
-                  onClick={() => onDeleteException(exc.id)}
-                  className="p-1 rounded text-error hover:bg-error/10"
+        {/* ─── Active Time Windows ─── */}
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-text">
+            חלונות זמן ליום זה:
+          </p>
+
+          {/* Show override ranges if any, otherwise show weekly rules */}
+          {hasOverrides ? (
+            <div className="space-y-1.5">
+              {overrideRanges.map((exc) => (
+                <div
+                  key={exc.id}
+                  className="flex items-center justify-between bg-warning/5 border border-warning/20 rounded-lg px-3 py-2"
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-3.5 w-3.5 text-warning" />
+                    <span className="text-sm font-medium" dir="ltr">
+                      {exc.startTime} - {exc.endTime}
+                    </span>
+                    {exc.reason && (
+                      <span className="text-xs text-text-muted">
+                        ({exc.reason})
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => onDeleteException(exc.id)}
+                    className="p-1.5 rounded-md text-text-muted hover:text-error hover:bg-error/10 transition-colors"
+                    title="מחק טווח"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : isBlocked ? (
+            <div className="flex items-center justify-between bg-error/5 border border-error/20 rounded-lg px-3 py-2">
+              <div className="flex items-center gap-2">
+                <Ban className="h-3.5 w-3.5 text-error" />
+                <span className="text-sm text-error font-medium">יום חסום</span>
+                {relevantExceptions.find((e) => e.type === "BLOCKED")?.reason && (
+                  <span className="text-xs text-text-muted">
+                    ({relevantExceptions.find((e) => e.type === "BLOCKED")?.reason})
+                  </span>
+                )}
               </div>
-            ))}
+              <button
+                onClick={() => {
+                  const blocked = relevantExceptions.find((e) => e.type === "BLOCKED");
+                  if (blocked) onDeleteException(blocked.id);
+                }}
+                className="p-1.5 rounded-md text-text-muted hover:text-error hover:bg-error/10 transition-colors"
+                title="הסר חסימה"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ) : hasActiveWeeklyRules ? (
+            <div className="space-y-1.5">
+              {activeRules.filter((r) => r.isActive).map((r) => (
+                <div
+                  key={r.id}
+                  className="flex items-center gap-2 bg-success/5 border border-success/20 rounded-lg px-3 py-2"
+                >
+                  <Clock className="h-3.5 w-3.5 text-success" />
+                  <span className="text-sm font-medium" dir="ltr">
+                    {r.startTime} - {r.endTime}
+                  </span>
+                  <span className="text-xs text-text-muted">(ברירת מחדל)</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-sm text-text-muted bg-surface/50 rounded-lg px-3 py-2 text-center">
+              אין שעות עבודה מוגדרות ליום זה
+            </div>
+          )}
+        </div>
+
+        {/* ─── Add Range Button / Form ─── */}
+        {!isBlocked && (
+          <div>
+            {!showAddRange ? (
+              <button
+                onClick={() => setShowAddRange(true)}
+                className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border-2 border-dashed border-primary/30 text-primary text-sm font-medium hover:bg-primary/5 hover:border-primary/50 transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+                הוסף טווח שעות
+              </button>
+            ) : (
+              <form
+                onSubmit={(e) => { e.preventDefault(); handleAddRange(); }}
+                className="space-y-3 bg-surface/30 rounded-lg p-3 border border-border"
+              >
+                <div className="grid grid-cols-2 gap-3" dir="ltr">
+                  <div>
+                    <label className="text-xs text-text-muted block mb-1 text-right">
+                      מ-
+                    </label>
+                    <input
+                      type="time"
+                      value={newStart}
+                      onChange={(e) => setNewStart(e.target.value)}
+                      className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-white text-center"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-text-muted block mb-1 text-right">
+                      עד-
+                    </label>
+                    <input
+                      type="time"
+                      value={newEnd}
+                      onChange={(e) => setNewEnd(e.target.value)}
+                      className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-white text-center"
+                    />
+                  </div>
+                </div>
+                <input
+                  type="text"
+                  placeholder="סיבה (אופציונלי)..."
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  className="w-full text-sm border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    className="flex-1 gap-1.5"
+                    type="submit"
+                    isLoading={isSubmitting}
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    הוסף
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    type="button"
+                    onClick={() => setShowAddRange(false)}
+                  >
+                    ביטול
+                  </Button>
+                </div>
+              </form>
+            )}
           </div>
         )}
 
-        {/* Divider */}
+        {/* ─── Divider ─── */}
         <div className="border-t border-border" />
 
-        {/* Quick Actions */}
-        {mode === "view" ? (
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-text-muted">פעולות מהירות:</p>
+        {/* ─── Day Actions ─── */}
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-text-muted">פעולות:</p>
 
-            {/* Block Day */}
+          {/* Block / Unblock Day */}
+          {!isBlocked ? (
             <div className="space-y-2">
               <input
                 type="text"
-                placeholder="סיבה (אופציונלי)..."
+                placeholder="סיבה לחסימה (אופציונלי)..."
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 className="w-full text-sm border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary"
               />
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  type="button"
-                  className="flex-1 gap-1.5 text-error border-error/20 hover:bg-error/5"
-                  onClick={handleBlock}
-                  isLoading={isSubmitting}
-                >
-                  <Ban className="h-4 w-4" />
-                  חסום יום זה
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  type="button"
-                  className="flex-1 gap-1.5"
-                  onClick={() => setMode("custom-hours")}
-                >
-                  <Clock className="h-4 w-4" />
-                  שעות מיוחדות
-                </Button>
-              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                type="button"
+                className="w-full gap-1.5 text-error border-error/20 hover:bg-error/5"
+                onClick={handleBlock}
+                isLoading={isSubmitting}
+              >
+                <Ban className="h-4 w-4" />
+                חסום יום שלם
+              </Button>
             </div>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              type="button"
+              className="w-full gap-1.5 text-success border-success/20 hover:bg-success/5"
+              onClick={() => {
+                const blocked = relevantExceptions.find((e) => e.type === "BLOCKED");
+                if (blocked) onDeleteException(blocked.id);
+              }}
+            >
+              <RotateCcw className="h-4 w-4" />
+              הסר חסימה ופתח את היום
+            </Button>
+          )}
 
-            {/* Toggle weekly rule */}
+          {/* Toggle weekly rule */}
+          {!isBlocked && (
             <button
               onClick={handleToggleRule}
               className={cn(
@@ -334,66 +442,12 @@ export default function DayDetailPanel({
               )}
             >
               <RotateCcw className="h-4 w-4" />
-              {activeRules.some((r) => r.isActive)
+              {hasActiveWeeklyRules
                 ? `הפוך את כל ימי ${dayName} ליום חופש`
                 : `הפעל את כל ימי ${dayName}`}
             </button>
-          </div>
-        ) : (
-          /* Custom Hours Form */
-          <form onSubmit={(e) => { e.preventDefault(); handleCustomHours(); }} className="space-y-3">
-            <p className="text-sm font-medium text-text">הגדרת שעות מיוחדות:</p>
-            <div className="grid grid-cols-2 gap-3" dir="ltr">
-              <div>
-                <label className="text-xs text-text-muted block mb-1 text-right">
-                  שעת התחלה
-                </label>
-                <input
-                  type="time"
-                  value={customStart}
-                  onChange={(e) => setCustomStart(e.target.value)}
-                  className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-white text-center"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-text-muted block mb-1 text-right">
-                  שעת סיום
-                </label>
-                <input
-                  type="time"
-                  value={customEnd}
-                  onChange={(e) => setCustomEnd(e.target.value)}
-                  className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-white text-center"
-                />
-              </div>
-            </div>
-            <input
-              type="text"
-              placeholder="סיבה (אופציונלי)..."
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              className="w-full text-sm border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary"
-            />
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                className="flex-1"
-                type="submit"
-                isLoading={isSubmitting}
-              >
-                שמור
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                type="button"
-                onClick={() => setMode("view")}
-              >
-                ביטול
-              </Button>
-            </div>
-          </form>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
