@@ -182,12 +182,14 @@ export async function sendBookingRejectedEmail(data: BookingEmailData) {
       to: data.customerEmail,
       subject: `עדכון לגבי ההזמנה - ${data.serviceName}`,
       html: emailWrapper(`
-        <h2 style="color: #5C7C5A;">עדכון לגבי ההזמנה</h2>
+        <h2 style="color: #5C7C5A;">עדכון לגבי ההזמנה שלך</h2>
         <p>שלום ${data.customerName},</p>
-        <p>לצערנו לא ניתן לאשר את ההזמנה הבאה:</p>
+        <p>תודה רבה שפנית אלינו ובחרת ב-Halo Yoga & Massage.</p>
+        <p>אנו מתנצלים מקרב לב, אך לצערנו לא נוכל לקיים את הטיפול במועד שנבחר:</p>
         ${bookingDetailsCard({ serviceName: data.serviceName, date, time })}
-        <p>ניתן ליצור קשר לתיאום מועד חלופי.</p>
-        <p>בברכה,</p>
+        <p>חשוב לנו שתדע/י שהפנייה שלך חשובה לנו מאוד, ונשמח לסייע למצוא מועד חלופי שיתאים לך.</p>
+        <p>ניתן לקבוע תור חדש באתר או ליצור איתנו קשר ישירות.</p>
+        <p style="margin-top: 16px;">מחכים לראותך,</p>
         <p style="color: #5C7C5A; font-weight: bold;">Halo Yoga & Massage</p>
       `),
     });

@@ -84,7 +84,13 @@ export default function BookingsPage() {
         body: JSON.stringify({ status }),
       });
       if (res.ok) {
-        toast.success("הסטטוס עודכן");
+        const result = await res.json();
+        const rejectedCount = result.rejectedIds?.length || 0;
+        if (status === "CONFIRMED" && rejectedCount > 0) {
+          toast.success(`ההזמנה אושרה | ${rejectedCount} הזמנות חופפות נדחו אוטומטית`);
+        } else {
+          toast.success("הסטטוס עודכן");
+        }
         fetchBookings();
       }
     } catch {
