@@ -82,14 +82,16 @@ export default function DayDetailPanel({
     year: "numeric",
   });
 
-  // Find rule for this day
-  const categoryRule = rules.find(
-    (r) => r.dayOfWeek === dayOfWeek && r.category === selectedCategory
-  );
-  const generalRule = rules.find(
-    (r) => r.dayOfWeek === dayOfWeek && r.category === null
-  );
-  const activeRule = (selectedCategory ? categoryRule : null) || generalRule;
+  // Find ALL rules for this day (not just one)
+  const categoryRules = rules
+    .filter((r) => r.dayOfWeek === dayOfWeek && r.category === selectedCategory)
+    .sort((a, b) => a.startTime.localeCompare(b.startTime));
+  const generalRules = rules
+    .filter((r) => r.dayOfWeek === dayOfWeek && r.category === null)
+    .sort((a, b) => a.startTime.localeCompare(b.startTime));
+  const activeRules = (selectedCategory && categoryRules.length > 0) ? categoryRules : generalRules;
+  // Keep a single reference for backward compat (first active rule)
+  const activeRule = activeRules.find((r) => r.isActive) || activeRules[0] || null;
 
   // Find exceptions for this date
   const dayExceptions = exceptions.filter((e) => {
@@ -118,10 +120,14 @@ export default function DayDetailPanel({
       statusVariant = "warning";
       effectiveHours = `${activeException.startTime} - ${activeException.endTime}`;
     }
-  } else if (activeRule?.isActive) {
+  } else if (activeRules.some((r) => r.isActive)) {
     statusLabel = "פעיל";
     statusVariant = "success";
-    effectiveHours = `${activeRule.startTime} - ${activeRule.endTime}`;
+    // Show all active time ranges
+    const activeTimeRanges = activeRules.filter((r) => r.isActive);
+    effectiveHours = activeTimeRanges
+      .map((r) => `${r.startTime} - ${r.endTime}`)
+      .join(" , ");
   } else {
     statusLabel = "יום חופש";
     statusVariant = "default";
@@ -161,7 +167,9 @@ export default function DayDetailPanel({
   };
 
   const handleToggleRule = async () => {
-    await onUpdateRule(dayOfWeek, { isActive: !activeRule?.isActive });
+    const newActive = !activeRules.some((r) => r.isActive);
+    // Toggle ALL rules for this day (updateRule handles multiple rules)
+    await onUpdateRule(dayOfWeek, { isActive: newActive });
   };
 
   return (
@@ -199,11 +207,14 @@ export default function DayDetailPanel({
         </div>
 
         {/* Default Rule Info */}
-        {activeRule && (
+        {activeRules.length > 0 && (
           <div className="text-xs text-text-muted bg-surface/50 rounded-lg px-3 py-2">
             ברירת מחדל ליום {dayName}:{" "}
-            {activeRule.isActive
-              ? `${activeRule.startTime} - ${activeRule.endTime}`
+            {activeRules.some((r) => r.isActive)
+              ? activeRules
+                  .filter((r) => r.isActive)
+                  .map((r) => `${r.startTime} - ${r.endTime}`)
+                  .join(" , ")
               : "יום חופש"}
           </div>
         )}

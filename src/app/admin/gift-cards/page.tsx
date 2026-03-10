@@ -39,6 +39,8 @@ export default function AdminGiftCardsPage() {
   const [deleteTarget, setDeleteTarget] = useState<GiftCardItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [shareCard, setShareCard] = useState<GiftCardItem | null>(null);
+  const [shareCopied, setShareCopied] = useState(false);
 
   // Form state
   const [recipientName, setRecipientName] = useState("");
@@ -91,9 +93,15 @@ export default function AdminGiftCardsPage() {
         return;
       }
 
+      const json = await res.json();
       toast.success("הגיפט קארד נוצר בהצלחה!");
       setIsModalOpen(false);
-      fetchGiftCards();
+      await fetchGiftCards();
+      // Show share popup with the new card
+      if (json.data) {
+        setShareCard(json.data);
+        setShareCopied(false);
+      }
     } catch {
       toast.error("שגיאת שרת");
     } finally {
@@ -306,6 +314,74 @@ export default function AdminGiftCardsPage() {
             </Button>
           </div>
         </div>
+      </Modal>
+
+      {/* Share Modal (shown after creation) */}
+      <Modal
+        isOpen={!!shareCard}
+        onClose={() => setShareCard(null)}
+        title="הגיפט קארד נוצר בהצלחה!"
+        size="sm"
+      >
+        {shareCard && (
+          <div className="space-y-4">
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto rounded-full bg-success/10 flex items-center justify-center mb-3">
+                <Gift className="h-8 w-8 text-success" />
+              </div>
+              <p className="text-text-secondary text-sm">
+                גיפט קארד עבור <strong>{shareCard.recipientName}</strong>
+              </p>
+            </div>
+
+            <div className="bg-surface rounded-lg p-3">
+              <p className="text-xs text-text-muted mb-1">קישור לשיתוף:</p>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={`${typeof window !== "undefined" ? window.location.origin : ""}/gift-card/${shareCard.code}`}
+                  className="flex-1 text-sm bg-white border border-border rounded-lg px-3 py-2 text-left"
+                  dir="ltr"
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                />
+                <Button
+                  size="sm"
+                  variant={shareCopied ? "outline" : "primary"}
+                  onClick={async () => {
+                    const url = `${window.location.origin}/gift-card/${shareCard.code}`;
+                    await navigator.clipboard.writeText(url);
+                    setShareCopied(true);
+                    toast.success("הקישור הועתק!");
+                    setTimeout(() => setShareCopied(false), 3000);
+                  }}
+                  className="flex-shrink-0"
+                >
+                  {shareCopied ? (
+                    <Check className="h-4 w-4" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                  {shareCopied ? "הועתק!" : "העתק"}
+                </Button>
+              </div>
+            </div>
+
+            <p className="text-xs text-text-muted text-center">
+              שלחו את הקישור ללקוח/ה כדי שיוכלו לצפות בגיפט קארד
+            </p>
+
+            <div className="flex justify-center pt-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShareCard(null)}
+              >
+                סגור
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
 
       {/* Delete Modal */}

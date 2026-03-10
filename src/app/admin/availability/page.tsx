@@ -223,20 +223,44 @@ export default function AvailabilityPage() {
 
   // Legacy updateRule for DayDetailPanel compatibility
   const updateRule = async (dayOfWeek: number, updates: Partial<Rule>) => {
-    const catRules = rules.filter((r) =>
-      selectedCategory === null
-        ? r.category === null
-        : r.category === selectedCategory
+    const dayRules = rules.filter((r) =>
+      r.dayOfWeek === dayOfWeek &&
+      (selectedCategory === null ? r.category === null : r.category === selectedCategory)
     );
-    const existing = catRules.find((r) => r.dayOfWeek === dayOfWeek);
-    await saveRule({
-      id: existing?.id,
-      dayOfWeek,
-      startTime: updates.startTime ?? existing?.startTime ?? "09:00",
-      endTime: updates.endTime ?? existing?.endTime ?? "18:00",
-      isActive: updates.isActive ?? existing?.isActive ?? true,
-      category: selectedCategory,
-    });
+
+    if (dayRules.length === 0) {
+      // No rules exist yet — create one
+      await saveRule({
+        dayOfWeek,
+        startTime: updates.startTime ?? "09:00",
+        endTime: updates.endTime ?? "18:00",
+        isActive: updates.isActive ?? true,
+        category: selectedCategory,
+      });
+    } else if (updates.isActive !== undefined) {
+      // Toggle active state on ALL rules for this day
+      for (const rule of dayRules) {
+        await saveRule({
+          id: rule.id,
+          dayOfWeek,
+          startTime: rule.startTime,
+          endTime: rule.endTime,
+          isActive: updates.isActive,
+          category: selectedCategory,
+        });
+      }
+    } else {
+      // Update the first rule with the provided changes
+      const existing = dayRules[0];
+      await saveRule({
+        id: existing.id,
+        dayOfWeek,
+        startTime: updates.startTime ?? existing.startTime,
+        endTime: updates.endTime ?? existing.endTime,
+        isActive: updates.isActive ?? existing.isActive,
+        category: selectedCategory,
+      });
+    }
   };
 
   const addException = async (excData: {
