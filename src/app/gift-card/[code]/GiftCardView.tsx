@@ -16,10 +16,10 @@ export default function GiftCardView({
   isRedeemed,
 }: GiftCardViewProps) {
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 sm:p-8" style={{ backgroundColor: "#f5f0e8" }} dir="rtl">
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-8 bg-white" dir="rtl">
       <div className="w-full max-w-2xl">
         {/* Gift Card */}
-        <div className="relative overflow-hidden" style={{ backgroundColor: "#faf6ee", aspectRatio: "4/3" }}>
+        <div className="relative overflow-hidden rounded-2xl shadow-xl" style={{ backgroundColor: "#faf6ee", aspectRatio: "4/3" }}>
           {/* Redeemed overlay */}
           {isRedeemed && (
             <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/10">
