@@ -5,7 +5,10 @@ import { prisma } from "@/lib/prisma";
 // AND which specific dates are blocked (exceptions)
 export async function GET() {
   try {
-    const [rules, exceptions] = await Promise.all([
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const [rules, blockedExceptions, overrideExceptions] = await Promise.all([
       prisma.availabilityRule.findMany({
         where: { isActive: true },
         select: { dayOfWeek: true },
@@ -13,26 +16,35 @@ export async function GET() {
       prisma.availabilityException.findMany({
         where: {
           type: "BLOCKED",
-          date: { gte: new Date() }, // Only future blocked dates
+          date: { gte: today },
         },
-        select: { date: true, category: true },
+        select: { date: true },
+      }),
+      prisma.availabilityException.findMany({
+        where: {
+          type: "OVERRIDE",
+          date: { gte: today },
+        },
+        select: { date: true },
       }),
     ]);
 
     const daySet = new Set(rules.map((r) => r.dayOfWeek));
     const activeDays = Array.from(daySet);
 
-    // Return blocked dates as ISO date strings (YYYY-MM-DD)
-    const blockedDates = exceptions.map((e) => {
-      const d = new Date(e.date);
-      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    });
-    // Deduplicate (a date blocked for ANY category blocks the whole day visually)
-    const uniqueBlockedDates = Array.from(new Set(blockedDates));
+    const formatDate = (d: Date) => {
+      const dt = new Date(d);
+      return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+    };
+
+    const uniqueBlockedDates = Array.from(new Set(blockedExceptions.map((e) => formatDate(e.date))));
+    // Dates with OVERRIDE exceptions — open even if the weekday is normally off
+    const uniqueOpenedDates = Array.from(new Set(overrideExceptions.map((e) => formatDate(e.date))));
 
     return NextResponse.json({
       data: activeDays,
       blockedDates: uniqueBlockedDates,
+      openedDates: uniqueOpenedDates,
     });
   } catch (error) {
     console.error("[AVAILABILITY_DAYS_GET]", error);
