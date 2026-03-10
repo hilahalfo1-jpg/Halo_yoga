@@ -1,8 +1,7 @@
 import { Resend } from "resend";
 
-// Use onboarding@resend.dev if domain isn't verified, otherwise custom domain
 const FROM_EMAIL =
-  process.env.RESEND_FROM_EMAIL || "Halo Yoga <onboarding@resend.dev>";
+  process.env.RESEND_FROM_EMAIL || "Halo Yoga <noreply@haloyogamassage.com>";
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "hilahalfo1@gmail.com";
 
