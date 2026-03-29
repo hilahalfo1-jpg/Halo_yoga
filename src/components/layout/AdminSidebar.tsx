@@ -16,6 +16,7 @@ import {
   Star,
   Gift,
   ShieldBan,
+  BookOpen,
   LogOut,
   X,
 } from "lucide-react";
@@ -28,6 +29,7 @@ const navItems = [
   { label: "הזמנות", href: "/admin/bookings", icon: Calendar },
   { label: "שירותים", href: "/admin/services", icon: Settings2 },
   { label: "זמינות", href: "/admin/availability", icon: Clock },
+  { label: "בלוג", href: "/admin/blog", icon: BookOpen },
   { label: "תמונות", href: "/admin/images", icon: ImageIcon },
   { label: "תוכן האתר", href: "/admin/content", icon: FileText },
   { label: "פניות", href: "/admin/leads", icon: MessageSquare },
