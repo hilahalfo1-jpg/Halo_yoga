@@ -155,23 +155,36 @@ export default function ReviewsPageClient({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {filtered.map((review) => (
             <Card key={`${review.source}-${review.id}`} className="flex flex-col">
+              {/* Author row — Google style */}
+              <div className="flex items-center gap-3 mb-3">
+                {review.profilePhotoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={review.profilePhotoUrl}
+                    alt={review.name}
+                    className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm flex-shrink-0">
+                    {review.name.charAt(0)}
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <p className="font-medium text-text text-sm truncate">{review.name}</p>
+                    {review.source === "google" && <GoogleBadge />}
+                  </div>
+                  {review.service && (
+                    <p className="text-xs text-text-muted truncate">{review.service}</p>
+                  )}
+                </div>
+              </div>
               <StarRating rating={review.rating} size="sm" />
               {review.content && (
-                <p className="text-text mt-4 mb-4 leading-relaxed text-sm flex-1">
+                <p className="text-text mt-3 leading-relaxed text-sm flex-1">
                   &ldquo;{review.content}&rdquo;
                 </p>
               )}
-              <div className="pt-4 border-t border-border">
-                <div className="flex items-center">
-                  {review.source === "google" && <GoogleBadge />}
-                  <p className="font-medium text-text">{review.name}</p>
-                </div>
-                {review.service && (
-                  <p className="text-xs text-text-muted mt-0.5">
-                    {review.service}
-                  </p>
-                )}
-              </div>
             </Card>
           ))}
         </div>

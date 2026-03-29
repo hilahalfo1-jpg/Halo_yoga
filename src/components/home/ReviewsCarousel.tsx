@@ -36,6 +36,7 @@ interface CarouselReview {
   content: string;
   service: string | null;
   source: "internal" | "google";
+  profilePhotoUrl: string | null;
 }
 
 export default function ReviewsCarousel({
@@ -53,10 +54,11 @@ export default function ReviewsCarousel({
       content: r.content,
       service: r.service,
       source: "internal",
+      profilePhotoUrl: null,
     }));
 
     const google: CarouselReview[] = googleReviews
-      .filter((r) => r.text) // only show reviews with text
+      .filter((r) => r.text)
       .map((r) => ({
         id: r.id,
         name: r.authorName,
@@ -64,6 +66,7 @@ export default function ReviewsCarousel({
         content: r.text!,
         service: null,
         source: "google",
+        profilePhotoUrl: r.profilePhotoUrl,
       }));
 
     return [...internal, ...google]
@@ -108,21 +111,34 @@ export default function ReviewsCarousel({
             className="min-w-[260px] max-w-[85vw] md:min-w-[350px] md:max-w-none snap-center flex-shrink-0"
           >
             <Card className="h-full">
+              {/* Author row — Google style */}
+              <div className="flex items-center gap-3 mb-3">
+                {review.profilePhotoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={review.profilePhotoUrl}
+                    alt={review.name}
+                    className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm flex-shrink-0">
+                    {review.name.charAt(0)}
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <p className="font-medium text-text text-sm truncate">{review.name}</p>
+                    {review.source === "google" && <GoogleBadge />}
+                  </div>
+                  {review.service && (
+                    <p className="text-xs text-text-muted truncate">{review.service}</p>
+                  )}
+                </div>
+              </div>
               <StarRating rating={review.rating} size="sm" />
-              <p className="text-text mt-4 mb-4 leading-relaxed text-sm">
+              <p className="text-text mt-3 leading-relaxed text-sm">
                 &ldquo;{review.content}&rdquo;
               </p>
-              <div className="pt-4 border-t border-border">
-                <div className="flex items-center">
-                  {review.source === "google" && <GoogleBadge />}
-                  <p className="font-medium text-text">{review.name}</p>
-                </div>
-                {review.service && (
-                  <p className="text-xs text-text-muted mt-0.5">
-                    {review.service}
-                  </p>
-                )}
-              </div>
             </Card>
           </motion.div>
         ))}
