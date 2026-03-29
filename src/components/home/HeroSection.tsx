@@ -119,6 +119,7 @@ export default function HeroSection() {
             <div className="w-6 h-6 rounded-full border-2 border-white/30 flex items-center justify-center text-[10px] font-bold text-white" style={{ backgroundColor: "#34A853" }}>ת</div>
             <div className="w-6 h-6 rounded-full border-2 border-white/30 flex items-center justify-center text-[10px] font-bold text-white" style={{ backgroundColor: "#E91E63" }}>א</div>
             <div className="w-6 h-6 rounded-full border-2 border-white/30 flex items-center justify-center text-[10px] font-bold text-white" style={{ backgroundColor: "#FF8F00" }}>נ</div>
+            <div className="w-6 h-6 rounded-full border-2 border-white/30 flex items-center justify-center text-[10px] font-bold text-white" style={{ backgroundColor: "#9C27B0" }}>י</div>
           </div>
           <span>5.0 מתוך 5 | 15+ ביקורות מאומתות בגוגל</span>
         </motion.div>
