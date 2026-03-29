@@ -138,7 +138,7 @@ export default function ReviewsCarousel({
         </p>
       </div>
 
-      {/* Reviews grid — 1 col mobile, 3 col desktop */}
+      {/* Reviews grid — 1 col mobile (3 visible), 3 col desktop (6 visible) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         {displayReviews.map((review, index) => (
           <motion.div
@@ -147,6 +147,7 @@ export default function ReviewsCarousel({
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.4, delay: index * 0.1 }}
+            className={index >= 3 ? "hidden md:block" : ""}
           >
             <div className="bg-white rounded-2xl border border-gray-100 shadow-md hover:shadow-lg p-6 h-full flex flex-col min-w-0 transition-shadow duration-200">
               {/* Header row: photo | name+time | stars+google */}
