@@ -113,14 +113,6 @@ export default function ReviewsCarousel({
       .slice(0, 6);
   }, [reviews, googleReviews]);
 
-  const averageRating =
-    displayReviews.length > 0
-      ? displayReviews.reduce((sum, r) => sum + r.rating, 0) /
-        displayReviews.length
-      : 0;
-
-  const totalCount = reviews.length + googleReviews.length;
-
   return (
     <Section bg="surface">
       <div className="text-center mb-12">
