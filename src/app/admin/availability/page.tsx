@@ -571,7 +571,7 @@ export default function AvailabilityPage() {
 
                           <button
                             onClick={() => deleteRule(rule.id)}
-                            className="p-1 rounded text-text-muted hover:text-error hover:bg-error/10 transition-colors mr-auto"
+                            className="p-1 rounded text-text-muted hover:text-error hover:bg-error/10 transition-colors ms-auto"
                             title="מחק טווח"
                           >
                             <Trash2 className="h-3.5 w-3.5" />

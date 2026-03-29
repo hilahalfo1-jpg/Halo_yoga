@@ -175,10 +175,7 @@ export default function StepConfirmation({
         ניתן לבטל תור עד 24 שעות לפני המועד ללא חיוב. ביטול מאוחר יותר עלול להיות כרוך בתשלום מלא.
       </p>
 
-      <div className="flex flex-col-reverse sm:flex-row gap-3 max-w-md mx-auto mt-4">
-        <Button variant="ghost" onClick={onBack} disabled={isLoading} fullWidth className="sm:w-auto">
-          חזרה
-        </Button>
+      <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto mt-4">
         <Button
           onClick={handleConfirm}
           isLoading={isLoading}
@@ -186,6 +183,9 @@ export default function StepConfirmation({
           size="lg"
         >
           אישור הזמנה
+        </Button>
+        <Button variant="ghost" onClick={onBack} disabled={isLoading} fullWidth className="sm:w-auto">
+          חזרה
         </Button>
       </div>
     </div>

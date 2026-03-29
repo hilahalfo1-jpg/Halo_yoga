@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Clock, Banknote, ArrowRight, Users, CheckCircle } from "lucide-react";
+import { Clock, Banknote, Users, CheckCircle } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -10,6 +10,8 @@ import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import { formatPrice, formatDuration } from "@/lib/utils";
 import { CATEGORY_LABELS } from "@/lib/constants";
+
+export const dynamic = "force-dynamic";
 
 interface PageProps {
   params: { slug: string };
@@ -51,16 +53,21 @@ export default async function ServiceDetailPage({ params }: PageProps) {
       <Header />
       <main>
         {/* Hero */}
-        <div className="relative h-[35vh] min-h-[260px] bg-gradient-to-br from-[#566668] via-[#637577] to-[#454f50] flex items-end">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 pt-24 w-full">
-            <Link
-              href="/services"
-              className="inline-flex items-center gap-1 text-white/60 hover:text-white text-sm mb-4 transition-colors"
-            >
-              <ArrowRight className="h-4 w-4" />
-              חזרה לשירותים
-            </Link>
-            <div className="flex items-center gap-3 mb-3">
+        <div className="relative h-[35vh] min-h-[260px] bg-gradient-to-br from-[#3d4a4b] via-[#4a5758] to-[#353d3e] flex items-end">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12 pt-20 sm:pt-24 w-full">
+            {/* Breadcrumb */}
+            <nav aria-label="Breadcrumb" className="mb-4">
+              <ol className="flex items-center gap-1 text-sm">
+                <li>
+                  <Link href="/services" className="text-white/70 hover:text-white transition-colors">
+                    שירותים
+                  </Link>
+                </li>
+                <li className="text-white/40">/</li>
+                <li className="text-white/90">{service.name}</li>
+              </ol>
+            </nav>
+            <div className="flex flex-wrap items-center gap-3 mb-3">
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white">
                 {service.name}
               </h1>
@@ -68,7 +75,35 @@ export default async function ServiceDetailPage({ params }: PageProps) {
                 {CATEGORY_LABELS[service.category] || service.category}
               </Badge>
             </div>
-            <p className="text-white/70 text-lg">{service.shortDesc}</p>
+            <p className="text-white/80 text-base sm:text-lg max-w-2xl">{service.shortDesc}</p>
+          </div>
+        </div>
+
+        {/* Mobile-only quick info bar: price, duration, CTA above the fold */}
+        <div className="lg:hidden bg-surface border-b border-border">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium text-text">{formatDuration(service.duration)}</span>
+                </div>
+                {service.price > 0 && (
+                  <div className="flex items-center gap-2">
+                    <Banknote className="h-4 w-4 text-secondary-dark" />
+                    <span className="text-sm font-semibold text-text">{formatPrice(service.price)}</span>
+                  </div>
+                )}
+                {service.price === 0 && (
+                  <span className="text-sm font-medium text-primary">צרו קשר למחיר</span>
+                )}
+              </div>
+            </div>
+            <Link href={`/booking?service=${service.slug}`}>
+              <Button fullWidth size="md">
+                קביעת תור לטיפול זה
+              </Button>
+            </Link>
           </div>
         </div>
 
@@ -103,8 +138,8 @@ export default async function ServiceDetailPage({ params }: PageProps) {
                 )}
               </div>
 
-              {/* Sidebar */}
-              <div className="lg:col-span-1">
+              {/* Sidebar -- hidden on mobile (shown as quick bar above) */}
+              <div className="hidden lg:block lg:col-span-1">
                 <div className="bg-white rounded-xl border border-border p-6 shadow-sm sticky top-24 space-y-6">
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
@@ -126,7 +161,7 @@ export default async function ServiceDetailPage({ params }: PageProps) {
                       <div>
                         <p className="text-sm text-text-muted">מחיר</p>
                         <p className="font-semibold text-text text-lg">
-                          {formatPrice(service.price)}
+                          {service.price > 0 ? formatPrice(service.price) : "צרו קשר"}
                         </p>
                       </div>
                     </div>

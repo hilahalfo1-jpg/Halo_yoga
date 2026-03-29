@@ -20,7 +20,7 @@ export default function ServicesHero() {
   }, []);
 
   return (
-    <div className="relative h-[35vh] min-h-[220px] sm:min-h-[260px] bg-gradient-to-br from-[#566668] via-[#637577] to-[#454f50] flex items-end overflow-hidden">
+    <div className="relative h-[35vh] min-h-[220px] sm:min-h-[260px] bg-gradient-to-br from-[#3d4a4b] via-[#4a5758] to-[#353d3e] flex items-end overflow-hidden">
       {bgImage && (
         <>
           <Image
@@ -36,7 +36,7 @@ export default function ServicesHero() {
         <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3">
           {t("services", "heroTitle", "השירותים שלי")}
         </h1>
-        <p className="text-white/70 text-base md:text-lg">
+        <p className="text-white/80 text-base md:text-lg">
           {t("services", "heroSubtitle", "מגוון טיפולים מקצועיים המותאמים לצרכים שלכם")}
         </p>
       </div>

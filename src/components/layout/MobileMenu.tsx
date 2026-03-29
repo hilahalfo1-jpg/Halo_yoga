@@ -76,7 +76,7 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                 />
                 <button
                   onClick={onClose}
-                  className="p-2 rounded-lg text-text-muted hover:text-text hover:bg-surface transition-colors"
+                  className="p-3 -m-1 rounded-lg text-text-muted hover:text-text hover:bg-surface transition-colors"
                   aria-label="סגירת תפריט"
                 >
                   <X className="h-5 w-5" />
@@ -90,6 +90,7 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                     <li key={link.href}>
                       <Link
                         href={link.href}
+                        aria-current={pathname === link.href ? "page" : undefined}
                         className={cn(
                           "block px-4 py-3 rounded-lg text-base font-medium transition-colors",
                           pathname === link.href
@@ -114,7 +115,7 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                   className="flex items-center justify-center gap-2 w-full py-3 rounded-lg border-2 border-primary text-primary font-medium hover:bg-primary hover:text-white transition-colors"
                 >
                   <Phone className="h-4 w-4" />
-                  {CONTACT_PHONE}
+                  <span dir="ltr">{CONTACT_PHONE}</span>
                 </a>
               </div>
             </div>

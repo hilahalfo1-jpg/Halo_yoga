@@ -8,7 +8,7 @@ import Section from "@/components/ui/Section";
 import Card from "@/components/ui/Card";
 import ServiceIcon from "@/components/ui/ServiceIcon";
 import { CATEGORY_OPTIONS } from "@/lib/constants";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, formatDuration } from "@/lib/utils";
 import { useSiteContent } from "@/lib/hooks/useSiteContent";
 import type { ServiceItem } from "@/types";
 
@@ -57,6 +57,11 @@ export default function ServicesGrid({ services, hideTitle }: ServicesGridProps)
       </div>
 
       {/* Grid */}
+      {filtered.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-text-muted text-lg">אין שירותים בקטגוריה זו כרגע</p>
+        </div>
+      )}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {filtered.map((service, index) => (
           <motion.div
@@ -66,7 +71,10 @@ export default function ServicesGrid({ services, hideTitle }: ServicesGridProps)
             viewport={{ once: true }}
             transition={{ duration: 0.4, delay: index * 0.1 }}
           >
-            <Link href={`/services/${service.slug}`}>
+            <Link
+              href={`/services/${service.slug}`}
+              className="block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            >
               <Card hover className="h-full flex flex-col">
                 <div className="text-primary mb-4">
                   <ServiceIcon name={service.icon} />
@@ -78,9 +86,16 @@ export default function ServicesGrid({ services, hideTitle }: ServicesGridProps)
                   {service.shortDesc}
                 </p>
                 <div className="flex items-center justify-between pt-4 border-t border-border">
-                  <span className="text-primary font-semibold">
-                    החל מ-{formatPrice(service.price)}
-                  </span>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-primary font-semibold">
+                      {service.price > 0
+                        ? `החל מ-${formatPrice(service.price)}`
+                        : "צרו קשר למחיר"}
+                    </span>
+                    <span className="text-xs text-text-muted">
+                      {formatDuration(service.duration)}
+                    </span>
+                  </div>
                   <span className="text-sm text-primary flex items-center gap-1">
                     פרטים נוספים
                     <ArrowLeft className="h-4 w-4" />

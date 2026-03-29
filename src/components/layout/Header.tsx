@@ -76,13 +76,14 @@ export default function Header() {
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-3">
-              {NAV_LINKS.map((link) => (
+            <nav className="hidden md:flex items-center gap-1">
+              {NAV_LINKS.filter((link) => link.href !== "/booking").map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
+                  aria-current={pathname === link.href ? "page" : undefined}
                   className={cn(
-                    "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+                    "px-3 py-2 rounded-lg text-sm font-medium transition-colors",
                     pathname === link.href
                       ? "text-primary bg-primary/10"
                       : showSolidHeader
@@ -99,7 +100,16 @@ export default function Header() {
             <div className="flex items-center gap-3">
               {/* Desktop: CTA */}
               <Link href="/booking" className="hidden md:block">
-                <Button size="sm" className={showSolidHeader ? "bg-[#576769] text-white hover:bg-[#475557]" : "bg-primary text-white hover:bg-primary-dark"}>קביעת תור</Button>
+                <Button
+                  size="sm"
+                  variant={showSolidHeader ? "primary" : "secondary"}
+                  className={cn(
+                    showSolidHeader ? "" : "text-white",
+                    pathname === "/booking" && "ring-2 ring-primary ring-offset-2"
+                  )}
+                >
+                  קביעת תור
+                </Button>
               </Link>
 
               {/* Mobile: Instagram (left side in RTL) */}
@@ -108,7 +118,7 @@ export default function Header() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className={cn(
-                  "md:hidden p-3 rounded-lg transition-colors",
+                  "md:hidden p-3 -m-1 rounded-lg transition-colors",
                   showSolidHeader
                     ? "text-text hover:bg-surface"
                     : "text-white hover:bg-white/10"

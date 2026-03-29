@@ -357,7 +357,15 @@ export default function StepMedicalForm({
         </div>
 
         {/* Actions */}
-        <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4">
+        <div className="flex flex-col sm:flex-row gap-3 pt-4">
+          <Button
+            onClick={handleSubmit}
+            isLoading={isSubmitting}
+            disabled={!allDeclared}
+            fullWidth
+          >
+            שליחת הצהרת בריאות
+          </Button>
           <Button
             type="button"
             variant="ghost"
@@ -367,14 +375,6 @@ export default function StepMedicalForm({
             className="sm:w-auto"
           >
             דלג
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            isLoading={isSubmitting}
-            disabled={!allDeclared}
-            fullWidth
-          >
-            שליחת הצהרת בריאות
           </Button>
         </div>
       </div>

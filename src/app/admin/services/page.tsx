@@ -361,6 +361,7 @@ export default function AdminServicesPage() {
                           disabled={isToggling === service.id}
                           className="p-2 rounded-lg text-text-muted hover:text-text hover:bg-surface transition-colors disabled:opacity-50"
                           title={service.isActive ? "השבת שירות" : "הפעל שירות"}
+                          aria-label={service.isActive ? "השבת שירות" : "הפעל שירות"}
                         >
                           {service.isActive ? (
                             <ToggleRight className="h-4 w-4 text-success" />
@@ -372,6 +373,7 @@ export default function AdminServicesPage() {
                           onClick={() => openEditModal(service)}
                           className="p-2 rounded-lg text-text-muted hover:text-text hover:bg-surface transition-colors"
                           title="עריכת שירות"
+                          aria-label="עריכת שירות"
                         >
                           <Pencil className="h-4 w-4" />
                         </button>
@@ -379,6 +381,7 @@ export default function AdminServicesPage() {
                           onClick={() => setDeleteTarget(service)}
                           className="p-2 rounded-lg text-text-muted hover:text-error hover:bg-error/10 transition-colors"
                           title="מחיקת שירות"
+                          aria-label="מחיקת שירות"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -541,7 +544,7 @@ export default function AdminServicesPage() {
                     setSelectedIcon("");
                     setValue("icon", "");
                   }}
-                  className="text-xs text-error hover:underline mr-auto"
+                  className="text-xs text-error hover:underline ms-auto"
                 >
                   הסרה
                 </button>

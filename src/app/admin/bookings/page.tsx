@@ -69,6 +69,10 @@ export default function BookingsPage() {
   const [selectedBooking, setSelectedBooking] = useState<BookingRow | null>(null);
   const [adminNotes, setAdminNotes] = useState("");
   const [medicalFormBooking, setMedicalFormBooking] = useState<BookingRow | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [deleteTarget, setDeleteTarget] = useState<BookingRow | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchBookings = useCallback(async () => {
     try {
@@ -111,18 +115,22 @@ export default function BookingsPage() {
     }
   };
 
-  const deleteBooking = async (id: string) => {
-    if (!confirm("למחוק את ההזמנה לצמיתות?")) return;
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
     try {
-      const res = await fetch(`/api/admin/bookings/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/bookings/${deleteTarget.id}`, { method: "DELETE" });
       if (res.ok) {
         toast.success("ההזמנה נמחקה");
+        setDeleteTarget(null);
         fetchBookings();
       } else {
         toast.error("שגיאה במחיקה");
       }
     } catch {
       toast.error("שגיאה במחיקה");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -229,23 +237,27 @@ export default function BookingsPage() {
             className="w-full pr-10 pl-3 py-2 text-sm rounded-lg border border-border bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
           />
         </div>
-        <div className="flex gap-2">
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            className="px-3 py-2 text-sm rounded-lg border border-border bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-            placeholder="מתאריך"
-            dir="ltr"
-          />
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            className="px-3 py-2 text-sm rounded-lg border border-border bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-            placeholder="עד תאריך"
-            dir="ltr"
-          />
+        <div className="flex gap-2 items-center">
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-text-muted">מתאריך</label>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="px-3 py-2 text-sm rounded-lg border border-border bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+              dir="ltr"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-text-muted">עד תאריך</label>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="px-3 py-2 text-sm rounded-lg border border-border bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+              dir="ltr"
+            />
+          </div>
         </div>
       </div>
 
@@ -339,12 +351,16 @@ export default function BookingsPage() {
                       setSelectedBooking(booking);
                       setAdminNotes(booking.adminNotes || "");
                     }}
-                    className="p-2 rounded-lg text-text-muted hover:text-text hover:bg-surface"
+                    className="relative p-2 rounded-lg text-text-muted hover:text-text hover:bg-surface"
+                    title={booking.adminNotes ? "יש הערות אדמין" : "הוסיפו הערה"}
                   >
                     <FileText className="h-5 w-5" />
+                    {booking.adminNotes && (
+                      <span className="absolute top-1 right-1 w-2 h-2 bg-secondary rounded-full" />
+                    )}
                   </button>
                   <button
-                    onClick={() => deleteBooking(booking.id)}
+                    onClick={() => setDeleteTarget(booking)}
                     className="p-2 rounded-lg text-text-muted hover:text-error hover:bg-error/10"
                   >
                     <Trash2 className="h-5 w-5" />
@@ -374,11 +390,11 @@ export default function BookingsPage() {
                     key={booking.id}
                     className="border-b border-border last:border-0 hover:bg-surface/30"
                   >
-                    <td className="p-3 text-text" dir="ltr">
-                      {formatDateShort(booking.startAt)}
+                    <td className="p-3 text-text">
+                      <span dir="ltr" className="inline-block">{formatDateShort(booking.startAt)}</span>
                     </td>
-                    <td className="p-3 text-text" dir="ltr">
-                      {formatTime(booking.startAt)}
+                    <td className="p-3 text-text">
+                      <span dir="ltr" className="inline-block">{formatTime(booking.startAt)}</span>
                     </td>
                     <td className="p-3 text-text">{booking.service.name}</td>
                     <td className="p-3">
@@ -459,12 +475,16 @@ export default function BookingsPage() {
                             setSelectedBooking(booking);
                             setAdminNotes(booking.adminNotes || "");
                           }}
-                          className="p-1 rounded text-text-muted hover:text-text hover:bg-surface"
+                          className="relative p-1 rounded text-text-muted hover:text-text hover:bg-surface"
+                          title={booking.adminNotes ? "יש הערות אדמין" : "הוסיפו הערה"}
                         >
                           <FileText className="h-4 w-4" />
+                          {booking.adminNotes && (
+                            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-secondary rounded-full" />
+                          )}
                         </button>
                         <button
-                          onClick={() => deleteBooking(booking.id)}
+                          onClick={() => setDeleteTarget(booking)}
                           className="p-1 rounded text-text-muted hover:text-error hover:bg-error/10"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -503,6 +523,42 @@ export default function BookingsPage() {
           <Button fullWidth onClick={saveAdminNotes}>
             שמירה
           </Button>
+        </div>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title="מחיקת הזמנה"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-text">
+            למחוק את ההזמנה של{" "}
+            <span className="font-semibold">{deleteTarget?.customerName}</span>
+            {" "}לצמיתות? פעולה זו לא ניתנת לביטול.
+          </p>
+          <div className="flex gap-3">
+            <Button
+              variant="danger"
+              size="sm"
+              fullWidth
+              onClick={confirmDelete}
+              isLoading={isDeleting}
+            >
+              <Trash2 className="h-4 w-4 ml-1" />
+              מחיקה
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              fullWidth
+              onClick={() => setDeleteTarget(null)}
+            >
+              ביטול
+            </Button>
+          </div>
         </div>
       </Modal>
 

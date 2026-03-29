@@ -1,21 +1,11 @@
-"use client";
-
-import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Heart } from "lucide-react";
 
-export default function AboutImage() {
-  const [imagePath, setImagePath] = useState<string | null>(null);
+interface AboutImageProps {
+  imagePath: string | null;
+}
 
-  useEffect(() => {
-    fetch("/api/site-images", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((json) => {
-        if (json.data?.about?.imagePath) setImagePath(json.data.about.imagePath);
-      })
-      .catch(() => {});
-  }, []);
-
+export default function AboutImage({ imagePath }: AboutImageProps) {
   return (
     <div className="aspect-square sm:aspect-[3/4] rounded-2xl bg-gradient-to-br from-primary-light/20 to-secondary/20 flex items-center justify-center lg:sticky lg:top-24 overflow-hidden relative">
       {imagePath ? (
@@ -23,6 +13,7 @@ export default function AboutImage() {
           src={imagePath}
           alt="הילה - מעסה רפואית ומורה ליוגה"
           fill
+          sizes="(max-width: 1024px) 100vw, 40vw"
           className="object-cover rounded-2xl"
         />
       ) : (

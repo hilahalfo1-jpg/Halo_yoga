@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 interface GiftCardViewProps {
   recipientName: string;
   senderName: string | null;
@@ -30,7 +32,7 @@ export default function GiftCardView({
           )}
 
           {/* Left botanical decoration */}
-          <div className="absolute bottom-0 left-0 w-[35%] h-[70%] pointer-events-none">
+          <div className="absolute bottom-0 left-0 w-[35%] h-[70%] pointer-events-none" aria-hidden="true">
             <svg viewBox="0 0 200 400" fill="none" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
               {/* Main branch */}
               <path d="M120 400 C110 350, 90 300, 80 250 C70 200, 60 150, 70 100" stroke="#8b9e7e" strokeWidth="2" fill="none" />
@@ -60,7 +62,7 @@ export default function GiftCardView({
           </div>
 
           {/* Right botanical decoration (mirrored) */}
-          <div className="absolute bottom-0 right-0 w-[35%] h-[70%] pointer-events-none" style={{ transform: "scaleX(-1)" }}>
+          <div className="absolute bottom-0 right-0 w-[35%] h-[70%] pointer-events-none" aria-hidden="true" style={{ transform: "scaleX(-1)" }}>
             <svg viewBox="0 0 200 400" fill="none" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
               <path d="M120 400 C110 350, 90 300, 80 250 C70 200, 60 150, 70 100" stroke="#8b9e7e" strokeWidth="2" fill="none" />
               <ellipse cx="65" cy="140" rx="18" ry="28" transform="rotate(-20 65 140)" fill="#9aac8b" opacity="0.6" />
@@ -126,14 +128,26 @@ export default function GiftCardView({
               className="text-sm sm:text-base tracking-[0.3em] uppercase mt-auto"
               style={{ color: "#6b6255" }}
             >
-              HALOYOGAMASSAGE
+              HALO YOGA & MASSAGE
             </p>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="text-center mt-6 text-sm" style={{ color: "#8a7f72" }}>
-          <p>haloyogamassage.com</p>
+        {/* Booking CTA + Footer */}
+        <div className="text-center mt-6 space-y-4">
+          {!isRedeemed && (
+            <Link
+              href="/booking"
+              className="inline-block bg-secondary text-white hover:bg-secondary-dark transition-colors duration-200 rounded-lg px-8 py-3 text-base font-medium shadow-sm"
+            >
+              לקביעת התור שלך
+            </Link>
+          )}
+          <p className="text-sm" style={{ color: "#8a7f72" }}>
+            <Link href="/" className="hover:underline" style={{ color: "#8a7f72" }}>
+              haloyogamassage.com
+            </Link>
+          </p>
         </div>
       </div>
     </div>

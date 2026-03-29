@@ -121,6 +121,14 @@ export default function BookingWizard({ services }: BookingWizardProps) {
     setData((prev) => ({ ...prev, ...partial }));
   };
 
+  const goToStep = (step: number) => {
+    // Only allow navigating to completed steps (going back)
+    if (step < currentStep) {
+      setCurrentStep(step);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
   return (
     <div className="max-w-5xl mx-auto">
       {/* Progress Bar */}
@@ -134,47 +142,73 @@ export default function BookingWizard({ services }: BookingWizardProps) {
             <span className="text-sm text-text-muted mr-2">
               — {STEPS[currentStep].label}
             </span>
-            <div className="mt-2 h-1.5 bg-surface rounded-full overflow-hidden">
+            <div className="mt-2 h-2 bg-surface rounded-full overflow-hidden">
               <div
-                className="h-full bg-primary rounded-full transition-all duration-300"
+                className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
                 style={{ width: `${((currentStep + 1) / STEPS.length) * 100}%` }}
               />
             </div>
+            {/* Mobile: tap completed steps */}
+            {currentStep > 0 && (
+              <div className="flex items-center justify-center gap-2 mt-3">
+                {STEPS.slice(0, currentStep).map((step, i) => (
+                  <button
+                    key={i}
+                    onClick={() => goToStep(i)}
+                    className="text-xs text-primary underline underline-offset-2 hover:text-primary-dark transition-colors"
+                  >
+                    {step.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           {/* Desktop: full step circles */}
           <div className="hidden sm:flex items-center justify-between">
             {STEPS.map((step, i) => (
               <div key={i} className="flex items-center flex-1 last:flex-none">
-                <div className="flex flex-col items-center">
+                <button
+                  type="button"
+                  onClick={() => goToStep(i)}
+                  disabled={i >= currentStep}
+                  className={cn(
+                    "flex flex-col items-center group",
+                    i < currentStep && "cursor-pointer"
+                  )}
+                >
                   <div
                     className={cn(
-                      "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all",
+                      "w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all",
                       i < currentStep
-                        ? "bg-primary text-white"
+                        ? "bg-primary text-white group-hover:bg-primary-dark group-hover:scale-110"
                         : i === currentStep
-                          ? "bg-primary text-white ring-4 ring-primary/20"
+                          ? "bg-primary text-white ring-4 ring-primary/20 scale-110"
                           : "bg-surface text-text-muted border border-border"
                     )}
                   >
                     {i < currentStep ? (
-                      <Check className="h-4 w-4" />
+                      <Check className="h-5 w-5" />
                     ) : (
                       i + 1
                     )}
                   </div>
                   <span
                     className={cn(
-                      "text-xs mt-2",
-                      i <= currentStep ? "text-text font-medium" : "text-text-muted"
+                      "text-xs mt-2 transition-colors",
+                      i < currentStep
+                        ? "text-primary font-medium group-hover:text-primary-dark"
+                        : i === currentStep
+                          ? "text-text font-medium"
+                          : "text-text-muted"
                     )}
                   >
                     {step.label}
                   </span>
-                </div>
+                </button>
                 {i < STEPS.length - 1 && (
                   <div
                     className={cn(
-                      "flex-1 h-0.5 mx-2",
+                      "flex-1 h-[3px] mx-3 rounded-full transition-all duration-500",
                       i < currentStep ? "bg-primary" : "bg-border"
                     )}
                   />
@@ -186,6 +220,7 @@ export default function BookingWizard({ services }: BookingWizardProps) {
       )}
 
       {/* Steps */}
+      <div key={currentStep} className="animate-fadeIn">
       {currentStep === 0 && (
         <StepServiceSelect
           services={services}
@@ -254,8 +289,8 @@ export default function BookingWizard({ services }: BookingWizardProps) {
 
       {currentStep === 6 && bookingResult && (
         <div className="text-center py-12">
-          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-warning/10 flex items-center justify-center">
-            <Clock className="h-10 w-10 text-warning" />
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center">
+            <Clock className="h-10 w-10 text-primary" />
           </div>
           <h2 className="text-3xl font-bold text-text mb-3">
             הבקשה נשלחה בהצלחה!
@@ -303,6 +338,7 @@ export default function BookingWizard({ services }: BookingWizardProps) {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { ShieldBan, Trash2, Plus, Phone, Mail } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+import Modal from "@/components/ui/Modal";
 import Spinner from "@/components/ui/Spinner";
 import EmptyState from "@/components/ui/EmptyState";
 
@@ -23,6 +25,7 @@ export default function BlacklistPage() {
   const [identifier, setIdentifier] = useState("");
   const [reason, setReason] = useState("");
   const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<BlacklistItem | null>(null);
 
   const fetchItems = useCallback(async () => {
     try {
@@ -69,16 +72,17 @@ export default function BlacklistPage() {
     }
   };
 
-  const removeItem = async (id: string) => {
-    if (!confirm("להסיר חסימה?")) return;
+  const removeItem = async () => {
+    if (!deleteTarget) return;
     try {
       const res = await fetch("/api/admin/blacklist", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
+        body: JSON.stringify({ id: deleteTarget.id }),
       });
       if (res.ok) {
         toast.success("הוסר מהרשימה");
+        setDeleteTarget(null);
         fetchItems();
       }
     } catch {
@@ -86,7 +90,13 @@ export default function BlacklistPage() {
     }
   };
 
-  if (isLoading) return <Spinner className="mx-auto mt-20" />;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Spinner label="טוען רשימת חסומים..." />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -98,40 +108,32 @@ export default function BlacklistPage() {
           </p>
         </div>
         <Button onClick={() => setShowForm(!showForm)} variant="primary" size="sm">
-          <Plus className="h-4 w-4 ml-1" />
+          <Plus className="h-4 w-4" />
           הוסף חסימה
         </Button>
       </div>
 
       {showForm && (
         <Card className="p-4 space-y-3 border-2 border-primary/30">
-          <div>
-            <label className="block text-sm font-medium text-text mb-1">טלפון או אימייל</label>
-            <input
-              type="text"
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
-              placeholder="050-1234567 או example@email.com"
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary"
-              dir="ltr"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-text mb-1">סיבה (אופציונלי)</label>
-            <input
-              type="text"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="סיבת החסימה..."
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary"
-            />
-          </div>
+          <Input
+            label="טלפון או אימייל"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+            placeholder="050-1234567 או example@email.com"
+            dir="ltr"
+          />
+          <Input
+            label="סיבה (אופציונלי)"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="סיבת החסימה..."
+          />
           <div className="flex gap-2 justify-end">
             <Button variant="ghost" size="sm" onClick={() => setShowForm(false)}>
               ביטול
             </Button>
-            <Button variant="primary" size="sm" onClick={addItem} disabled={saving}>
-              {saving ? "שומר..." : "הוסף"}
+            <Button variant="primary" size="sm" onClick={addItem} isLoading={saving}>
+              הוסף
             </Button>
           </div>
         </Card>
@@ -164,8 +166,9 @@ export default function BlacklistPage() {
                 </div>
               </div>
               <button
-                onClick={() => removeItem(item.id)}
-                className="p-2 text-error hover:bg-error/10 rounded-lg transition-colors"
+                onClick={() => setDeleteTarget(item)}
+                className="p-2 text-text-muted hover:text-error hover:bg-error/10 rounded-lg transition-colors"
+                title="הסרת חסימה"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -173,6 +176,37 @@ export default function BlacklistPage() {
           ))}
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title="הסרת חסימה"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-text">
+            האם להסיר את החסימה על{" "}
+            <strong dir="ltr">{deleteTarget?.identifier}</strong>?
+          </p>
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setDeleteTarget(null)}
+            >
+              ביטול
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={removeItem}
+            >
+              הסרת חסימה
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

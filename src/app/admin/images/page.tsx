@@ -6,6 +6,8 @@ import { Upload, Trash2, ImageIcon, Check, Plus } from "lucide-react";
 import { toast } from "sonner";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
+import Modal from "@/components/ui/Modal";
+import Spinner from "@/components/ui/Spinner";
 
 interface SiteImage {
   id: string;
@@ -46,6 +48,8 @@ export default function AdminImagesPage() {
   const [images, setImages] = useState<SiteImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState<string | null>(null);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchImages = useCallback(async () => {
     try {
@@ -129,20 +133,23 @@ export default function AdminImagesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("למחוק את התמונה?")) return;
+    setIsDeleting(true);
     try {
       await fetch(`/api/admin/site-images?id=${id}`, { method: "DELETE" });
       toast.success("התמונה נמחקה");
+      setDeleteTargetId(null);
       fetchImages();
     } catch {
       toast.error("שגיאה במחיקה");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
-  const handleRemove = async (section: string) => {
+  const handleRemove = (section: string) => {
     const img = getImageForSection(section);
     if (!img) return;
-    await handleDelete(img.id);
+    setDeleteTargetId(img.id);
   };
 
   const handleAltChange = async (id: string, imagePath: string, alt: string) => {
@@ -167,7 +174,7 @@ export default function AdminImagesPage() {
 
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <Spinner label="טוען תמונות..." />
         </div>
       ) : (
         <div className="space-y-8">
@@ -188,7 +195,7 @@ export default function AdminImagesPage() {
                       <div className="aspect-video relative">
                         <Image src={img.imagePath} alt={img.alt || `תמונה ${index + 1}`} fill className="object-cover" />
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
-                          <button onClick={() => handleDelete(img.id)} className="p-2 bg-white rounded-full text-error shadow-lg">
+                          <button onClick={() => setDeleteTargetId(img.id)} className="p-2 bg-white rounded-full text-error shadow-lg">
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
@@ -330,6 +337,36 @@ export default function AdminImagesPage() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={!!deleteTargetId}
+        onClose={() => setDeleteTargetId(null)}
+        title="מחיקת תמונה"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-text">האם למחוק את התמונה? פעולה זו אינה ניתנת לביטול.</p>
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setDeleteTargetId(null)}
+            >
+              ביטול
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              isLoading={isDeleting}
+              onClick={() => deleteTargetId && handleDelete(deleteTargetId)}
+            >
+              מחיקה
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

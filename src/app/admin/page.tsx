@@ -67,7 +67,20 @@ export default function AdminDashboard() {
     );
   }
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <AlertCircle className="h-12 w-12 text-error mb-3" />
+        <p className="text-text font-medium">שגיאה בטעינת הנתונים</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-3 text-sm text-secondary hover:underline"
+        >
+          נסו שוב
+        </button>
+      </div>
+    );
+  }
 
   const statCards = [
     {
@@ -76,6 +89,7 @@ export default function AdminDashboard() {
       icon: Calendar,
       color: "text-secondary",
       bg: "bg-primary/20",
+      href: "/admin/bookings",
     },
     {
       label: "הזמנות השבוע",
@@ -83,6 +97,7 @@ export default function AdminDashboard() {
       icon: TrendingUp,
       color: "text-info",
       bg: "bg-info/10",
+      href: "/admin/bookings",
     },
     {
       label: "פניות חדשות",
@@ -124,7 +139,7 @@ export default function AdminDashboard() {
         {statCards.map((stat) => {
           const Icon = stat.icon;
           const content = (
-            <Card key={stat.label} className="flex items-center gap-3 sm:gap-4">
+            <Card className="flex items-center gap-3 sm:gap-4">
               <div
                 className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${stat.bg} flex items-center justify-center flex-shrink-0`}
               >

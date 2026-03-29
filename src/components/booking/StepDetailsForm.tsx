@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRef, useState } from "react";
 import { Home, Camera, X } from "lucide-react";
+import { toast } from "sonner";
 import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
 import Button from "@/components/ui/Button";
@@ -64,11 +65,11 @@ export default function StepDetailsForm({
 
     const allowed = ["image/jpeg", "image/png"];
     if (!allowed.includes(file.type)) {
-      alert("סוג קובץ לא נתמך. השתמשו ב-JPG או PNG");
+      toast.error("סוג קובץ לא נתמך. השתמשו ב-JPG או PNG");
       return;
     }
     if (file.size > 3 * 1024 * 1024) {
-      alert("הקובץ גדול מדי. מקסימום 3MB");
+      toast.error("הקובץ גדול מדי. מקסימום 3MB");
       return;
     }
 
@@ -208,12 +209,12 @@ export default function StepDetailsForm({
           </button>
         )}
 
-        <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4">
-          <Button type="button" variant="ghost" onClick={onBack} fullWidth className="sm:w-auto">
-            חזרה
-          </Button>
+        <div className="flex flex-col sm:flex-row gap-3 pt-4">
           <Button type="submit" fullWidth>
             המשך לאישור
+          </Button>
+          <Button type="button" variant="ghost" onClick={onBack} fullWidth className="sm:w-auto">
+            חזרה
           </Button>
         </div>
       </form>

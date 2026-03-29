@@ -1,15 +1,30 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { CONTACT_WHATSAPP } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 
 export default function WhatsAppFab() {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsVisible(true), 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <a
       href={`https://wa.me/${CONTACT_WHATSAPP}`}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="שלחו הודעה בוואטסאפ"
-      className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all hover:scale-110"
+      className={cn(
+        "fixed bottom-6 right-6 z-50 w-14 h-14 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-500 hover:scale-110",
+        "sm:bottom-6 bottom-20",
+        isVisible
+          ? "opacity-100 translate-y-0"
+          : "opacity-0 translate-y-4 pointer-events-none"
+      )}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"

@@ -53,7 +53,7 @@ export default function HeroSection() {
       {/* Background */}
       {hasImages ? (
         <>
-          <AnimatePresence mode="popLayout">
+          <AnimatePresence mode="wait">
             <motion.div
               key={currentIndex}
               initial={{ opacity: 0 }}
@@ -83,6 +83,7 @@ export default function HeroSection() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
+          aria-hidden="true"
         >
           <Badge className="mb-6 bg-white/15 text-white border-white/20 text-sm">
             {THERAPIST_TITLE}
@@ -93,7 +94,7 @@ export default function HeroSection() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.15 }}
-          className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight"
+          className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight max-w-3xl mx-auto"
         >
           {t("hero", "title", "ריפוי הגוף, שקט הנפש")}
         </motion.h1>
@@ -131,12 +132,12 @@ export default function HeroSection() {
           className="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
           <Link href="/booking">
-            <Button size="lg" className="bg-primary text-white hover:bg-primary-dark text-base">
+            <Button size="lg" className="bg-secondary text-white hover:bg-secondary-dark text-base">
               {t("hero", "buttonText", "קביעת תור")}
             </Button>
           </Link>
           <a href={`tel:${CONTACT_PHONE.replace(/-/g, "")}`}>
-            <Button variant="outline" size="lg" className="border-0 ring-2 ring-inset ring-white text-white hover:bg-white hover:text-primary text-base">
+            <Button variant="outline" size="lg" className="border-0 ring-2 ring-inset ring-white text-white hover:bg-white hover:text-secondary text-base">
               {t("hero", "buttonText2", "שיחת ייעוץ")}
             </Button>
           </a>
@@ -150,13 +151,15 @@ export default function HeroSection() {
             <button
               key={index}
               onClick={() => goToSlide(index)}
-              className={`rounded-full transition-all duration-300 ${
+              className={`relative flex items-center justify-center w-11 h-11 rounded-full transition-all duration-300`}
+              aria-label={`תמונה ${index + 1}`}
+            >
+              <span className={`block rounded-full transition-all duration-300 ${
                 index === currentIndex
                   ? "w-8 h-2.5 bg-white"
                   : "w-2.5 h-2.5 bg-white/40 hover:bg-white/60"
-              }`}
-              aria-label={`תמונה ${index + 1}`}
-            />
+              }`} />
+            </button>
           ))}
         </div>
       )}
@@ -167,6 +170,7 @@ export default function HeroSection() {
         animate={{ opacity: 1 }}
         transition={{ delay: 1.2 }}
         className="absolute bottom-8 left-1/2 -translate-x-1/2"
+        aria-hidden="true"
       >
         <motion.div
           animate={{ y: [0, 8, 0] }}

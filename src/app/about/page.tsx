@@ -15,17 +15,22 @@ export const metadata: Metadata = {
 };
 
 const certifications = [
-  { icon: <Award className="h-6 w-6" />, title: "עיסוי תאילנדי מוסמך", year: "" },
-  { icon: <GraduationCap className="h-6 w-6" />, title: "הדרכת יוגה", year: "" },
-  { icon: <Heart className="h-6 w-6" />, title: "חיבור לגוף ולאנרגיה", year: "" },
-  { icon: <Leaf className="h-6 w-6" />, title: "איזון גוף ונפש", year: "" },
+  { icon: <Award className="h-6 w-6" />, title: "עיסוי תאילנדי מוסמך" },
+  { icon: <GraduationCap className="h-6 w-6" />, title: "הדרכת יוגה" },
+  { icon: <Heart className="h-6 w-6" />, title: "חיבור לגוף ולאנרגיה" },
+  { icon: <Leaf className="h-6 w-6" />, title: "איזון גוף ונפש" },
 ];
 
 export default async function AboutPage() {
-  const certImages = await prisma.siteImage.findMany({
-    where: { section: "certifications" },
-    orderBy: { sortOrder: "asc" },
-  });
+  const [certImages, aboutImage] = await Promise.all([
+    prisma.siteImage.findMany({
+      where: { section: "certifications" },
+      orderBy: { sortOrder: "asc" },
+    }),
+    prisma.siteImage.findFirst({
+      where: { section: "about" },
+    }),
+  ]);
   return (
     <>
       <Header />
@@ -36,7 +41,7 @@ export default async function AboutPage() {
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3">
               אודות
             </h1>
-            <p className="text-white/70 text-base md:text-lg">
+            <p className="text-white/90 text-base md:text-lg">
               הסיפור שלי, הדרך שלי, הגישה שלי
             </p>
           </div>
@@ -48,7 +53,7 @@ export default async function AboutPage() {
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12 items-start">
               {/* Profile Image */}
               <div className="lg:col-span-2">
-                <AboutImage />
+                <AboutImage imagePath={aboutImage?.imagePath ?? null} />
               </div>
 
               {/* Text */}
@@ -130,7 +135,7 @@ export default async function AboutPage() {
             <h2 className="text-3xl font-bold text-text text-center mb-10">
               הכשרות והסמכות
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
               {certifications.map((cert, index) => (
                 <div
                   key={index}
@@ -139,10 +144,7 @@ export default async function AboutPage() {
                   <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
                     {cert.icon}
                   </div>
-                  <div>
-                    <p className="font-medium text-text text-sm">{cert.title}</p>
-                    <p className="text-xs text-text-muted">{cert.year}</p>
-                  </div>
+                  <p className="font-medium text-text text-sm">{cert.title}</p>
                 </div>
               ))}
             </div>

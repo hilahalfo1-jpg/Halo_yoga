@@ -11,7 +11,7 @@ export default function ContactHero() {
         <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3">
           {t("contact", "heroTitle", "צור קשר")}
         </h1>
-        <p className="text-white/70 text-base md:text-lg">
+        <p className="text-white/90 text-base md:text-lg">
           {t("contact", "heroSubtitle", "נשמח לשמוע מכם ולענות על כל שאלה")}
         </p>
       </div>

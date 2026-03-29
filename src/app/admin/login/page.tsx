@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import Link from "next/link";
 
 function LoginContent() {
   const searchParams = useSearchParams();
@@ -20,7 +21,7 @@ function LoginContent() {
       <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-primary mb-2">ניהול האתר</h1>
-          <p className="text-text-secondary">התחברו כדי לגשת לפאנל הניהול</p>
+          <p className="text-text-muted">התחברו כדי לגשת לפאנל הניהול</p>
         </div>
 
         {error && (
@@ -60,6 +61,13 @@ function LoginContent() {
           </svg>
           {isLoading ? "מתחבר..." : "התחברות עם Google"}
         </button>
+
+        <Link
+          href="/"
+          className="block text-center mt-6 text-sm text-text-muted hover:text-text transition-colors"
+        >
+          חזרה לאתר
+        </Link>
       </div>
     </div>
   );

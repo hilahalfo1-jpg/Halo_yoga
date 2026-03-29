@@ -13,21 +13,21 @@ export default function AccessibilityPage() {
   return (
     <>
       <Header />
-      <main>
+      <main aria-label="הצהרת נגישות">
         <Section>
-          <div className="max-w-3xl mx-auto prose prose-lg" dir="rtl">
+          <article className="max-w-3xl mx-auto" dir="rtl">
             <h1 className="text-3xl md:text-4xl font-bold text-text mb-8">
               הצהרת נגישות
             </h1>
 
             <p className="text-text-secondary mb-6">
-              עדכון אחרון: מרץ 2026
+              עדכון אחרון: <time dateTime="2026-03">מרץ 2026</time>
             </p>
 
             <h2 className="text-xl font-semibold text-text mt-8 mb-4">
               מחויבותנו לנגישות
             </h2>
-            <p className="text-text-secondary mb-4">
+            <p className="text-text-secondary mb-4 leading-relaxed">
               {SITE_NAME} מחויב להנגשת האתר לכלל האוכלוסייה, לרבות אנשים עם
               מוגבלויות, בהתאם לתקנות שוויון זכויות לאנשים עם מוגבלות (התאמות
               נגישות לשירות), התשע&quot;ג-2013, ותקן הנגישות הישראלי (ת&quot;י
@@ -50,7 +50,7 @@ export default function AccessibilityPage() {
             <h2 className="text-xl font-semibold text-text mt-8 mb-4">
               דרכי פנייה בנושא נגישות
             </h2>
-            <p className="text-text-secondary mb-4">
+            <p className="text-text-secondary mb-4 leading-relaxed">
               אם נתקלתם בבעיית נגישות באתר או שיש לכם הצעות לשיפור, אנא פנו
               אלינו ונטפל בכך בהקדם:
             </p>
@@ -59,7 +59,7 @@ export default function AccessibilityPage() {
                 אימייל:{" "}
                 <a
                   href={`mailto:${CONTACT_EMAIL}`}
-                  className="text-primary hover:underline"
+                  className="text-primary-dark hover:underline font-medium"
                   dir="ltr"
                 >
                   {CONTACT_EMAIL}
@@ -69,7 +69,7 @@ export default function AccessibilityPage() {
                 טלפון:{" "}
                 <a
                   href={`tel:${CONTACT_PHONE.replace(/-/g, "")}`}
-                  className="text-primary hover:underline"
+                  className="text-primary-dark hover:underline font-medium"
                   dir="ltr"
                 >
                   {CONTACT_PHONE}
@@ -78,13 +78,30 @@ export default function AccessibilityPage() {
             </ul>
 
             <h2 className="text-xl font-semibold text-text mt-8 mb-4">
+              רמת התאמה
+            </h2>
+            <p className="text-text-secondary mb-4 leading-relaxed">
+              אנו שואפים לעמוד ברמת הנגישות AA בהתאם להנחיות WCAG 2.1. האתר
+              נבדק לאחרונה במרץ 2026. ייתכן שחלקים מסוימים באתר טרם הונגשו
+              במלואם — אנו פועלים לתקנם.
+            </p>
+
+            <h2 className="text-xl font-semibold text-text mt-8 mb-4">
+              רכז/ת נגישות
+            </h2>
+            <p className="text-text-secondary mb-4 leading-relaxed">
+              רכזת הנגישות של {SITE_NAME} היא הילה חלפון. לכל פנייה בנושא
+              נגישות ניתן ליצור קשר באמצעות הפרטים שלהלן.
+            </p>
+
+            <h2 className="text-xl font-semibold text-text mt-8 mb-4">
               פרטים נוספים
             </h2>
-            <p className="text-text-secondary mb-4">
+            <p className="text-text-secondary mb-4 leading-relaxed">
               אנו ממשיכים לפעול לשיפור הנגישות באתר ומעדכנים את הצהרת הנגישות
               בהתאם. נשמח לקבל משוב כדי לשפר את חוויית השימוש עבור כולם.
             </p>
-          </div>
+          </article>
         </Section>
       </main>
       <Footer />

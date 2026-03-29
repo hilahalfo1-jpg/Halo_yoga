@@ -51,7 +51,7 @@ export default function AboutPreview() {
           transition={{ duration: 0.5 }}
           className="order-2 lg:order-1"
         >
-          <div className="relative overflow-hidden">
+          <div className="relative">
             <div className="w-full max-w-md mx-auto rounded-2xl overflow-hidden">
               {aboutImage ? (
                 <Image
@@ -71,7 +71,7 @@ export default function AboutPreview() {
               )}
             </div>
             {/* Decorative element */}
-            <div className="absolute -bottom-4 -left-4 w-24 h-24 bg-secondary/20 rounded-2xl -z-10" />
+            <div className="absolute -bottom-4 -left-4 w-24 h-24 bg-secondary/20 rounded-2xl -z-10" aria-hidden="true" />
           </div>
         </motion.div>
 

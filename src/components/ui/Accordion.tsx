@@ -33,6 +33,8 @@ export default function Accordion({ items, className }: AccordionProps) {
             onClick={() => toggle(index)}
             className="w-full flex items-center justify-between px-6 py-4 text-right hover:bg-surface/50 transition-colors"
             aria-expanded={openIndex === index}
+            aria-controls={`accordion-panel-${index}`}
+            id={`accordion-trigger-${index}`}
           >
             <span className="font-medium text-text">{item.question}</span>
             <ChevronDown
@@ -49,6 +51,9 @@ export default function Accordion({ items, className }: AccordionProps) {
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
                 transition={{ duration: 0.2, ease: "easeInOut" }}
+                id={`accordion-panel-${index}`}
+                role="region"
+                aria-labelledby={`accordion-trigger-${index}`}
               >
                 <div className="px-6 pb-4 text-text-secondary leading-relaxed">
                   {item.answer}

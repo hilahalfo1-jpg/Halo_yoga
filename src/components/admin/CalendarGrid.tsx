@@ -158,26 +158,26 @@ export default function CalendarGrid({
                 {day}
               </span>
 
-              {/* Status dot */}
-              {!isSelected && status !== "dayoff" && (
-                <span
-                  className={cn(
-                    "absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full",
-                    dotColors[status]
-                  )}
-                />
-              )}
-
               {/* Exception indicator */}
               {info?.hasException && !isSelected && (
                 <span className="absolute top-1 left-1 w-1.5 h-1.5 rounded-full bg-warning" />
               )}
 
               {/* Time hint — show ranges summary if available, otherwise start time */}
-              {(info?.rangesSummary || info?.effectiveStart) && !isSelected && (
-                <span className="absolute bottom-0 text-[9px] text-text-muted/60 leading-none hidden sm:block">
+              {(info?.rangesSummary || info?.effectiveStart) && !isSelected ? (
+                <span className="absolute bottom-0.5 text-[9px] text-text-muted/60 leading-none hidden sm:block">
                   {info?.rangesSummary || info?.effectiveStart}
                 </span>
+              ) : (
+                /* Status dot — only shown when no time hint to avoid overlap */
+                !isSelected && status !== "dayoff" && (
+                  <span
+                    className={cn(
+                      "absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full",
+                      dotColors[status]
+                    )}
+                  />
+                )
               )}
             </button>
           );

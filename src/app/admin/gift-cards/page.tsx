@@ -218,7 +218,7 @@ export default function AdminGiftCardsPage() {
                 </p>
               </div>
 
-              <p className="text-sm text-text-secondary line-clamp-2 mb-3 italic">
+              <p className="text-sm text-text-muted line-clamp-2 mb-3 italic">
                 &ldquo;{card.message}&rdquo;
               </p>
 
@@ -257,7 +257,7 @@ export default function AdminGiftCardsPage() {
                 </button>
                 <button
                   onClick={() => setDeleteTarget(card)}
-                  className="p-1.5 rounded-lg text-text-muted hover:text-error hover:bg-error/10 transition-colors mr-auto"
+                  className="p-1.5 rounded-lg text-text-muted hover:text-error hover:bg-error/10 transition-colors ms-auto"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>

@@ -88,7 +88,12 @@ export default function ContactPage() {
                   </div>
                 </a>
 
-                <div className="flex items-start gap-4 p-4 rounded-xl bg-white border border-border">
+                <a
+                  href={`https://maps.google.com/?q=${encodeURIComponent(CONTACT_ADDRESS)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-start gap-4 p-4 rounded-xl bg-white border border-border hover:shadow-md transition-shadow"
+                >
                   <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center flex-shrink-0">
                     <MapPin className="h-5 w-5 text-secondary-dark" />
                   </div>
@@ -98,7 +103,7 @@ export default function ContactPage() {
                       {CONTACT_ADDRESS}
                     </p>
                   </div>
-                </div>
+                </a>
 
                 {/* Working hours */}
                 <div className="bg-surface rounded-xl p-4 sm:p-6">
@@ -125,11 +130,12 @@ export default function ContactPage() {
             </div>
 
             {/* Map */}
-            <div className="mt-8 lg:mt-12 rounded-xl overflow-hidden border border-border">
+            <div className="mt-10 lg:mt-16 rounded-xl overflow-hidden border border-border">
               <iframe
                 src={`https://maps.google.com/maps?q=${encodeURIComponent(CONTACT_ADDRESS)}&output=embed&hl=he`}
                 width="100%"
-                height="300"
+                height="350"
+                className="lg:h-[400px]"
                 style={{ border: 0 }}
                 allowFullScreen
                 loading="lazy"

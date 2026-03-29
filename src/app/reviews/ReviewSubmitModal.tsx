@@ -104,7 +104,7 @@ export default function ReviewSubmitModal({
           {...register("service")}
         />
 
-        <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
+        <div className="flex flex-col-reverse sm:flex-row-reverse gap-3 pt-2">
           <Button type="submit" isLoading={isLoading} fullWidth>
             שליחת המלצה
           </Button>

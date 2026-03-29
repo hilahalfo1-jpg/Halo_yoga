@@ -142,13 +142,7 @@ export default function ReviewsPage() {
                       {formatDate(review.createdAt)}
                     </p>
                   </div>
-                  <Badge
-                    className={
-                      review.isApproved
-                        ? "bg-success/10 text-success border-success/20"
-                        : "bg-warning/10 text-warning border-warning/20"
-                    }
-                  >
+                  <Badge variant={review.isApproved ? "success" : "warning"}>
                     {review.isApproved ? "מאושר" : "ממתין"}
                   </Badge>
                 </div>
@@ -208,18 +202,18 @@ export default function ReviewsPage() {
             האם למחוק את ההמלצה של{" "}
             <strong>{deleteTarget?.customerName}</strong>? פעולה זו אינה הפיכה.
           </p>
-          <div className="flex gap-3">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
             <Button
-              variant="outline"
-              fullWidth
+              variant="ghost"
+              size="sm"
               onClick={() => setDeleteTarget(null)}
             >
               ביטול
             </Button>
             <Button
-              fullWidth
+              variant="danger"
+              size="sm"
               onClick={deleteReview}
-              className="bg-error hover:bg-error/90 text-white"
             >
               מחיקה
             </Button>

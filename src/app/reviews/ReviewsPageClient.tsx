@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { motion } from "framer-motion";
 import { PenLine } from "lucide-react";
 import Button from "@/components/ui/Button";
 import EmptyState from "@/components/ui/EmptyState";
@@ -23,7 +24,7 @@ function MiniStars({ count }: { count: number }) {
   return (
     <div className="flex gap-0.5">
       {Array.from({ length: 5 }).map((_, i) => (
-        <svg key={i} xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill={i < count ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" className={i < count ? "text-yellow-400 fill-yellow-400" : "text-gray-200"}>
+        <svg key={i} xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill={i < count ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" className={i < count ? "text-yellow-400 fill-yellow-400" : "text-border"}>
           <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" />
         </svg>
       ))}
@@ -145,10 +146,10 @@ export default function ReviewsPageClient({
             <button
               key={f.value}
               onClick={() => setFilter(f.value)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border ${
                 filter === f.value
-                  ? "bg-primary text-white"
-                  : "bg-surface text-text-secondary hover:bg-surface-alt"
+                  ? "bg-secondary text-white border-secondary"
+                  : "bg-bg text-text-muted border-border hover:border-secondary hover:text-secondary"
               }`}
             >
               {f.label}
@@ -179,8 +180,15 @@ export default function ReviewsPageClient({
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          {filtered.map((review) => (
-            <div key={`${review.source}-${review.id}`} className="bg-white rounded-2xl border border-gray-100 shadow-md hover:shadow-lg p-6 h-full flex flex-col min-w-0 transition-shadow duration-200">
+          {filtered.map((review, index) => (
+            <motion.div
+              key={`${review.source}-${review.id}`}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: index * 0.08 }}
+              className="bg-bg rounded-2xl border border-border shadow-sm hover:shadow-md hover:-translate-y-1 p-6 h-full flex flex-col min-w-0 transition-all duration-300"
+            >
               <div className="flex items-center gap-3 mb-4">
                 {review.profilePhotoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -195,8 +203,8 @@ export default function ReviewsPageClient({
                   </div>
                 )}
                 <div className="flex-1 text-right min-w-0">
-                  <p className="font-semibold text-sm text-gray-900 truncate">{review.name}</p>
-                  <p className="text-xs text-gray-400">{getRelativeTime(review.date)}</p>
+                  <p className="font-semibold text-sm text-text truncate">{review.name}</p>
+                  <p className="text-xs text-text-muted">{getRelativeTime(review.date)}</p>
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">
                   <MiniStars count={review.rating} />
@@ -204,11 +212,11 @@ export default function ReviewsPageClient({
                 </div>
               </div>
               {review.content && (
-                <p className="text-gray-600 text-sm leading-relaxed text-right flex-1">
+                <p className="text-text-secondary text-sm leading-relaxed text-right flex-1">
                   {review.content}
                 </p>
               )}
-            </div>
+            </motion.div>
           ))}
         </div>
       )}

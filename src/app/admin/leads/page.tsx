@@ -254,17 +254,13 @@ export default function LeadsPage() {
                 </div>
 
                 <div className="flex sm:flex-col items-center gap-2">
-                  <select
-                    value={lead.status}
-                    onChange={(e) => updateStatus(lead.id, e.target.value)}
-                    className="text-sm px-2.5 py-1.5 rounded border border-border bg-white"
-                  >
-                    {STATUS_CHANGE_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="w-28">
+                    <Select
+                      value={lead.status}
+                      onChange={(e) => updateStatus(lead.id, e.target.value)}
+                      options={STATUS_CHANGE_OPTIONS}
+                    />
+                  </div>
                   <button
                     onClick={() => {
                       setSelectedLead(lead);
@@ -322,18 +318,18 @@ export default function LeadsPage() {
             האם למחוק את הפנייה של{" "}
             <strong>{deleteTarget?.name}</strong>? פעולה זו אינה הפיכה.
           </p>
-          <div className="flex gap-3">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
             <Button
-              variant="outline"
-              fullWidth
+              variant="ghost"
+              size="sm"
               onClick={() => setDeleteTarget(null)}
             >
               ביטול
             </Button>
             <Button
-              fullWidth
+              variant="danger"
+              size="sm"
               onClick={deleteLead}
-              className="bg-error hover:bg-error/90 text-white"
             >
               מחיקה
             </Button>

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { useMemo } from "react";
@@ -151,11 +152,13 @@ export default function ReviewsCarousel({
               {/* Header row: photo | name+time | stars+google */}
               <div className="flex items-center gap-3 mb-4">
                 {review.profilePhotoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  <Image
                     src={review.profilePhotoUrl}
                     alt={review.name}
+                    width={40}
+                    height={40}
                     className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                    unoptimized
                   />
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm flex-shrink-0">

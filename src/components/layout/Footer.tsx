@@ -53,7 +53,7 @@ export default function Footer() {
                     href={SOCIAL_INSTAGRAM}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+                    className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
                     aria-label="Instagram"
                   >
                     <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
@@ -66,7 +66,7 @@ export default function Footer() {
                     href={SOCIAL_FACEBOOK}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+                    className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
                     aria-label="Facebook"
                   >
                     <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">

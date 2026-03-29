@@ -4,7 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { BookOpen } from "lucide-react";
 import Section from "@/components/ui/Section";
+import EmptyState from "@/components/ui/EmptyState";
 
 
 interface BlogPostItem {
@@ -54,28 +56,32 @@ export default function BlogListClient({ posts }: { posts: BlogPostItem[] }) {
 
   return (
     <Section>
-      {/* Category Filter Tabs */}
-      <div className="flex flex-wrap gap-2 mb-8 justify-center">
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat.value}
-            onClick={() => setActiveCategory(cat.value)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border ${
-              activeCategory === cat.value
-                ? "bg-secondary text-white border-secondary"
-                : "bg-white text-text-muted border-border hover:border-secondary hover:text-secondary"
-            }`}
-          >
-            {cat.label}
-          </button>
-        ))}
-      </div>
+      {/* Category Filter Tabs — only show when posts exist */}
+      {posts.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-8 justify-center">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat.value}
+              onClick={() => setActiveCategory(cat.value)}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border ${
+                activeCategory === cat.value
+                  ? "bg-secondary text-white border-secondary"
+                  : "bg-bg text-text-muted border-border hover:border-secondary hover:text-secondary"
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Blog Grid */}
       {filtered.length === 0 ? (
-        <div className="text-center py-16">
-          <p className="text-text-muted text-lg">אין מאמרים בקטגוריה זו עדיין</p>
-        </div>
+        <EmptyState
+          icon={<BookOpen className="h-12 w-12" strokeWidth={1.5} />}
+          title={posts.length === 0 ? "הבלוג שלנו בקרוב" : "אין מאמרים בקטגוריה זו עדיין"}
+          description={posts.length === 0 ? "מאמרים מקצועיים בנושאי יוגה, עיסוי ובריאות יעלו כאן בקרוב" : "נסו קטגוריה אחרת או חזרו מאוחר יותר"}
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filtered.map((post, index) => (

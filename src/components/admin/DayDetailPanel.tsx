@@ -69,7 +69,8 @@ export default function DayDetailPanel({
 }: DayDetailPanelProps) {
   const [newStart, setNewStart] = useState("09:00");
   const [newEnd, setNewEnd] = useState("18:00");
-  const [reason, setReason] = useState("");
+  const [rangeReason, setRangeReason] = useState("");
+  const [blockReason, setBlockReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAddRange, setShowAddRange] = useState(false);
 
@@ -156,10 +157,10 @@ export default function DayDetailPanel({
         type: "OVERRIDE",
         startTime: newStart,
         endTime: newEnd,
-        reason: reason || undefined,
+        reason: rangeReason || undefined,
         category: selectedCategory,
       });
-      setReason("");
+      setRangeReason("");
       setShowAddRange(false);
       // Smart defaults for next range — suggest after the last range
       const allRanges = [...overrideRanges, { startTime: newStart, endTime: newEnd }]
@@ -182,10 +183,10 @@ export default function DayDetailPanel({
       await onAddException({
         date: new Date(date).toISOString(),
         type: "BLOCKED",
-        reason: reason || undefined,
+        reason: blockReason || undefined,
         category: selectedCategory,
       });
-      setReason("");
+      setBlockReason("");
     } finally {
       setIsSubmitting(false);
     }
@@ -359,8 +360,8 @@ export default function DayDetailPanel({
                 <input
                   type="text"
                   placeholder="סיבה (אופציונלי)..."
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
+                  value={rangeReason}
+                  onChange={(e) => setRangeReason(e.target.value)}
                   className="w-full text-sm border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary"
                 />
                 <div className="flex gap-2">
@@ -400,8 +401,8 @@ export default function DayDetailPanel({
               <input
                 type="text"
                 placeholder="סיבה לחסימה (אופציונלי)..."
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
+                value={blockReason}
+                onChange={(e) => setBlockReason(e.target.value)}
                 className="w-full text-sm border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary"
               />
               <Button

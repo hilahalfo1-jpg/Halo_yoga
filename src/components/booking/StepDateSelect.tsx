@@ -151,7 +151,7 @@ export default function StepDateSelect({
                     : isDisabled
                       ? "text-text-muted/40 cursor-not-allowed"
                       : "text-text hover:bg-primary/10",
-                  isToday && !isSelected && "font-bold",
+                  isToday && !isSelected && "font-bold ring-2 ring-primary/40 bg-primary/5",
                 )}
               >
                 {day}
@@ -171,7 +171,7 @@ export default function StepDateSelect({
             יש זמנים פנויים
           </div>
           <div className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-gray-200" />
+            <span className="w-2 h-2 rounded-full bg-border" />
             יום סגור
           </div>
         </div>

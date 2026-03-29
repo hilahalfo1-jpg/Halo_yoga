@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { CalendarX, AlertTriangle, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import Card from "@/components/ui/Card";
@@ -64,10 +65,13 @@ export default function CancelBookingClient({
           <CheckCircle className="h-8 w-8 text-text-muted" />
         </div>
         <h1 className="text-2xl font-bold text-text mb-3">התור בוטל</h1>
-        <p className="text-text-secondary">
+        <p className="text-text-secondary mb-8">
           התור ל{booking.serviceName} בתאריך{" "}
           {formatDateTime(booking.startAt)} בוטל בהצלחה.
         </p>
+        <Link href="/booking">
+          <Button variant="secondary">קביעת תור חדש</Button>
+        </Link>
       </div>
     );
   }
@@ -82,9 +86,12 @@ export default function CancelBookingClient({
         <h1 className="text-2xl font-bold text-text mb-3">
           לא ניתן לבטל
         </h1>
-        <p className="text-text-secondary">
+        <p className="text-text-secondary mb-8">
           לא ניתן לבטל תור שכבר עבר.
         </p>
+        <Link href="/">
+          <Button variant="secondary">חזרה לדף הבית</Button>
+        </Link>
       </div>
     );
   }

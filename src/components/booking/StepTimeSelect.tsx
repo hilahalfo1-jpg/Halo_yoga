@@ -91,18 +91,15 @@ export default function StepTimeSelect({
       ) : (
         <>
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 max-w-lg mx-auto">
-            {slots.map((slot) => (
+            {availableSlots.map((slot) => (
               <button
                 key={slot.startTime}
-                onClick={() => slot.isAvailable && onSelect(slot)}
-                disabled={!slot.isAvailable}
+                onClick={() => onSelect(slot)}
                 className={cn(
                   "py-3 px-2 rounded-lg text-sm font-medium transition-all border",
                   selected?.startTime === slot.startTime
                     ? "bg-primary text-white border-primary"
-                    : slot.isAvailable
-                      ? "bg-white text-text border-border hover:border-primary hover:text-primary"
-                      : "bg-surface text-text-muted/40 border-transparent cursor-not-allowed line-through"
+                    : "bg-white text-text border-border hover:border-primary hover:text-primary"
                 )}
                 dir="ltr"
               >
