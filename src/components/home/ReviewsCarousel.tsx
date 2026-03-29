@@ -3,23 +3,81 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
+import { useMemo } from "react";
 import Section from "@/components/ui/Section";
 import Card from "@/components/ui/Card";
 import StarRating from "@/components/ui/StarRating";
 import Button from "@/components/ui/Button";
 import { useSiteContent } from "@/lib/hooks/useSiteContent";
-import type { ReviewItem } from "@/types";
+import type { ReviewItem, GoogleReviewItem } from "@/types";
+
+/** Small Google "G" badge */
+function GoogleBadge() {
+  return (
+    <span
+      className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold text-white mr-1.5"
+      style={{ background: "#4285F4" }}
+      title="ביקורת Google"
+    >
+      G
+    </span>
+  );
+}
 
 interface ReviewsCarouselProps {
   reviews: ReviewItem[];
+  googleReviews?: GoogleReviewItem[];
 }
 
-export default function ReviewsCarousel({ reviews }: ReviewsCarouselProps) {
+interface CarouselReview {
+  id: string;
+  name: string;
+  rating: number;
+  content: string;
+  service: string | null;
+  source: "internal" | "google";
+}
+
+export default function ReviewsCarousel({
+  reviews,
+  googleReviews = [],
+}: ReviewsCarouselProps) {
   const { t } = useSiteContent();
+
+  // Merge and pick top-rated, max 6 total
+  const displayReviews = useMemo<CarouselReview[]>(() => {
+    const internal: CarouselReview[] = reviews.map((r) => ({
+      id: r.id,
+      name: r.name,
+      rating: r.rating,
+      content: r.content,
+      service: r.service,
+      source: "internal",
+    }));
+
+    const google: CarouselReview[] = googleReviews
+      .filter((r) => r.text) // only show reviews with text
+      .map((r) => ({
+        id: r.id,
+        name: r.authorName,
+        rating: r.rating,
+        content: r.text!,
+        service: null,
+        source: "google",
+      }));
+
+    return [...internal, ...google]
+      .sort((a, b) => b.rating - a.rating)
+      .slice(0, 6);
+  }, [reviews, googleReviews]);
+
   const averageRating =
-    reviews.length > 0
-      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+    displayReviews.length > 0
+      ? displayReviews.reduce((sum, r) => sum + r.rating, 0) /
+        displayReviews.length
       : 0;
+
+  const totalCount = reviews.length + googleReviews.length;
 
   return (
     <Section bg="surface">
@@ -34,15 +92,15 @@ export default function ReviewsCarousel({ reviews }: ReviewsCarouselProps) {
           </span>
         </div>
         <p className="text-text-secondary text-sm">
-          מבוסס על {reviews.length} המלצות
+          מבוסס על {totalCount} המלצות
         </p>
       </div>
 
       {/* Horizontal scroll */}
       <div className="flex gap-4 md:gap-6 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
-        {reviews.map((review, index) => (
+        {displayReviews.map((review, index) => (
           <motion.div
-            key={review.id}
+            key={`${review.source}-${review.id}`}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -55,7 +113,10 @@ export default function ReviewsCarousel({ reviews }: ReviewsCarouselProps) {
                 &ldquo;{review.content}&rdquo;
               </p>
               <div className="pt-4 border-t border-border">
-                <p className="font-medium text-text">{review.name}</p>
+                <div className="flex items-center">
+                  {review.source === "google" && <GoogleBadge />}
+                  <p className="font-medium text-text">{review.name}</p>
+                </div>
                 {review.service && (
                   <p className="text-xs text-text-muted mt-0.5">
                     {review.service}

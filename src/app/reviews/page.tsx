@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
+import { getGoogleReviews } from "@/lib/google-reviews";
 
 export const dynamic = "force-dynamic";
 import Header from "@/components/layout/Header";
@@ -26,7 +27,10 @@ async function getReviews(): Promise<ReviewItem[]> {
 }
 
 export default async function ReviewsPage() {
-  const reviews = await getReviews();
+  const [reviews, googleReviews] = await Promise.all([
+    getReviews(),
+    getGoogleReviews(),
+  ]);
 
   return (
     <>
@@ -35,7 +39,7 @@ export default async function ReviewsPage() {
         <ReviewsHero />
 
         <Section>
-          <ReviewsPageClient reviews={reviews} />
+          <ReviewsPageClient reviews={reviews} googleReviews={googleReviews} />
         </Section>
       </main>
       <Footer />

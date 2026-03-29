@@ -108,6 +108,17 @@ export interface DashboardStats {
   pendingReviews: number;
 }
 
+// ─── Google Review ──────────────────────────────────
+export interface GoogleReviewItem {
+  id: string;
+  googleReviewId: string;
+  authorName: string;
+  rating: number;
+  text: string | null;
+  time: string; // ISO string
+  profilePhotoUrl: string | null;
+}
+
 // ─── Nav ─────────────────────────────────────────────
 export interface NavLink {
   label: string;

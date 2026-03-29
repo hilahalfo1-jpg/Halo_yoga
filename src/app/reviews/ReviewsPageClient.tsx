@@ -1,39 +1,100 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { PenLine } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import StarRating from "@/components/ui/StarRating";
 import EmptyState from "@/components/ui/EmptyState";
 import ReviewSubmitModal from "./ReviewSubmitModal";
-import type { ReviewItem } from "@/types";
+import type { ReviewItem, GoogleReviewItem } from "@/types";
+
+/** Small Google "G" badge */
+function GoogleBadge() {
+  return (
+    <span
+      className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold text-white mr-1.5"
+      style={{ background: "#4285F4" }}
+      title="ביקורת Google"
+    >
+      G
+    </span>
+  );
+}
 
 interface ReviewsPageClientProps {
   reviews: ReviewItem[];
+  googleReviews?: GoogleReviewItem[];
 }
 
-export default function ReviewsPageClient({ reviews }: ReviewsPageClientProps) {
+/** Unified review for sorting & rendering */
+interface UnifiedReview {
+  id: string;
+  name: string;
+  rating: number;
+  content: string;
+  service: string | null;
+  date: string; // ISO
+  source: "internal" | "google";
+  profilePhotoUrl?: string | null;
+}
+
+export default function ReviewsPageClient({
+  reviews,
+  googleReviews = [],
+}: ReviewsPageClientProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [filter, setFilter] = useState("ALL");
 
+  // Merge internal + google reviews into unified list
+  const allReviews = useMemo<UnifiedReview[]>(() => {
+    const internal: UnifiedReview[] = reviews.map((r) => ({
+      id: r.id,
+      name: r.name,
+      rating: r.rating,
+      content: r.content,
+      service: r.service,
+      date: r.createdAt,
+      source: "internal",
+    }));
+
+    const google: UnifiedReview[] = googleReviews.map((r) => ({
+      id: r.id,
+      name: r.authorName,
+      rating: r.rating,
+      content: r.text || "",
+      service: null,
+      date: r.time,
+      source: "google",
+      profilePhotoUrl: r.profilePhotoUrl,
+    }));
+
+    return [...internal, ...google].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+  }, [reviews, googleReviews]);
+
   const averageRating =
-    reviews.length > 0
-      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+    allReviews.length > 0
+      ? allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length
       : 0;
 
   const filters = [
     { value: "ALL", label: "הכל" },
     { value: "עיסוי", label: "עיסויים" },
     { value: "יוגה", label: "יוגה" },
+    ...(googleReviews.length > 0
+      ? [{ value: "GOOGLE", label: "Google" }]
+      : []),
   ];
 
-  const filtered =
-    filter === "ALL"
-      ? reviews
-      : reviews.filter((r) =>
-          r.service ? r.service.toLowerCase().includes(filter.toLowerCase()) : false
-        );
+  const filtered = useMemo(() => {
+    if (filter === "ALL") return allReviews;
+    if (filter === "GOOGLE") return allReviews.filter((r) => r.source === "google");
+    return allReviews.filter((r) =>
+      r.service ? r.service.toLowerCase().includes(filter.toLowerCase()) : false
+    );
+  }, [filter, allReviews]);
 
   return (
     <>
@@ -46,14 +107,14 @@ export default function ReviewsPageClient({ reviews }: ReviewsPageClientProps) {
           </span>
         </div>
         <p className="text-text-secondary">
-          {reviews.length} המלצות מלקוחות מרוצים
+          {allReviews.length} המלצות מלקוחות מרוצים
         </p>
       </div>
 
       {/* Actions */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
         {/* Filter tabs */}
-        <div className="flex gap-2 w-full sm:w-auto justify-center sm:justify-start">
+        <div className="flex gap-2 w-full sm:w-auto justify-center sm:justify-start flex-wrap">
           {filters.map((f) => (
             <button
               key={f.value}
@@ -93,13 +154,18 @@ export default function ReviewsPageClient({ reviews }: ReviewsPageClientProps) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {filtered.map((review) => (
-            <Card key={review.id} className="flex flex-col">
+            <Card key={`${review.source}-${review.id}`} className="flex flex-col">
               <StarRating rating={review.rating} size="sm" />
-              <p className="text-text mt-4 mb-4 leading-relaxed text-sm flex-1">
-                &ldquo;{review.content}&rdquo;
-              </p>
+              {review.content && (
+                <p className="text-text mt-4 mb-4 leading-relaxed text-sm flex-1">
+                  &ldquo;{review.content}&rdquo;
+                </p>
+              )}
               <div className="pt-4 border-t border-border">
-                <p className="font-medium text-text">{review.name}</p>
+                <div className="flex items-center">
+                  {review.source === "google" && <GoogleBadge />}
+                  <p className="font-medium text-text">{review.name}</p>
+                </div>
                 {review.service && (
                   <p className="text-xs text-text-muted mt-0.5">
                     {review.service}

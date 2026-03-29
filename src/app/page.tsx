@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getGoogleReviews } from "@/lib/google-reviews";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,7 @@ import AboutPreview from "@/components/home/AboutPreview";
 import ReviewsCarousel from "@/components/home/ReviewsCarousel";
 import FAQ from "@/components/home/FAQ";
 import QuickContact from "@/components/home/QuickContact";
-import type { ServiceItem, ReviewItem } from "@/types";
+import type { ServiceItem, ReviewItem, GoogleReviewItem } from "@/types";
 
 async function getServices(): Promise<ServiceItem[]> {
   const services = await prisma.service.findMany({
@@ -80,9 +81,10 @@ function getJsonLd(reviewCount: number, avgRating: number) {
 }
 
 export default async function HomePage() {
-  const [services, reviews] = await Promise.all([
+  const [services, reviews, googleReviews] = await Promise.all([
     getServices(),
     getApprovedReviews(),
+    getGoogleReviews(),
   ]);
 
   const avgRating =
@@ -104,7 +106,7 @@ export default async function HomePage() {
         <ServicesGrid services={services} />
         <HowItWorks />
         <AboutPreview />
-        <ReviewsCarousel reviews={reviews} />
+        <ReviewsCarousel reviews={reviews} googleReviews={googleReviews} />
         <FAQ />
         <QuickContact />
       </main>
