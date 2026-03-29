@@ -83,8 +83,9 @@ export default function AboutPreview() {
           transition={{ duration: 0.5 }}
           className="order-1 lg:order-2"
         >
+          <p className="text-sm font-medium text-primary tracking-wide mb-2">הילה חלפון</p>
           <h2 className="text-3xl md:text-4xl font-bold text-text mb-6">
-            {t("about", "title", "קצת עליי — הילה חלפון")}
+            {t("about", "title", "קצת עליי")}
           </h2>
 
           <div className="space-y-4 text-text-secondary leading-relaxed mb-8">
