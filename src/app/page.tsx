@@ -13,7 +13,7 @@ import ReviewsCarousel from "@/components/home/ReviewsCarousel";
 import BlogPreview from "@/components/home/BlogPreview";
 import FAQ from "@/components/home/FAQ";
 import QuickContact from "@/components/home/QuickContact";
-import type { ServiceItem, ReviewItem, GoogleReviewItem } from "@/types";
+import type { ServiceItem, ReviewItem } from "@/types";
 
 async function getServices(): Promise<ServiceItem[]> {
   const services = await prisma.service.findMany({

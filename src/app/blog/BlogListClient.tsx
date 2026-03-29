@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import Section from "@/components/ui/Section";
-import Badge from "@/components/ui/Badge";
+
 
 interface BlogPostItem {
   id: string;

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
-import { Calendar, Phone, FileText, CheckCircle, XCircle, Trash2, Search, Download, Heart, Image as ImageIcon } from "lucide-react";
+import { Calendar, Phone, FileText, CheckCircle, XCircle, Trash2, Search, Download, Heart } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
