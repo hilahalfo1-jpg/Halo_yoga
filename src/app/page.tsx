@@ -37,14 +37,67 @@ async function getApprovedReviews(): Promise<ReviewItem[]> {
   }));
 }
 
+function getJsonLd(reviewCount: number, avgRating: number) {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://haloyogamassage.com";
+  return {
+    "@context": "https://schema.org",
+    "@type": "HealthAndBeautyBusiness",
+    name: "HALO - יוגה ועיסוי רפואי",
+    image: `${baseUrl}/images/logo.png`,
+    url: baseUrl,
+    telephone: "+972-54-313-5182",
+    email: "hilahalfo1@gmail.com",
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "רחוב דובנוב",
+      addressLocality: "ראשון לציון",
+      addressCountry: "IL",
+    },
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: 31.9646,
+      longitude: 34.8046,
+    },
+    openingHoursSpecification: [
+      { "@type": "OpeningHoursSpecification", dayOfWeek: "Sunday", opens: "11:00", closes: "20:00" },
+      { "@type": "OpeningHoursSpecification", dayOfWeek: "Monday", opens: "07:00", closes: "20:00" },
+      { "@type": "OpeningHoursSpecification", dayOfWeek: "Wednesday", opens: "07:00", closes: "20:00" },
+      { "@type": "OpeningHoursSpecification", dayOfWeek: "Thursday", opens: "07:00", closes: "20:00" },
+      { "@type": "OpeningHoursSpecification", dayOfWeek: "Friday", opens: "09:00", closes: "17:00" },
+      { "@type": "OpeningHoursSpecification", dayOfWeek: "Saturday", opens: "11:00", closes: "18:30" },
+    ],
+    priceRange: "₪140 - ₪350",
+    ...(reviewCount > 0 && {
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: avgRating.toFixed(1),
+        reviewCount: reviewCount,
+        bestRating: 5,
+        worstRating: 1,
+      },
+    }),
+  };
+}
+
 export default async function HomePage() {
   const [services, reviews] = await Promise.all([
     getServices(),
     getApprovedReviews(),
   ]);
 
+  const avgRating =
+    reviews.length > 0
+      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+      : 0;
+
+  const jsonLd = getJsonLd(reviews.length, avgRating);
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Header />
       <main>
         <HeroSection />

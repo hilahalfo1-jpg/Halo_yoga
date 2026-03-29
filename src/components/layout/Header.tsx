@@ -56,9 +56,9 @@ export default function Header() {
               <Image
                 src={logoSrc}
                 alt={images.logo?.alt || SITE_NAME}
-                width={120}
-                height={40}
-                className="h-9 w-auto object-contain transition-opacity duration-300"
+                width={160}
+                height={56}
+                className="h-14 w-auto object-contain transition-opacity duration-300"
                 priority
               />
             </Link>
@@ -68,9 +68,9 @@ export default function Header() {
               <Image
                 src={logoSrc}
                 alt={images.logo?.alt || SITE_NAME}
-                width={120}
-                height={40}
-                className="h-8 w-auto object-contain transition-opacity duration-300"
+                width={140}
+                height={48}
+                className="h-11 w-auto object-contain transition-opacity duration-300"
                 priority
               />
             </Link>

@@ -5,16 +5,17 @@ export const SITE_NAME = "HALO";
 export const SITE_NAME_HE = "הילה";
 export const SITE_TAGLINE = "Yoga & Massage";
 export const SITE_TAGLINE_HE = "יוגה ועיסוי";
-export const THERAPIST_NAME = "הילה";
+export const THERAPIST_NAME = "הילה חלפון";
 export const THERAPIST_TITLE = "מעסה תאילנדי מוסמכת, מדריכת יוגה ופילאטיס";
 export const LOGO_PATH = "/images/logo.png";
 
 export const CONTACT_PHONE = "054-3135182";
 export const CONTACT_WHATSAPP = "972502919918";
 export const CONTACT_EMAIL = "hilahalfo1@gmail.com";
-export const CONTACT_ADDRESS = "שכונת משולש, זבוטינסקי, ראשון לציון";
+export const CONTACT_ADDRESS = "רחוב דובנוב, ראשון לציון";
 export const SOCIAL_INSTAGRAM = "https://www.instagram.com/halo.yoga.massage/";
 export const SOCIAL_FACEBOOK = "";
+export const WHATSAPP_COMMUNITY_LINK = "https://chat.whatsapp.com/LBWIaJi6Um6IdqrEDLTutM";
 
 // ─── Navigation ──────────────────────────────────────
 export const NAV_LINKS: NavLink[] = [
@@ -23,6 +24,7 @@ export const NAV_LINKS: NavLink[] = [
   { label: "שירותים", href: "/services" },
   { label: "קביעת תור", href: "/booking" },
   { label: "המלצות", href: "/reviews" },
+  { label: "בלוג", href: "/blog" },
   { label: "צור קשר", href: "/contact" },
 ];
 
@@ -34,6 +36,7 @@ export const ADMIN_NAV_LINKS: NavLink[] = [
   { label: "תמונות", href: "/admin/images" },
   { label: "פניות", href: "/admin/leads" },
   { label: "המלצות", href: "/admin/reviews" },
+  { label: "בלוג", href: "/admin/blog" },
   { label: "גיפט קארד", href: "/admin/gift-cards" },
 ];
 
