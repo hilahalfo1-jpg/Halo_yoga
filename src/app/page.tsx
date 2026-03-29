@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { getGoogleReviews } from "@/lib/google-reviews";
+import { getGoogleReviews, getGoogleRatingInfo } from "@/lib/google-reviews";
 
 export const dynamic = "force-dynamic";
 
@@ -99,11 +99,12 @@ function getJsonLd(reviewCount: number, avgRating: number) {
 }
 
 export default async function HomePage() {
-  const [services, reviews, googleReviews, latestPosts] = await Promise.all([
+  const [services, reviews, googleReviews, latestPosts, googleRatingInfo] = await Promise.all([
     getServices(),
     getApprovedReviews(),
     getGoogleReviews(),
     getLatestBlogPosts(),
+    getGoogleRatingInfo(),
   ]);
 
   const avgRating =
@@ -125,7 +126,7 @@ export default async function HomePage() {
         <ServicesGrid services={services} />
         <HowItWorks />
         <AboutPreview />
-        <ReviewsCarousel reviews={reviews} googleReviews={googleReviews} />
+        <ReviewsCarousel reviews={reviews} googleReviews={googleReviews} googleRating={googleRatingInfo.rating} googleTotalReviews={googleRatingInfo.totalReviews} />
         <BlogPreview posts={latestPosts} />
         <FAQ />
         <QuickContact />

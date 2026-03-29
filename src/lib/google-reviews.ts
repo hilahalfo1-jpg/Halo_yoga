@@ -72,6 +72,47 @@ export async function syncGoogleReviews(): Promise<void> {
 }
 
 /**
+ * Get Google Business rating and total review count from Places API.
+ * Falls back to calculating from cached DB reviews.
+ */
+export async function getGoogleRatingInfo(): Promise<{ rating: number; totalReviews: number }> {
+  try {
+    const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+    if (apiKey) {
+      const findUrl = new URL("https://maps.googleapis.com/maps/api/place/findplacefromtext/json");
+      findUrl.searchParams.set("input", SEARCH_QUERY);
+      findUrl.searchParams.set("inputtype", "textquery");
+      findUrl.searchParams.set("fields", "place_id");
+      findUrl.searchParams.set("key", apiKey);
+      const findRes = await fetch(findUrl.toString(), { next: { revalidate: 3600 } });
+      const findData = await findRes.json();
+      const placeId = findData.candidates?.[0]?.place_id;
+      if (placeId) {
+        const detailsUrl = new URL("https://maps.googleapis.com/maps/api/place/details/json");
+        detailsUrl.searchParams.set("place_id", placeId);
+        detailsUrl.searchParams.set("fields", "rating,user_ratings_total");
+        detailsUrl.searchParams.set("key", apiKey);
+        const detailsRes = await fetch(detailsUrl.toString(), { next: { revalidate: 3600 } });
+        const detailsData = await detailsRes.json();
+        if (detailsData.result) {
+          return {
+            rating: detailsData.result.rating ?? 5,
+            totalReviews: detailsData.result.user_ratings_total ?? 0,
+          };
+        }
+      }
+    }
+  } catch (e) {
+    console.warn("[Google Reviews] Failed to fetch rating info:", e);
+  }
+  // Fallback: calculate from cached DB reviews
+  const reviews = await prisma.googleReview.findMany({ select: { rating: true } });
+  if (reviews.length === 0) return { rating: 5, totalReviews: 0 };
+  const avg = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+  return { rating: avg, totalReviews: reviews.length };
+}
+
+/**
  * Fetch cached Google reviews from DB.
  */
 export async function getGoogleReviews() {
