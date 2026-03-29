@@ -6,7 +6,6 @@ import {
   Plus,
   Pencil,
   Trash2,
-  Sparkles,
   Upload,
   X,
   Eye,
@@ -64,9 +63,6 @@ export default function AdminBlogPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<BlogPost | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [showAiModal, setShowAiModal] = useState(false);
-  const [aiTopic, setAiTopic] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form state
@@ -154,37 +150,6 @@ export default function AdminBlogPage() {
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
-    }
-  };
-
-  // ─── AI Generate ──────────────────────────────────
-  const handleAiGenerate = async () => {
-    if (!aiTopic.trim()) {
-      toast.error("נא להזין נושא למאמר");
-      return;
-    }
-    setIsGenerating(true);
-    try {
-      const res = await fetch("/api/admin/blog/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic: aiTopic, category }),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        toast.error(json.error || "שגיאה ביצירת תוכן");
-        return;
-      }
-      setTitle(json.data.title);
-      setContent(json.data.content);
-      setExcerpt(json.data.excerpt);
-      setShowAiModal(false);
-      setAiTopic("");
-      toast.success("התוכן נוצר בהצלחה! ניתן לערוך לפני שמירה");
-    } catch {
-      toast.error("שגיאה ביצירת תוכן עם AI");
-    } finally {
-      setIsGenerating(false);
     }
   };
 
@@ -289,27 +254,13 @@ export default function AdminBlogPage() {
             onChange={(e) => setTitle(e.target.value)}
           />
 
-          {/* Category + AI Generate */}
-          <div className="flex items-end gap-3">
-            <div className="flex-1">
-              <Select
-                label="קטגוריה"
-                options={BLOG_CATEGORIES}
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-              />
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setShowAiModal(true)}
-              className="mb-0.5"
-            >
-              <Sparkles className="h-4 w-4" />
-              צור עם AI
-            </Button>
-          </div>
+          {/* Category */}
+          <Select
+            label="קטגוריה"
+            options={BLOG_CATEGORIES}
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+          />
 
           {/* Excerpt */}
           <Textarea
@@ -398,48 +349,6 @@ export default function AdminBlogPage() {
           </div>
         </Card>
 
-        {/* AI Generate Modal */}
-        <Modal
-          isOpen={showAiModal}
-          onClose={() => {
-            setShowAiModal(false);
-            setAiTopic("");
-          }}
-          title="יצירת תוכן עם AI"
-          size="sm"
-        >
-          <div className="space-y-4">
-            <p className="text-sm text-text-muted">
-              הזינו נושא ו-AI ייצור כותרת, תוכן ותקציר עבור המאמר.
-            </p>
-            <Input
-              label="נושא המאמר"
-              placeholder="לדוגמה: היתרונות של עיסוי תאילנדי"
-              value={aiTopic}
-              onChange={(e) => setAiTopic(e.target.value)}
-            />
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setShowAiModal(false);
-                  setAiTopic("");
-                }}
-              >
-                ביטול
-              </Button>
-              <Button
-                size="sm"
-                isLoading={isGenerating}
-                onClick={handleAiGenerate}
-              >
-                <Sparkles className="h-4 w-4" />
-                צור תוכן
-              </Button>
-            </div>
-          </div>
-        </Modal>
       </div>
     );
   }
