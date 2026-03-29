@@ -10,6 +10,7 @@ import ServicesGrid from "@/components/home/ServicesGrid";
 import HowItWorks from "@/components/home/HowItWorks";
 import AboutPreview from "@/components/home/AboutPreview";
 import ReviewsCarousel from "@/components/home/ReviewsCarousel";
+import BlogPreview from "@/components/home/BlogPreview";
 import FAQ from "@/components/home/FAQ";
 import QuickContact from "@/components/home/QuickContact";
 import type { ServiceItem, ReviewItem, GoogleReviewItem } from "@/types";
@@ -35,6 +36,23 @@ async function getApprovedReviews(): Promise<ReviewItem[]> {
   return reviews.map((r) => ({
     ...r,
     createdAt: r.createdAt.toISOString(),
+  }));
+}
+
+async function getLatestBlogPosts() {
+  const posts = await prisma.blogPost.findMany({
+    where: { isPublished: true },
+    orderBy: { publishedAt: "desc" },
+    take: 3,
+  });
+  return posts.map((p) => ({
+    id: p.id,
+    title: p.title,
+    slug: p.slug,
+    excerpt: p.excerpt,
+    category: p.category,
+    coverImage: p.coverImage,
+    publishedAt: p.publishedAt?.toISOString() || null,
   }));
 }
 
@@ -81,10 +99,11 @@ function getJsonLd(reviewCount: number, avgRating: number) {
 }
 
 export default async function HomePage() {
-  const [services, reviews, googleReviews] = await Promise.all([
+  const [services, reviews, googleReviews, latestPosts] = await Promise.all([
     getServices(),
     getApprovedReviews(),
     getGoogleReviews(),
+    getLatestBlogPosts(),
   ]);
 
   const avgRating =
@@ -107,6 +126,7 @@ export default async function HomePage() {
         <HowItWorks />
         <AboutPreview />
         <ReviewsCarousel reviews={reviews} googleReviews={googleReviews} />
+        <BlogPreview posts={latestPosts} />
         <FAQ />
         <QuickContact />
       </main>
