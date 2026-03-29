@@ -109,8 +109,7 @@ export default function ReviewsCarousel({
         date: r.time,
       }));
 
-    return [...internal, ...google]
-      .sort((a, b) => b.rating - a.rating)
+    return [...google, ...internal]
       .slice(0, 6);
   }, [reviews, googleReviews]);
 
@@ -139,8 +138,8 @@ export default function ReviewsCarousel({
         </p>
       </div>
 
-      {/* Horizontal scroll */}
-      <div className="flex gap-4 md:gap-6 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
+      {/* Reviews grid — 1 col mobile, 3 col desktop */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         {displayReviews.map((review, index) => (
           <motion.div
             key={`${review.source}-${review.id}`}
@@ -148,7 +147,6 @@ export default function ReviewsCarousel({
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.4, delay: index * 0.1 }}
-            className="min-w-[260px] max-w-[85vw] md:min-w-[350px] md:max-w-none snap-center flex-shrink-0"
           >
             <div className="bg-white rounded-2xl border border-gray-100 shadow-md hover:shadow-lg p-6 h-full flex flex-col min-w-0 transition-shadow duration-200">
               {/* Header row: photo | name+time | stars+google */}
