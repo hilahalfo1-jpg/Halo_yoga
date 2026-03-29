@@ -2,7 +2,7 @@ import type { NavLink } from "@/types";
 
 // ─── Site Info ───────────────────────────────────────
 export const SITE_NAME = "HALO";
-export const SITE_NAME_HE = "הילה";
+export const SITE_NAME_HE = "הילה חלפון";
 export const SITE_TAGLINE = "Yoga & Massage";
 export const SITE_TAGLINE_HE = "יוגה ועיסוי";
 export const THERAPIST_NAME = "הילה חלפון";

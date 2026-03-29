@@ -11,7 +11,7 @@ import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
   title: "אודות",
-  description: "הכירו את הילה — מטפלת בעיסוי תאילנדי ומדריכת יוגה, מתוך חיבור עמוק לגוף ולאנרגיה שבו.",
+  description: "הכירו את הילה חלפון — מטפלת בעיסוי תאילנדי ומדריכת יוגה, מתוך חיבור עמוק לגוף ולאנרגיה שבו.",
 };
 
 const certifications = [
@@ -53,7 +53,7 @@ export default async function AboutPage() {
 
               {/* Text */}
               <div className="lg:col-span-3 space-y-6">
-                <h2 className="text-3xl font-bold text-text">שלום, אני הילה</h2>
+                <h2 className="text-3xl font-bold text-text">שלום, אני הילה חלפון</h2>
 
                 <div className="space-y-4 text-text-secondary leading-relaxed">
                   <p>
