@@ -102,10 +102,26 @@ export default function HeroSection() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="text-lg md:text-xl text-white/80 mb-10 max-w-2xl mx-auto leading-relaxed"
+          className="text-lg md:text-xl text-white/80 mb-6 max-w-2xl mx-auto leading-relaxed"
         >
           {t("hero", "subtitle", "עיסוי תאילנדי מקצועי ושיעורי יוגה מותאמים אישית. גישה הוליסטית המשלבת מגע מרפא, תנועה ונשימה נכונה לאיזון גוף ונפש.")}
         </motion.p>
+
+        {/* Google reviews trust badge */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.38 }}
+          className="flex items-center justify-center gap-2 text-sm text-white/70 mb-8"
+        >
+          <div className="flex -space-x-1 rtl:space-x-reverse">
+            <div className="w-6 h-6 rounded-full border-2 border-white/30 flex items-center justify-center text-[10px] font-bold text-white" style={{ backgroundColor: "#4285F4" }}>א</div>
+            <div className="w-6 h-6 rounded-full border-2 border-white/30 flex items-center justify-center text-[10px] font-bold text-white" style={{ backgroundColor: "#34A853" }}>ת</div>
+            <div className="w-6 h-6 rounded-full border-2 border-white/30 flex items-center justify-center text-[10px] font-bold text-white" style={{ backgroundColor: "#E91E63" }}>א</div>
+            <div className="w-6 h-6 rounded-full border-2 border-white/30 flex items-center justify-center text-[10px] font-bold text-white" style={{ backgroundColor: "#FF8F00" }}>נ</div>
+          </div>
+          <span>5.0 מתוך 5 | 15+ ביקורות מאומתות בגוגל</span>
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
