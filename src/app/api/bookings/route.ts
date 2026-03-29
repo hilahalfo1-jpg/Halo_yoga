@@ -50,7 +50,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { serviceId, startAt, customerName, customerPhone, customerEmail, notes, isHomeVisit: homeVisitFlag } =
+    const { serviceId, startAt, customerName, customerPhone, customerEmail, notes, isHomeVisit: homeVisitFlag, customerPhotoUrl } =
       validated.data;
 
     const isHomeVisit = homeVisitFlag === true;
@@ -120,6 +120,7 @@ export async function POST(req: Request) {
         status: "PENDING",
         isHomeVisit,
         homeVisitSurcharge: isHomeVisit ? (service.homeVisitSurcharge || 0) : null,
+        customerPhotoUrl: customerPhotoUrl || null,
       },
       include: { service: true },
     });

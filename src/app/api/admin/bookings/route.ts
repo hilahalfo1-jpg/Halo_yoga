@@ -20,7 +20,7 @@ export async function GET(req: Request) {
 
     const bookings = await prisma.booking.findMany({
       where,
-      include: { service: true },
+      include: { service: true, medicalForm: true },
       orderBy: { startAt: "desc" },
     });
 

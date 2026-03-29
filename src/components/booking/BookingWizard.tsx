@@ -10,6 +10,7 @@ import StepDateSelect from "./StepDateSelect";
 import StepTimeSelect from "./StepTimeSelect";
 import StepDetailsForm from "./StepDetailsForm";
 import StepConfirmation from "./StepConfirmation";
+import StepMedicalForm from "./StepMedicalForm";
 import type { ServiceItem, TimeSlot } from "@/types";
 
 const STEPS = [
@@ -18,6 +19,7 @@ const STEPS = [
   { label: "בחירת שעה" },
   { label: "פרטים אישיים" },
   { label: "אישור" },
+  { label: "הצהרת בריאות" },
 ];
 
 interface BookingWizardProps {
@@ -33,6 +35,7 @@ export interface BookingData {
   customerEmail: string;
   notes: string;
   isHomeVisit: boolean;
+  customerPhoto: File | null;
 }
 
 export default function BookingWizard({ services }: BookingWizardProps) {
@@ -49,6 +52,7 @@ export default function BookingWizard({ services }: BookingWizardProps) {
     customerEmail: "",
     notes: "",
     isHomeVisit: false,
+    customerPhoto: null,
   });
 
   // Pre-select service from query param
@@ -120,7 +124,7 @@ export default function BookingWizard({ services }: BookingWizardProps) {
   return (
     <div className="max-w-5xl mx-auto">
       {/* Progress Bar */}
-      {currentStep < 5 && (
+      {currentStep < 6 && (
         <div className="mb-10">
           {/* Mobile: simple text indicator */}
           <div className="sm:hidden text-center mb-4">
@@ -239,6 +243,16 @@ export default function BookingWizard({ services }: BookingWizardProps) {
       )}
 
       {currentStep === 5 && bookingResult && (
+        <StepMedicalForm
+          bookingId={bookingResult.id as string}
+          customerName={data.customerName}
+          customerPhone={data.customerPhone}
+          onSuccess={() => setCurrentStep(6)}
+          onSkip={() => setCurrentStep(6)}
+        />
+      )}
+
+      {currentStep === 6 && bookingResult && (
         <div className="text-center py-12">
           <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-warning/10 flex items-center justify-center">
             <Clock className="h-10 w-10 text-warning" />

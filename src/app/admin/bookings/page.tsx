@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
-import { Calendar, Phone, FileText, CheckCircle, XCircle, Trash2, Search, Download } from "lucide-react";
+import { Calendar, Phone, FileText, CheckCircle, XCircle, Trash2, Search, Download, Heart, Image as ImageIcon } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
@@ -17,6 +17,16 @@ import {
   BOOKING_STATUS_COLORS,
 } from "@/lib/constants";
 
+interface MedicalFormData {
+  id: string;
+  idNumber: string | null;
+  conditions: string;
+  conditionDetails: string | null;
+  signatureUrl: string | null;
+  medicalDocUrl: string | null;
+  agreedAt: string;
+}
+
 interface BookingRow {
   id: string;
   startAt: string;
@@ -27,6 +37,8 @@ interface BookingRow {
   customerEmail: string | null;
   notes: string | null;
   adminNotes: string | null;
+  customerPhotoUrl: string | null;
+  medicalForm: MedicalFormData | null;
   service: { name: string };
 }
 
@@ -56,6 +68,7 @@ export default function BookingsPage() {
   const [dateTo, setDateTo] = useState("");
   const [selectedBooking, setSelectedBooking] = useState<BookingRow | null>(null);
   const [adminNotes, setAdminNotes] = useState("");
+  const [medicalFormBooking, setMedicalFormBooking] = useState<BookingRow | null>(null);
 
   const fetchBookings = useCallback(async () => {
     try {
@@ -249,9 +262,18 @@ export default function BookingsPage() {
             {filteredBookings.map((booking) => (
               <Card key={booking.id} className="p-4 space-y-3">
                 <div className="flex items-start justify-between">
-                  <div>
-                    <p className="font-semibold text-text">{booking.customerName}</p>
-                    <p className="text-sm text-text-muted">{booking.service.name}</p>
+                  <div className="flex items-center gap-3">
+                    {booking.customerPhotoUrl && (
+                      <img
+                        src={booking.customerPhotoUrl}
+                        alt={booking.customerName}
+                        className="w-10 h-10 rounded-full object-cover border border-border flex-shrink-0"
+                      />
+                    )}
+                    <div>
+                      <p className="font-semibold text-text">{booking.customerName}</p>
+                      <p className="text-sm text-text-muted">{booking.service.name}</p>
+                    </div>
                   </div>
                   <Badge className={BOOKING_STATUS_COLORS[booking.status]}>
                     {BOOKING_STATUS_LABELS[booking.status]}
@@ -303,6 +325,15 @@ export default function BookingsPage() {
                       ))}
                     </select>
                   )}
+                  {booking.medicalForm && (
+                    <button
+                      onClick={() => setMedicalFormBooking(booking)}
+                      className="p-2 rounded-lg text-primary hover:text-primary hover:bg-primary/10"
+                      title="טופס רפואי"
+                    >
+                      <Heart className="h-5 w-5" />
+                    </button>
+                  )}
                   <button
                     onClick={() => {
                       setSelectedBooking(booking);
@@ -351,12 +382,23 @@ export default function BookingsPage() {
                     </td>
                     <td className="p-3 text-text">{booking.service.name}</td>
                     <td className="p-3">
-                      <p className="text-text font-medium">{booking.customerName}</p>
-                      {booking.notes && (
-                        <p className="text-xs text-text-muted mt-0.5 truncate max-w-[200px]" title={booking.notes}>
-                          {booking.notes}
-                        </p>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {booking.customerPhotoUrl && (
+                          <img
+                            src={booking.customerPhotoUrl}
+                            alt={booking.customerName}
+                            className="w-8 h-8 rounded-full object-cover border border-border flex-shrink-0"
+                          />
+                        )}
+                        <div>
+                          <p className="text-text font-medium">{booking.customerName}</p>
+                          {booking.notes && (
+                            <p className="text-xs text-text-muted mt-0.5 truncate max-w-[200px]" title={booking.notes}>
+                              {booking.notes}
+                            </p>
+                          )}
+                        </div>
+                      </div>
                     </td>
                     <td className="p-3">
                       <a
@@ -402,6 +444,15 @@ export default function BookingsPage() {
                               <option key={opt.value} value={opt.value}>{opt.label}</option>
                             ))}
                           </select>
+                        )}
+                        {booking.medicalForm && (
+                          <button
+                            onClick={() => setMedicalFormBooking(booking)}
+                            className="p-1 rounded text-primary hover:bg-primary/10"
+                            title="טופס רפואי"
+                          >
+                            <Heart className="h-4 w-4" />
+                          </button>
                         )}
                         <button
                           onClick={() => {
@@ -453,6 +504,99 @@ export default function BookingsPage() {
             שמירה
           </Button>
         </div>
+      </Modal>
+
+      {/* Medical Form Modal */}
+      <Modal
+        isOpen={!!medicalFormBooking}
+        onClose={() => setMedicalFormBooking(null)}
+        title={`טופס רפואי — ${medicalFormBooking?.customerName || ""}`}
+        size="lg"
+      >
+        {medicalFormBooking?.medicalForm && (() => {
+          const form = medicalFormBooking.medicalForm;
+          let conditionsList: string[] = [];
+          try {
+            conditionsList = JSON.parse(form.conditions);
+          } catch {
+            conditionsList = [];
+          }
+          return (
+            <div className="space-y-4">
+              {/* ID Number */}
+              {form.idNumber && (
+                <div className="bg-surface rounded-lg p-3">
+                  <p className="text-xs text-text-muted mb-1">תעודת זהות</p>
+                  <p className="text-sm text-text font-medium" dir="ltr">{form.idNumber}</p>
+                </div>
+              )}
+
+              {/* Medical Conditions */}
+              {conditionsList.length > 0 && (
+                <div className="bg-surface rounded-lg p-3">
+                  <p className="text-xs text-text-muted mb-2">מצבים רפואיים</p>
+                  <div className="flex flex-wrap gap-2">
+                    {conditionsList.map((c: string, i: number) => (
+                      <span
+                        key={i}
+                        className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-warning/10 text-warning"
+                      >
+                        {c}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Condition Details */}
+              {form.conditionDetails && (
+                <div className="bg-surface rounded-lg p-3">
+                  <p className="text-xs text-text-muted mb-1">פירוט רפואי</p>
+                  <p className="text-sm text-text whitespace-pre-wrap">{form.conditionDetails}</p>
+                </div>
+              )}
+
+              {/* Signature */}
+              {form.signatureUrl && (
+                <div className="bg-surface rounded-lg p-3">
+                  <p className="text-xs text-text-muted mb-2">חתימה דיגיטלית</p>
+                  <img
+                    src={form.signatureUrl}
+                    alt="חתימה"
+                    className="max-h-24 border border-border rounded bg-white p-1"
+                  />
+                </div>
+              )}
+
+              {/* Medical Document */}
+              {form.medicalDocUrl && (
+                <div className="bg-surface rounded-lg p-3">
+                  <p className="text-xs text-text-muted mb-1">מסמך רפואי</p>
+                  <a
+                    href={form.medicalDocUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-secondary hover:underline flex items-center gap-1"
+                  >
+                    <FileText className="h-4 w-4" />
+                    צפייה במסמך
+                  </a>
+                </div>
+              )}
+
+              {/* Agreement Date */}
+              <p className="text-xs text-text-muted text-center">
+                נחתם בתאריך: {new Date(form.agreedAt).toLocaleDateString("he-IL", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </p>
+            </div>
+          );
+        })()}
       </Modal>
     </div>
   );

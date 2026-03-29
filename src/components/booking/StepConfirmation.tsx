@@ -26,6 +26,21 @@ export default function StepConfirmation({
 
     setIsLoading(true);
     try {
+      // Upload customer photo if provided
+      let customerPhotoUrl: string | null = null;
+      if (data.customerPhoto) {
+        const formData = new FormData();
+        formData.append("file", data.customerPhoto);
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+        if (uploadRes.ok) {
+          const uploadResult = await uploadRes.json();
+          customerPhotoUrl = uploadResult.url;
+        }
+      }
+
       // Build the startAt datetime
       const [hours, minutes] = data.timeSlot.startTime.split(":").map(Number);
       const startAt = new Date(data.date);
@@ -42,6 +57,7 @@ export default function StepConfirmation({
           customerEmail: data.customerEmail,
           notes: data.notes,
           isHomeVisit: data.isHomeVisit,
+          customerPhotoUrl,
         }),
       });
 
