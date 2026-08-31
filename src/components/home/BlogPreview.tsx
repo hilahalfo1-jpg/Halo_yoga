@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import Section from "@/components/ui/Section";
 import Button from "@/components/ui/Button";
+import { formatDate } from "@/lib/utils";
 
 interface BlogPostPreview {
   id: string;
@@ -100,16 +101,7 @@ export default function BlogPreview({ posts }: BlogPreviewProps) {
                   </p>
                   <div className="flex items-center justify-between text-xs text-text-muted pt-3 border-t border-border">
                     <span>
-                      {post.publishedAt
-                        ? new Date(post.publishedAt).toLocaleDateString(
-                            "he-IL",
-                            {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            }
-                          )
-                        : ""}
+                      {post.publishedAt ? formatDate(post.publishedAt) : ""}
                     </span>
                     <span className="text-secondary font-medium group-hover:underline">
                       קראו עוד

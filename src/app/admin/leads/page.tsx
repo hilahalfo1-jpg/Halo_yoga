@@ -12,7 +12,8 @@ import Spinner from "@/components/ui/Spinner";
 import EmptyState from "@/components/ui/EmptyState";
 import Textarea from "@/components/ui/Textarea";
 import { formatDateTime, formatPhone } from "@/lib/utils";
-import { LEAD_STATUS_LABELS, LEAD_STATUS_COLORS } from "@/lib/constants";
+import { downloadCsv } from "@/lib/csv";
+import { LEAD_STATUS_LABELS, LEAD_STATUS_COLORS, getContactSubjectLabel } from "@/lib/constants";
 
 interface LeadRow {
   id: string;
@@ -120,19 +121,11 @@ export default function LeadsPage() {
       l.name,
       l.phone,
       l.email || "",
-      l.subject || "",
+      l.subject ? getContactSubjectLabel(l.subject) : "",
       l.message,
       LEAD_STATUS_LABELS[l.status] || l.status,
     ]);
-    const bom = "\uFEFF";
-    const csv = bom + [headers, ...rows].map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `leads-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadCsv(`leads-${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
   };
 
   const deleteLead = async () => {
@@ -162,7 +155,12 @@ export default function LeadsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-text">ניהול פניות</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-text">ניהול פניות</h1>
+          <p className="text-text-muted text-sm mt-1">
+            הודעות שהתקבלו דרך טופס &apos;צור קשר&apos; באתר.
+          </p>
+        </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={exportCSV}>
             <Download className="h-4 w-4 ml-1" />
@@ -186,7 +184,7 @@ export default function LeadsPage() {
           placeholder="חיפוש לפי שם, טלפון, אימייל או הודעה..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pr-10 pl-3 py-2 text-sm rounded-lg border border-border bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+          className="w-full pr-10 pl-3 py-2 text-base sm:text-sm rounded-lg border border-border bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
         />
       </div>
 
@@ -201,7 +199,7 @@ export default function LeadsPage() {
           {filteredLeads.map((lead) => (
             <Card key={lead.id} className="p-4">
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                <div className="flex-1 space-y-2">
+                <div className="flex-1 min-w-0 space-y-2">
                   <div className="flex items-center gap-3 flex-wrap">
                     <h3 className="font-semibold text-text">{lead.name}</h3>
                     <Badge className={LEAD_STATUS_COLORS[lead.status]}>
@@ -224,18 +222,18 @@ export default function LeadsPage() {
                     {lead.email && (
                       <a
                         href={`mailto:${lead.email}`}
-                        className="text-secondary hover:underline flex items-center gap-1"
+                        className="text-secondary hover:underline flex items-center gap-1 min-w-0"
                         dir="ltr"
                       >
-                        <Mail className="h-3 w-3" />
-                        {lead.email}
+                        <Mail className="h-3 w-3 flex-shrink-0" />
+                        <span className="truncate">{lead.email}</span>
                       </a>
                     )}
                   </div>
 
                   {lead.subject && (
                     <p className="text-sm text-text-muted">
-                      נושא: {lead.subject}
+                      נושא: {getContactSubjectLabel(lead.subject)}
                     </p>
                   )}
 
@@ -266,17 +264,17 @@ export default function LeadsPage() {
                       setSelectedLead(lead);
                       setAdminNotes(lead.adminNotes || "");
                     }}
-                    className="p-1.5 rounded text-text-muted hover:text-text hover:bg-surface"
+                    className="p-2.5 rounded-lg text-text-muted hover:text-text hover:bg-surface"
                     title="הערות אדמין"
                   >
-                    <MessageSquare className="h-4 w-4" />
+                    <MessageSquare className="h-5 w-5" />
                   </button>
                   <button
                     onClick={() => setDeleteTarget(lead)}
-                    className="p-1.5 rounded text-text-muted hover:text-error hover:bg-error/10"
+                    className="p-2.5 rounded-lg text-text-muted hover:text-error hover:bg-error/10"
                     title="מחק פנייה"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-5 w-5" />
                   </button>
                 </div>
               </div>

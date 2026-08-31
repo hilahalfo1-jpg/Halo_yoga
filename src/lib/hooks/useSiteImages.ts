@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { createCachedFetchHook } from "@/lib/hooks/createCachedFetchHook";
 
 interface SiteImageData {
   imagePath: string;
@@ -16,38 +16,14 @@ interface SiteImages {
   [key: string]: SiteImageData | SiteImageData[] | undefined;
 }
 
-let cachedImages: SiteImages | null = null;
-let fetchPromise: Promise<SiteImages> | null = null;
+const EMPTY_IMAGES: SiteImages = {};
 
-function fetchSiteImages(): Promise<SiteImages> {
-  if (cachedImages) return Promise.resolve(cachedImages);
-  if (fetchPromise) return fetchPromise;
-
-  fetchPromise = fetch("/api/site-images", { cache: "no-store" })
-    .then((r) => r.json())
-    .then((json) => {
-      cachedImages = json.data || {};
-      fetchPromise = null;
-      return cachedImages!;
-    })
-    .catch(() => {
-      fetchPromise = null;
-      return {} as SiteImages;
-    });
-
-  return fetchPromise;
-}
+const useSiteImagesData = createCachedFetchHook<SiteImages>(
+  "/api/site-images",
+  (json) => json?.data ?? null
+);
 
 export function useSiteImages() {
-  const [images, setImages] = useState<SiteImages>(cachedImages || {});
-  const [loaded, setLoaded] = useState(!!cachedImages);
-
-  useEffect(() => {
-    fetchSiteImages().then((data) => {
-      setImages(data);
-      setLoaded(true);
-    });
-  }, []);
-
-  return { images, loaded };
+  const { data, loaded } = useSiteImagesData();
+  return { images: data ?? EMPTY_IMAGES, loaded };
 }

@@ -9,6 +9,7 @@ import Input from "@/components/ui/Input";
 import Modal from "@/components/ui/Modal";
 import Spinner from "@/components/ui/Spinner";
 import EmptyState from "@/components/ui/EmptyState";
+import { formatDateShort } from "@/lib/utils";
 
 interface BlacklistItem {
   id: string;
@@ -100,7 +101,7 @@ export default function BlacklistPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-text">ניהול חסומים</h1>
           <p className="text-sm text-text-muted mt-1">
@@ -156,12 +157,12 @@ export default function BlacklistPage() {
                   <Phone className="h-5 w-5 text-primary" />
                 )}
                 <div>
-                  <p className="font-medium text-text" dir="ltr">{item.identifier}</p>
+                  <p className="font-medium text-text break-all" dir="ltr">{item.identifier}</p>
                   {item.reason && (
                     <p className="text-xs text-text-muted">{item.reason}</p>
                   )}
                   <p className="text-xs text-text-muted">
-                    {new Date(item.createdAt).toLocaleDateString("he-IL")}
+                    {formatDateShort(item.createdAt)}
                   </p>
                 </div>
               </div>

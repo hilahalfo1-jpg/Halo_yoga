@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { blogPostSchema } from "@/lib/validations";
 
 // Helper: generate a URL-safe slug from Hebrew title
 function generateSlug(title: string): string {
@@ -31,7 +33,15 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { title, content, excerpt, category, coverImage, isPublished } = body;
+    const parsed = blogPostSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "נתונים לא תקינים", details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const { title, content, excerpt, category, coverImage, isPublished } =
+      parsed.data;
 
     if (!title || !content || !excerpt) {
       return NextResponse.json(
@@ -62,6 +72,7 @@ export async function POST(req: Request) {
       },
     });
 
+    revalidatePath("/", "layout");
     return NextResponse.json({ data: post }, { status: 201 });
   } catch (error) {
     console.error("[ADMIN_BLOG_POST]", error);

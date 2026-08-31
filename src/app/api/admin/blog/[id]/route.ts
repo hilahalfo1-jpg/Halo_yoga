@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { blogPatchSchema } from "@/lib/validations";
 
 // GET single blog post
 export async function GET(
@@ -29,6 +31,14 @@ export async function PATCH(
 ) {
   try {
     const body = await req.json();
+    const validated = blogPatchSchema.safeParse(body);
+
+    if (!validated.success) {
+      return NextResponse.json(
+        { error: "נתונים לא תקינים", details: validated.error.flatten() },
+        { status: 400 }
+      );
+    }
 
     const existing = await prisma.blogPost.findUnique({
       where: { id: params.id },
@@ -39,8 +49,8 @@ export async function PATCH(
     }
 
     // If transitioning to published and no publishedAt yet, set it
-    const updateData: Record<string, unknown> = { ...body };
-    if (body.isPublished === true && !existing.publishedAt) {
+    const updateData: Record<string, unknown> = { ...validated.data };
+    if (validated.data.isPublished === true && !existing.publishedAt) {
       updateData.publishedAt = new Date();
     }
 
@@ -49,6 +59,7 @@ export async function PATCH(
       data: updateData,
     });
 
+    revalidatePath("/", "layout");
     return NextResponse.json({ data: post });
   } catch (error) {
     console.error("[ADMIN_BLOG_PATCH]", error);
@@ -66,6 +77,7 @@ export async function DELETE(
       where: { id: params.id },
     });
 
+    revalidatePath("/", "layout");
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[ADMIN_BLOG_DELETE]", error);

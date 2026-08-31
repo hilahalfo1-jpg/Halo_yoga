@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { siteContentSchema } from "@/lib/validations";
 
 // GET all site content
 export async function GET() {
@@ -21,21 +23,24 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { section, key, value, sortOrder } = body;
+    const validated = siteContentSchema.safeParse(body);
 
-    if (!section || !key) {
+    if (!validated.success) {
       return NextResponse.json(
-        { error: "חסרים שדות חובה" },
+        { error: "נתונים לא תקינים", details: validated.error.flatten() },
         { status: 400 }
       );
     }
 
+    const { section, key, value, sortOrder } = validated.data;
+
     const content = await prisma.siteContent.upsert({
       where: { section_key: { section, key } },
-      update: { value: value ?? "", sortOrder: sortOrder ?? 0 },
-      create: { section, key, value: value ?? "", sortOrder: sortOrder ?? 0 },
+      update: { value, sortOrder: sortOrder ?? 0 },
+      create: { section, key, value, sortOrder: sortOrder ?? 0 },
     });
 
+    revalidatePath("/", "layout");
     return NextResponse.json({ data: content });
   } catch (error) {
     console.error("[SITE_CONTENT_POST]", error);
@@ -57,6 +62,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     await prisma.siteContent.delete({ where: { id } });
+    revalidatePath("/", "layout");
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[SITE_CONTENT_DELETE]", error);

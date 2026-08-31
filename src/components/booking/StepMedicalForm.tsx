@@ -14,6 +14,7 @@ import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
 import Card from "@/components/ui/Card";
 import SignaturePad from "./SignaturePad";
+import { TERMS_VERSION } from "@/lib/terms-content";
 
 const MEDICAL_CONDITIONS = [
   { id: "heart", label: "בעיות לב / לחץ דם" },
@@ -141,6 +142,7 @@ export default function StepMedicalForm({
           conditionDetails: conditionDetails || null,
           signatureData,
           medicalDocUrl,
+          termsVersion: TERMS_VERSION,
         }),
       });
 
@@ -317,6 +319,18 @@ export default function StepMedicalForm({
 
         {/* Signature Pad */}
         <SignaturePad onChange={setSignatureData} />
+        <p className="text-xs text-text-muted leading-relaxed">
+          חתימתך הדיגיטלית מהווה אישור כי קראת והבנת את{" "}
+          <a
+            href="/terms"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block py-2 -my-2 text-primary-dark font-medium underline hover:text-primary"
+          >
+            התקנון והצהרת הבריאות
+          </a>{" "}
+          וכי המידע שמסרת נכון ומלא
+        </p>
 
         {/* Medical Document Upload */}
         <div>

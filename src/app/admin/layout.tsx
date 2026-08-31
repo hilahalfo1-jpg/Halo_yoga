@@ -21,12 +21,13 @@ export default function AdminLayout({
           onClose={() => setSidebarOpen(false)}
         />
 
-        <div className="flex-1 flex flex-col min-h-screen">
+        <div className="flex-1 flex flex-col min-h-screen min-w-0">
           {/* Top bar */}
           <header className="sticky top-0 z-30 bg-white border-b border-border px-4 py-3 flex items-center gap-4 lg:px-6">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 rounded-lg text-text-muted hover:text-text hover:bg-surface"
+              className="lg:hidden p-3 rounded-lg text-text-muted hover:text-text hover:bg-surface"
+              aria-label="פתיחת תפריט"
             >
               <Menu className="h-5 w-5" />
             </button>

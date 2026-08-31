@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import { Star, Trash2, CheckCircle, XCircle } from "lucide-react";
+import { Star, Trash2, CheckCircle, XCircle, RefreshCw } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
@@ -32,6 +32,7 @@ export default function ReviewsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState("ALL");
   const [deleteTarget, setDeleteTarget] = useState<ReviewRow | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const fetchReviews = useCallback(async () => {
     try {
@@ -51,6 +52,25 @@ export default function ReviewsPage() {
     setIsLoading(true);
     fetchReviews();
   }, [fetchReviews]);
+
+  // POST /api/admin/google-reviews returns { success, reviews } — the cached Google list after sync
+  const syncGoogleReviews = async () => {
+    setIsSyncing(true);
+    try {
+      const res = await fetch("/api/admin/google-reviews", { method: "POST" });
+      const json = await res.json();
+      if (!res.ok) {
+        toast.error(json.error || "שגיאה בסנכרון ביקורות מגוגל");
+        return;
+      }
+      toast.success(`סונכרנו ${json.reviews?.length ?? 0} ביקורות מגוגל`);
+      fetchReviews();
+    } catch {
+      toast.error("שגיאה בסנכרון ביקורות מגוגל");
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const toggleApproval = async (id: string, currentlyApproved: boolean) => {
     try {
@@ -113,12 +133,23 @@ export default function ReviewsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold text-text">ניהול המלצות</h1>
-        <div className="w-48">
-          <Select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            options={FILTER_OPTIONS}
-          />
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={syncGoogleReviews}
+            isLoading={isSyncing}
+          >
+            <RefreshCw className="h-4 w-4 ml-1" />
+            סנכרן ביקורות מגוגל
+          </Button>
+          <div className="w-48">
+            <Select
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              options={FILTER_OPTIONS}
+            />
+          </div>
         </div>
       </div>
 
@@ -158,7 +189,7 @@ export default function ReviewsPage() {
                     onClick={() =>
                       toggleApproval(review.id, review.isApproved)
                     }
-                    className={`flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg transition-colors ${
+                    className={`flex items-center gap-1 text-sm px-3 py-2.5 rounded-lg transition-colors ${
                       review.isApproved
                         ? "text-warning hover:bg-warning/10"
                         : "text-success hover:bg-success/10"
@@ -166,21 +197,21 @@ export default function ReviewsPage() {
                   >
                     {review.isApproved ? (
                       <>
-                        <XCircle className="h-3.5 w-3.5" />
+                        <XCircle className="h-4 w-4" />
                         הסרת אישור
                       </>
                     ) : (
                       <>
-                        <CheckCircle className="h-3.5 w-3.5" />
+                        <CheckCircle className="h-4 w-4" />
                         אישור
                       </>
                     )}
                   </button>
                   <button
                     onClick={() => setDeleteTarget(review)}
-                    className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg text-error hover:bg-error/10 transition-colors"
+                    className="flex items-center gap-1 text-sm px-3 py-2.5 rounded-lg text-error hover:bg-error/10 transition-colors"
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <Trash2 className="h-4 w-4" />
                     מחיקה
                   </button>
                 </div>

@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CONTACT_WHATSAPP } from "@/lib/constants";
+import { useContactInfo } from "@/lib/hooks/useContactInfo";
 import { cn } from "@/lib/utils";
 
 export default function WhatsAppFab() {
+  const { whatsapp } = useContactInfo();
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -14,7 +15,7 @@ export default function WhatsAppFab() {
 
   return (
     <a
-      href={`https://wa.me/${CONTACT_WHATSAPP}`}
+      href={`https://wa.me/${whatsapp}`}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="שלחו הודעה בוואטסאפ"

@@ -8,8 +8,9 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Section from "@/components/ui/Section";
 import Badge from "@/components/ui/Badge";
+import { formatDate } from "@/lib/utils";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 const CATEGORY_LABELS: Record<string, string> = {
   MASSAGE: "עיסוי",
@@ -19,10 +20,44 @@ const CATEGORY_LABELS: Record<string, string> = {
   TIPS: "טיפים",
 };
 
+// Inline image token: [תמונה: <url>] or [תמונה: <url> | כיתוב]
+const IMAGE_TOKEN_RE = /^\[תמונה:\s*(\S+)(?:\s*\|\s*(.+))?\]$/;
+
+// Same blob-host check as medicalDocUrl in src/lib/validations.ts
+function isAllowedImageUrl(u: string): boolean {
+  try {
+    const parsed = new URL(u);
+    return (
+      parsed.protocol === "https:" &&
+      parsed.hostname.endsWith(".public.blob.vercel-storage.com")
+    );
+  } catch {
+    return false;
+  }
+}
+
 async function getPost(slug: string) {
-  const post = await prisma.blogPost.findUnique({
+  // 1. exact match (fast path)
+  let post = await prisma.blogPost.findUnique({
     where: { slug },
   });
+
+  // 2. fallback: tolerate whitespace / Unicode-normalization / encoding mismatches
+  if (!post) {
+    const norm = (s: string) => {
+      try {
+        return decodeURIComponent(s).normalize("NFC").trim();
+      } catch {
+        return s.normalize("NFC").trim();
+      }
+    };
+    const target = norm(slug);
+    const candidates = await prisma.blogPost.findMany({
+      where: { isPublished: true },
+    });
+    post = candidates.find((p) => norm(p.slug) === target) ?? null;
+  }
+
   if (!post || !post.isPublished) return null;
   return post;
 }
@@ -130,13 +165,7 @@ export default async function BlogPostPage({
               <span>{post.author}</span>
               <span>|</span>
               <span>
-                {post.publishedAt
-                  ? new Date(post.publishedAt).toLocaleDateString("he-IL", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })
-                  : ""}
+                {post.publishedAt ? formatDate(post.publishedAt) : ""}
               </span>
             </div>
           </div>
@@ -161,14 +190,41 @@ export default async function BlogPostPage({
 
             {/* Content */}
             <article className="prose prose-lg max-w-none">
-              {paragraphs.map((paragraph, index) => (
-                <p
-                  key={index}
-                  className="text-text leading-relaxed mb-6 text-base"
-                >
-                  {paragraph.trim()}
-                </p>
-              ))}
+              {paragraphs.map((paragraph, index) => {
+                const trimmed = paragraph.trim();
+                const match = trimmed.match(IMAGE_TOKEN_RE);
+                if (match) {
+                  // Token with a disallowed/invalid URL: hide it from readers
+                  if (!isAllowedImageUrl(match[1])) return null;
+                  const caption = match[2]?.trim();
+                  return (
+                    <figure key={index} className="my-8">
+                      <Image
+                        src={match[1]}
+                        alt={caption || post.title}
+                        width={800}
+                        height={450}
+                        sizes="(max-width: 800px) 100vw, 800px"
+                        className="rounded-xl mx-auto"
+                        style={{ width: "100%", maxWidth: 800, height: "auto" }}
+                      />
+                      {caption && (
+                        <figcaption className="mt-2 text-sm text-text-muted text-center">
+                          {caption}
+                        </figcaption>
+                      )}
+                    </figure>
+                  );
+                }
+                return (
+                  <p
+                    key={index}
+                    className="text-text leading-relaxed mb-6 text-base"
+                  >
+                    {trimmed}
+                  </p>
+                );
+              })}
             </article>
 
             {/* Footer */}

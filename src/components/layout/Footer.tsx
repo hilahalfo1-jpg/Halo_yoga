@@ -9,22 +9,21 @@ import {
   LOGO_PATH,
   SITE_NAME,
   SITE_TAGLINE,
-  CONTACT_PHONE,
-  CONTACT_EMAIL,
-  CONTACT_ADDRESS,
-  CONTACT_WHATSAPP,
   WHATSAPP_COMMUNITY_LINK,
-  WORKING_HOURS,
   SOCIAL_INSTAGRAM,
   SOCIAL_FACEBOOK,
 } from "@/lib/constants";
 import { useSiteImages } from "@/lib/hooks/useSiteImages";
 import { useSiteContent } from "@/lib/hooks/useSiteContent";
+import { useContactInfo } from "@/lib/hooks/useContactInfo";
+import { useWorkingHours } from "@/lib/hooks/useWorkingHours";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
   const { images } = useSiteImages();
   const { t } = useSiteContent();
+  const { phone, whatsapp, email, address } = useContactInfo();
+  const { workingHours } = useWorkingHours();
   const logoSrc = images.logo?.imagePath || LOGO_PATH;
 
   return (
@@ -101,16 +100,16 @@ export default function Footer() {
             <ul className="space-y-3">
               <li>
                 <a
-                  href={`tel:${CONTACT_PHONE.replace(/-/g, "")}`}
+                  href={`tel:${phone.replace(/-/g, "")}`}
                   className="flex items-center gap-3 text-sm text-white/60 hover:text-white transition-colors"
                 >
                   <Phone className="h-4 w-4 flex-shrink-0" />
-                  <span dir="ltr">{CONTACT_PHONE}</span>
+                  <span dir="ltr">{phone}</span>
                 </a>
               </li>
               <li>
                 <a
-                  href={`https://wa.me/${CONTACT_WHATSAPP}`}
+                  href={`https://wa.me/${whatsapp}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 text-sm text-white/60 hover:text-white transition-colors"
@@ -134,16 +133,16 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href={`mailto:${CONTACT_EMAIL}`}
+                  href={`mailto:${email}`}
                   className="flex items-center gap-3 text-sm text-white/60 hover:text-white transition-colors"
                 >
                   <Mail className="h-4 w-4 flex-shrink-0" />
-                  <span dir="ltr">{CONTACT_EMAIL}</span>
+                  <span dir="ltr">{email}</span>
                 </a>
               </li>
               <li className="flex items-start gap-3 text-sm text-white/60">
                 <MapPin className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                <span>{CONTACT_ADDRESS}</span>
+                <span>{address}</span>
               </li>
             </ul>
           </div>
@@ -152,7 +151,7 @@ export default function Footer() {
           <div>
             <h3 className="text-white font-semibold mb-4">שעות פעילות</h3>
             <ul className="space-y-2">
-              {WORKING_HOURS.map((item) => (
+              {workingHours.map((item) => (
                 <li
                   key={item.day}
                   className="flex items-center gap-3 text-sm text-white/60"
@@ -184,6 +183,12 @@ export default function Footer() {
               className="text-sm text-white/40 hover:text-white/70 transition-colors"
             >
               הצהרת נגישות
+            </Link>
+            <Link
+              href="/terms"
+              className="text-sm text-white/40 hover:text-white/70 transition-colors"
+            >
+              תקנון
             </Link>
           </div>
         </div>

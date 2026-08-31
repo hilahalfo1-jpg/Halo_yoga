@@ -1,17 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-// import { getServerSession } from "next-auth";
-// import { authOptions } from "@/lib/auth";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  // const session = await getServerSession(authOptions);
-  // if (!session) {
-  //   return NextResponse.json({ error: "לא מורשה" }, { status: 401 });
-  // }
-
   try {
     const body = await req.json();
     const { isApproved } = body;
@@ -29,6 +23,7 @@ export async function PATCH(
       data: { isApproved },
     });
 
+    revalidatePath("/", "layout");
     return NextResponse.json({ data: updated });
   } catch (error) {
     console.error("[ADMIN_REVIEWS_PATCH]", error);
@@ -43,11 +38,6 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  // const session = await getServerSession(authOptions);
-  // if (!session) {
-  //   return NextResponse.json({ error: "לא מורשה" }, { status: 401 });
-  // }
-
   try {
     const existing = await prisma.review.findUnique({
       where: { id: params.id },
@@ -59,6 +49,7 @@ export async function DELETE(
 
     await prisma.review.delete({ where: { id: params.id } });
 
+    revalidatePath("/", "layout");
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[ADMIN_REVIEWS_DELETE]", error);

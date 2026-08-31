@@ -39,10 +39,6 @@ export function formatDateTime(date: string | Date): string {
   return format(new Date(date), "dd/MM/yyyy HH:mm", { locale: he });
 }
 
-export function formatDayName(date: string | Date): string {
-  return format(new Date(date), "EEEE", { locale: he });
-}
-
 // ─── Duration Formatting ────────────────────────────
 export function formatDuration(minutes: number): string {
   if (minutes < 60) return `${minutes} דקות`;

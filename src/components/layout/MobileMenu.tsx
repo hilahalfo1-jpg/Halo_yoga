@@ -6,7 +6,8 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { X, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { NAV_LINKS, LOGO_PATH, SITE_NAME, CONTACT_PHONE } from "@/lib/constants";
+import { NAV_LINKS, LOGO_PATH, SITE_NAME } from "@/lib/constants";
+import { useContactInfo } from "@/lib/hooks/useContactInfo";
 import { useSiteImages } from "@/lib/hooks/useSiteImages";
 import { motion, AnimatePresence } from "framer-motion";
 import Button from "@/components/ui/Button";
@@ -19,6 +20,7 @@ interface MobileMenuProps {
 export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
   const pathname = usePathname();
   const { images } = useSiteImages();
+  const { phone } = useContactInfo();
   const logoSrc = images.logo?.imagePath || LOGO_PATH;
 
   // Close on route change
@@ -111,11 +113,11 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                   <Button fullWidth>קביעת תור</Button>
                 </Link>
                 <a
-                  href={`tel:${CONTACT_PHONE.replace(/-/g, "")}`}
+                  href={`tel:${phone.replace(/-/g, "")}`}
                   className="flex items-center justify-center gap-2 w-full py-3 rounded-lg border-2 border-primary text-primary font-medium hover:bg-primary hover:text-white transition-colors"
                 >
                   <Phone className="h-4 w-4" />
-                  <span dir="ltr">{CONTACT_PHONE}</span>
+                  <span dir="ltr">{phone}</span>
                 </a>
               </div>
             </div>

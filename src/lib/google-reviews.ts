@@ -113,12 +113,13 @@ export async function getGoogleRatingInfo(): Promise<{ rating: number; totalRevi
 }
 
 /**
- * Fetch cached Google reviews from DB.
+ * Fetch cached Google reviews from DB (newest first, optionally limited).
  */
-export async function getGoogleReviews() {
+export async function getGoogleReviews(limit?: number) {
   try {
     const reviews = await prisma.googleReview.findMany({
       orderBy: { time: "desc" },
+      ...(limit ? { take: limit } : {}),
     });
     return reviews.map((r) => ({
       id: r.id,

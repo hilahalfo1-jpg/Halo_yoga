@@ -39,3 +39,8 @@ prisma/dev.db-journal
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# production env files (real secrets — never commit)
+.env.production
+.env.vercel
+.env*.production

@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 
+// Non-streaming AI call can take 10-30s; default Vercel timeout may 504
+export const maxDuration = 60;
+
 const BLOG_CATEGORIES: Record<string, string> = {
   MASSAGE: "עיסוי",
   YOGA: "יוגה",
@@ -23,7 +26,7 @@ export async function POST(req: Request) {
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
-        { error: "מפתח API של Anthropic לא הוגדר" },
+        { error: "חסר מפתח API של Anthropic בהגדרות השרת" },
         { status: 500 }
       );
     }
@@ -33,8 +36,8 @@ export async function POST(req: Request) {
     const categoryLabel = BLOG_CATEGORIES[category] || "בריאות";
 
     const message = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 2048,
+      model: "claude-sonnet-5",
+      max_tokens: 8192,
       messages: [
         {
           role: "user",
@@ -55,10 +58,19 @@ export async function POST(req: Request) {
 - התמקד ביתרונות הטיפול/הפעילות
 - כלול מידע מעשי שהקורא יכול ליישם
 - הכותרת צריכה להיות מושכת ובעברית
-- התוכן צריך להיות אינפורמטיבי ומקורי`,
+- התוכן צריך להיות אינפורמטיבי ומקורי
+- אל תכלול בתוכן תגיות תמונה כמו [תמונה: ...] — טקסט בלבד`,
         },
       ],
     });
+
+    // Output was cut off before the JSON could complete
+    if (message.stop_reason === "max_tokens") {
+      return NextResponse.json(
+        { error: "התוכן ארוך מדי, נסו נושא ממוקד יותר" },
+        { status: 502 }
+      );
+    }
 
     // Extract text from response
     const textBlock = message.content.find((block) => block.type === "text");
@@ -69,7 +81,34 @@ export async function POST(req: Request) {
       );
     }
 
-    const parsed = JSON.parse(textBlock.text);
+    // Strip markdown code fences (```json ... ```) the model may add
+    const raw = textBlock.text
+      .trim()
+      .replace(/^```(?:json)?\s*/i, "")
+      .replace(/\s*```$/, "");
+
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      return NextResponse.json(
+        { error: "שגיאה בעיבוד תשובת ה-AI" },
+        { status: 502 }
+      );
+    }
+
+    // Guard against valid JSON that isn't the expected draft shape
+    if (
+      !parsed ||
+      typeof parsed.title !== "string" ||
+      typeof parsed.content !== "string" ||
+      !parsed.content
+    ) {
+      return NextResponse.json(
+        { error: "שגיאה בעיבוד תשובת ה-AI" },
+        { status: 502 }
+      );
+    }
 
     return NextResponse.json({
       data: {

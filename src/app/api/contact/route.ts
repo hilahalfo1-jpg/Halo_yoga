@@ -14,6 +14,27 @@ export async function POST(req: Request) {
       );
     }
 
+    // Throttle: max 3 leads per phone per hour, max 30 leads globally per hour
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const [phoneCount, globalCount] = await Promise.all([
+      prisma.lead.count({
+        where: {
+          phone: validated.data.phone,
+          createdAt: { gte: oneHourAgo },
+        },
+      }),
+      prisma.lead.count({ where: { createdAt: { gte: oneHourAgo } } }),
+    ]);
+    if (phoneCount >= 3 || globalCount >= 30) {
+      console.warn(
+        `[THROTTLE] contact POST blocked (phoneCount=${phoneCount}, globalCount=${globalCount})`
+      );
+      return NextResponse.json(
+        { error: "יותר מדי פניות, אנא נסו שוב מאוחר יותר" },
+        { status: 429 }
+      );
+    }
+
     const lead = await prisma.lead.create({
       data: {
         name: validated.data.name,

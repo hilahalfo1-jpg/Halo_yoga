@@ -5,7 +5,8 @@ export type BookingStatus =
   | "CONFIRMED"
   | "CANCELLED"
   | "COMPLETED"
-  | "NO_SHOW";
+  | "NO_SHOW"
+  | "REJECTED";
 export type LeadStatus = "NEW" | "IN_PROGRESS" | "CLOSED";
 export type ExceptionType = "BLOCKED" | "OVERRIDE";
 

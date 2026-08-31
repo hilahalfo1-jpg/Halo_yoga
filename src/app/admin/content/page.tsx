@@ -8,6 +8,13 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
 import Spinner from "@/components/ui/Spinner";
+import {
+  CONTACT_PHONE,
+  CONTACT_WHATSAPP,
+  CONTACT_EMAIL,
+  CONTACT_ADDRESS,
+} from "@/lib/constants";
+import { TERMS_TITLE, TERMS_BODY } from "@/lib/terms-content";
 
 interface ContentItem {
   id: string;
@@ -23,88 +30,140 @@ const SECTIONS = [
     key: "hero",
     label: "דף הבית - Hero",
     fields: [
-      { key: "title", label: "כותרת ראשית", type: "input" as const },
-      { key: "subtitle", label: "תיאור", type: "textarea" as const },
-      { key: "buttonText", label: "טקסט כפתור ראשי", type: "input" as const },
-      { key: "buttonText2", label: "טקסט כפתור משני", type: "input" as const },
+      { key: "title", label: "כותרת ראשית", type: "input" as const, default: "ריפוי הגוף, שקט הנפש" },
+      { key: "subtitle", label: "תיאור", type: "textarea" as const, default: "עיסוי תאילנדי מקצועי ושיעורי יוגה מותאמים אישית. גישה הוליסטית המשלבת מגע מרפא, תנועה ונשימה נכונה לאיזון גוף ונפש." },
+      { key: "buttonText", label: "טקסט כפתור ראשי", type: "input" as const, default: "קביעת תור" },
+      { key: "buttonText2", label: "טקסט כפתור משני", type: "input" as const, default: "שיחת ייעוץ" },
     ],
   },
   {
     key: "about",
     label: "דף הבית - קצת עליי",
     fields: [
-      { key: "title", label: "כותרת", type: "input" as const },
-      { key: "credential1", label: "הסמכה 1", type: "input" as const },
-      { key: "credential2", label: "הסמכה 2", type: "input" as const },
-      { key: "credential3", label: "הסמכה 3", type: "input" as const },
-      { key: "paragraph1", label: "פסקה 1", type: "textarea" as const },
-      { key: "paragraph2", label: "פסקה 2", type: "textarea" as const },
-      { key: "paragraph3", label: "פסקה 3", type: "textarea" as const },
-      { key: "buttonText", label: "טקסט כפתור", type: "input" as const },
+      { key: "title", label: "כותרת", type: "input" as const, default: "הילה חלפון" },
+      { key: "credential1", label: "הסמכה 1", type: "input" as const, default: "מעסה תאילנדי מוסמכת" },
+      { key: "credential2", label: "הסמכה 2", type: "input" as const, default: "מדריכת יוגה ופילאטיס" },
+      { key: "credential3", label: "הסמכה 3", type: "input" as const, default: "גישה הוליסטית לגוף ונפש" },
+      { key: "paragraph1", label: "פסקה 1", type: "textarea" as const, default: "בעיסוי אני שואפת לעזור לגוף לשחרר ולפרק אנרגיות שלא משרתות אותו, לפתוח חסימות ולהחזיר תחושת זרימה טבעית." },
+      { key: "paragraph2", label: "פסקה 2", type: "textarea" as const, default: "ביוגה אני מתמקדת בהכנסת אנרגיה חדשה, דרך תנועה, נשימה ונוכחות." },
+      { key: "paragraph3", label: "פסקה 3", type: "textarea" as const, default: "דרך פילאטיס נלמד לחזק את הגוף בלי לקצר אותו, לחבר אותנו לעבודה ממוקדת, פעולות שיסייעו לנו ביום יום וישמרו עלינו בריאים וחזקים." },
+      { key: "buttonText", label: "טקסט כפתור", type: "input" as const, default: "קראו עוד" },
     ],
   },
   {
     key: "howItWorks",
     label: "דף הבית - איך זה עובד",
     fields: [
-      { key: "title", label: "כותרת", type: "input" as const },
-      { key: "subtitle", label: "תת כותרת", type: "input" as const },
-      { key: "step1Title", label: "שלב 1 - כותרת", type: "input" as const },
-      { key: "step1Desc", label: "שלב 1 - תיאור", type: "input" as const },
-      { key: "step2Title", label: "שלב 2 - כותרת", type: "input" as const },
-      { key: "step2Desc", label: "שלב 2 - תיאור", type: "input" as const },
-      { key: "step3Title", label: "שלב 3 - כותרת", type: "input" as const },
-      { key: "step3Desc", label: "שלב 3 - תיאור", type: "input" as const },
+      { key: "title", label: "כותרת", type: "input" as const, default: "איך זה עובד?" },
+      { key: "subtitle", label: "תת כותרת", type: "input" as const, default: "שלושה צעדים פשוטים לטיפול מושלם" },
+      { key: "step1Title", label: "שלב 1 - כותרת", type: "input" as const, default: "בחרו שירות" },
+      { key: "step1Desc", label: "שלב 1 - תיאור", type: "input" as const, default: "עיינו במגוון הטיפולים שלי ובחרו את המתאים לכם ביותר" },
+      { key: "step2Title", label: "שלב 2 - כותרת", type: "input" as const, default: "קבעו תור" },
+      { key: "step2Desc", label: "שלב 2 - תיאור", type: "input" as const, default: "בחרו תאריך ושעה נוחים מתוך הזמנים הפנויים ביומן" },
+      { key: "step3Title", label: "שלב 3 - כותרת", type: "input" as const, default: "הגיעו ותהנו" },
+      { key: "step3Desc", label: "שלב 3 - תיאור", type: "input" as const, default: "הגיעו לטיפול, תנו לגוף לנוח, וצאו מחודשים ורעננים" },
+    ],
+  },
+  {
+    key: "gift_promo",
+    label: "דף הבית - גיפט קארד",
+    fields: [
+      { key: "title", label: "כותרת", type: "input" as const, default: "מתנה שמרגישים 🎁" },
+      { key: "subtitle", label: "תת כותרת", type: "textarea" as const, default: "פנקו מישהו שאתם אוהבים בגיפט קארד לטיפול או שיעור — הילה תכין כרטיס מתנה מעוצב אישית" },
+      { key: "buttonText", label: "טקסט כפתור", type: "input" as const, default: "להזמנת גיפט קארד" },
     ],
   },
   {
     key: "about_page",
     label: "עמוד אודות",
     fields: [
-      { key: "heroTitle", label: "כותרת Hero", type: "input" as const },
-      { key: "heroSubtitle", label: "תת כותרת Hero", type: "input" as const },
-      { key: "bioTitle", label: "כותרת ביוגרפיה", type: "input" as const },
-      { key: "bio", label: "ביוגרפיה (פסקאות מופרדות בשורה ריקה)", type: "textarea" as const },
-      { key: "quote", label: "ציטוט", type: "textarea" as const },
-      { key: "approachTitle", label: "כותרת גישה", type: "input" as const },
-      { key: "approach", label: "גישה (פסקאות מופרדות בשורה ריקה)", type: "textarea" as const },
-      { key: "ctaTitle", label: "כותרת CTA", type: "input" as const },
-      { key: "ctaText", label: "טקסט CTA", type: "input" as const },
-      { key: "ctaButton", label: "טקסט כפתור CTA", type: "input" as const },
+      { key: "heroTitle", label: "כותרת Hero", type: "input" as const, default: "אודות" },
+      { key: "heroSubtitle", label: "תת כותרת Hero", type: "input" as const, default: "הסיפור שלי, הדרך שלי, הגישה שלי" },
+      { key: "bioTitle", label: "כותרת ביוגרפיה", type: "input" as const, default: "שלום, אני הילה חלפון" },
+      {
+        key: "bio",
+        label: "ביוגרפיה (פסקאות מופרדות בשורה ריקה)",
+        type: "textarea" as const,
+        default:
+          "אני מטפלת בעיסוי תאילנדי ומדריכת יוגה ופילאטיס, מתוך חיבור עמוק לגוף ולאנרגיה שבו.\n\nבעיסוי אני שואפת לעזור לגוף לשחרר ולפרק אנרגיות שלא משרתות אותו, לפתוח חסימות ולהחזיר תחושת זרימה טבעית.\n\nביוגה אני מתמקדת בהכנסת אנרגיה חדשה, דרך תנועה, נשימה ונוכחות, שמחזקת ומאזנת את הגוף והנפש.\n\nדרך פילאטיס נלמד לחזק את הגוף בלי לקצר אותו, לחבר אותנו לעבודה ממוקדת, פעולות שיסייעו לנו ביום יום וישמרו עלינו בריאים וחזקים.",
+      },
+      { key: "quote", label: "ציטוט", type: "textarea" as const, default: "עבורי, האיזון של הגוף הוא אלמנט מרכזי וחשוב מאוד בדרך לבריאות ולהרגשה טובה." },
+      { key: "approachTitle", label: "כותרת גישה", type: "input" as const, default: "הגישה שלי" },
+      { key: "certTitle", label: "כותרת הכשרות והסמכות", type: "input" as const, default: "הכשרות והסמכות" },
+      { key: "cert1", label: "הסמכה 1", type: "input" as const, default: "עיסוי תאילנדי מוסמך" },
+      { key: "cert2", label: "הסמכה 2", type: "input" as const, default: "הדרכת יוגה" },
+      { key: "cert3", label: "הסמכה 3", type: "input" as const, default: "חיבור לגוף ולאנרגיה" },
+      { key: "cert4", label: "הסמכה 4", type: "input" as const, default: "איזון גוף ונפש" },
+      { key: "ctaTitle", label: "כותרת CTA", type: "input" as const, default: "מוכנים להתחיל?" },
+      { key: "ctaText", label: "טקסט CTA", type: "input" as const, default: "קבעו את הטיפול הראשון שלכם ותרגישו את ההבדל" },
+      { key: "ctaButton", label: "טקסט כפתור CTA", type: "input" as const, default: "קביעת תור ראשון" },
     ],
   },
   {
     key: "services",
     label: "שירותים",
     fields: [
-      { key: "heroTitle", label: "כותרת Hero", type: "input" as const },
-      { key: "heroSubtitle", label: "תת כותרת Hero", type: "input" as const },
-      { key: "gridTitle", label: "כותרת רשימה", type: "input" as const },
-      { key: "gridSubtitle", label: "תת כותרת רשימה", type: "input" as const },
+      { key: "heroTitle", label: "כותרת Hero", type: "input" as const, default: "השירותים שלי" },
+      { key: "heroSubtitle", label: "תת כותרת Hero", type: "input" as const, default: "מגוון טיפולים מקצועיים המותאמים לצרכים שלכם" },
+      { key: "gridTitle", label: "כותרת רשימה", type: "input" as const, default: "השירותים שלי" },
+      { key: "gridSubtitle", label: "תת כותרת רשימה", type: "input" as const, default: "מגוון טיפולים מקצועיים המותאמים לצרכים האישיים שלכם" },
     ],
   },
   {
     key: "reviews",
     label: "המלצות",
     fields: [
-      { key: "title", label: "כותרת בדף הבית", type: "input" as const },
-      { key: "heroTitle", label: "כותרת עמוד המלצות", type: "input" as const },
-      { key: "heroSubtitle", label: "תת כותרת עמוד המלצות", type: "input" as const },
+      { key: "title", label: "כותרת בדף הבית", type: "input" as const, default: "מה אומרים עליי" },
+      { key: "heroTitle", label: "כותרת עמוד המלצות", type: "input" as const, default: "המלצות" },
+      { key: "heroSubtitle", label: "תת כותרת עמוד המלצות", type: "input" as const, default: "מה הלקוחות שלנו אומרים" },
+    ],
+  },
+  {
+    key: "blog",
+    label: "בלוג",
+    fields: [
+      { key: "heroTitle", label: "כותרת Hero", type: "input" as const, default: "הבלוג שלנו" },
+      { key: "heroSubtitle", label: "תת כותרת Hero", type: "input" as const, default: "מאמרים, טיפים ותובנות מעולם היוגה והעיסוי" },
     ],
   },
   {
     key: "footer",
     label: "פוטר",
     fields: [
-      { key: "description", label: "תיאור קצר", type: "textarea" as const },
+      { key: "description", label: "תיאור קצר", type: "textarea" as const, default: "טיפולי עיסוי מקצועיים, שיעורי יוגה פרטיים וקבוצתיים, ושיקום פציעות." },
     ],
   },
   {
     key: "contact",
     label: "צור קשר",
     fields: [
-      { key: "heroTitle", label: "כותרת Hero", type: "input" as const },
-      { key: "heroSubtitle", label: "תת כותרת Hero", type: "input" as const },
+      { key: "heroTitle", label: "כותרת Hero", type: "input" as const, default: "צור קשר" },
+      { key: "heroSubtitle", label: "תת כותרת Hero", type: "input" as const, default: "נשמח לשמוע מכם ולענות על כל שאלה" },
+    ],
+  },
+  {
+    key: "terms",
+    label: "תקנון טיפולים",
+    fields: [
+      { key: "title", label: "כותרת", type: "input" as const, default: TERMS_TITLE },
+      {
+        key: "body",
+        label: "נוסח התקנון (פסקאות מופרדות בשורה ריקה)",
+        type: "textarea" as const,
+        rows: 16,
+        default: TERMS_BODY,
+        help: "מומלץ שעורך דין יאשר שינויים בנוסח. שינוי מהותי מחייב עדכון גרסה אצל המפתח.",
+      },
+    ],
+  },
+  {
+    key: "contact_info",
+    label: "פרטי התקשרות",
+    fields: [
+      { key: "phone", label: "טלפון", type: "input" as const, inputType: "tel", default: CONTACT_PHONE, help: "המספר כפי שיוצג באתר, למשל 054-3135182" },
+      { key: "whatsapp", label: "וואטסאפ", type: "input" as const, inputType: "tel", default: CONTACT_WHATSAPP, help: "מספר בפורמט בינלאומי, למשל 972501234567" },
+      { key: "email", label: "אימייל", type: "input" as const, inputType: "email", default: CONTACT_EMAIL, help: "כתובת האימייל ליצירת קשר" },
+      { key: "address", label: "כתובת", type: "input" as const, default: CONTACT_ADDRESS, help: "הכתובת מוצגת בפוטר ובעמוד צור קשר (כולל המפה)" },
     ],
   },
 ];
@@ -162,8 +221,8 @@ export default function AdminContentPage() {
     fetchContent();
   }, [fetchContent]);
 
-  const getValue = (section: string, key: string) => {
-    return localValues[`${section}::${key}`] ?? "";
+  const getValue = (section: string, key: string, fallback = "") => {
+    return localValues[`${section}::${key}`] ?? fallback;
   };
 
   const setValue = (section: string, key: string, value: string) => {
@@ -172,6 +231,9 @@ export default function AdminContentPage() {
 
   const saveField = async (section: string, key: string) => {
     const fieldKey = `${section}::${key}`;
+    // Untouched field (focus-then-blur without typing) — skip so we don't
+    // persist "" over the display fallback; mirrors saveSection's guard.
+    if (localValues[fieldKey] === undefined) return;
     setSaving(fieldKey);
     try {
       const res = await fetch("/api/admin/site-content", {
@@ -199,13 +261,17 @@ export default function AdminContentPage() {
     setSaving(sectionKey);
     try {
       for (const field of section.fields) {
+        const value = localValues[`${sectionKey}::${field.key}`];
+        // Only save fields the user actually typed into; skip untouched
+        // fields so we don't blank them out (they fall back to defaults).
+        if (value === undefined) continue;
         await fetch("/api/admin/site-content", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             section: sectionKey,
             key: field.key,
-            value: localValues[`${sectionKey}::${field.key}`] || "",
+            value,
           }),
         });
       }
@@ -231,8 +297,16 @@ export default function AdminContentPage() {
       // Delete from DB
       const qItem = items.find((i) => i.section === "faq" && i.key === `q_${item.id}`);
       const aItem = items.find((i) => i.section === "faq" && i.key === `a_${item.id}`);
-      if (qItem) await fetch(`/api/admin/site-content?id=${qItem.id}`, { method: "DELETE" });
-      if (aItem) await fetch(`/api/admin/site-content?id=${aItem.id}`, { method: "DELETE" });
+      try {
+        for (const target of [qItem, aItem]) {
+          if (!target) continue;
+          const res = await fetch(`/api/admin/site-content?id=${target.id}`, { method: "DELETE" });
+          if (!res.ok) throw new Error();
+        }
+      } catch {
+        toast.error("שגיאה במחיקת השאלה");
+        return;
+      }
     }
     setFaqItems((prev) => prev.filter((_, i) => i !== index));
     toast.success("השאלה נמחקה");
@@ -324,7 +398,9 @@ export default function AdminContentPage() {
                       {field.type === "input" ? (
                         <Input
                           label={field.label}
-                          value={getValue(section.key, field.key)}
+                          type={"inputType" in field ? field.inputType : undefined}
+                          helperText={"help" in field ? field.help : undefined}
+                          value={getValue(section.key, field.key, "default" in field ? field.default : "")}
                           onChange={(e) =>
                             setValue(section.key, field.key, e.target.value)
                           }
@@ -333,12 +409,13 @@ export default function AdminContentPage() {
                       ) : (
                         <Textarea
                           label={field.label}
-                          value={getValue(section.key, field.key)}
+                          helperText={"help" in field ? field.help : undefined}
+                          value={getValue(section.key, field.key, "default" in field ? field.default : "")}
                           onChange={(e) =>
                             setValue(section.key, field.key, e.target.value)
                           }
                           onBlur={() => saveField(section.key, field.key)}
-                          rows={4}
+                          rows={"rows" in field ? field.rows : 4}
                         />
                       )}
                     </div>
@@ -358,6 +435,54 @@ export default function AdminContentPage() {
               )}
             </Card>
           ))}
+
+          {/* Google review link (used by the WhatsApp review-request messages) */}
+          <Card className="p-0 overflow-hidden">
+            <button
+              onClick={() => toggleSection("settings")}
+              className="w-full flex items-center justify-between px-4 py-3 bg-surface/50 border-b border-border hover:bg-surface transition-colors text-right"
+            >
+              <h3 className="font-semibold text-text">קישור ביקורת בגוגל</h3>
+              {openSections["settings"] ? (
+                <ChevronUp className="h-5 w-5 text-text-muted" />
+              ) : (
+                <ChevronDown className="h-5 w-5 text-text-muted" />
+              )}
+            </button>
+
+            {openSections["settings"] && (
+              <div className="p-4 space-y-4">
+                <Input
+                  label="קישור לכתיבת ביקורת בגוגל"
+                  type="url"
+                  dir="ltr"
+                  placeholder="https://g.page/r/..."
+                  value={getValue("settings", "google_review_link")}
+                  onChange={(e) =>
+                    setValue("settings", "google_review_link", e.target.value)
+                  }
+                  onBlur={() => saveField("settings", "google_review_link")}
+                />
+                {!getValue("settings", "google_review_link").trim() && (
+                  <p className="text-sm text-text-secondary bg-warning/10 border border-warning/20 rounded-lg px-3 py-2">
+                    עד שיוגדר קישור — הודעות בקשת הביקורת ישתמשו בקישור חיפוש
+                    של העסק במפות גוגל.
+                  </p>
+                )}
+                <div className="bg-surface rounded-lg p-3 text-sm text-text-secondary leading-relaxed">
+                  <p className="font-medium text-text mb-1">איך משיגים את הקישור?</p>
+                  <ol className="space-y-1 pr-4 list-decimal">
+                    <li>
+                      פתחי את אפליקציית Google Business Profile (או חפשי בגוגל את
+                      שם העסק כשאת מחוברת לחשבון העסק).
+                    </li>
+                    <li>לחצי על &quot;בקש ביקורות&quot; (Ask for reviews).</li>
+                    <li>העתיקי את הקישור הקצר והדביקי אותו כאן.</li>
+                  </ol>
+                </div>
+              </div>
+            )}
+          </Card>
 
           {/* FAQ Section */}
           <Card className="p-0 overflow-hidden">
@@ -413,7 +538,7 @@ export default function AdminContentPage() {
                   </div>
                 ))}
 
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3">
                   <Button
                     variant="outline"
                     size="sm"

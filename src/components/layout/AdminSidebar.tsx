@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
@@ -13,10 +13,13 @@ import {
   ImageIcon,
   FileText,
   MessageSquare,
+  Users,
   Star,
   Gift,
   ShieldBan,
   BookOpen,
+  BookMarked,
+  BarChart3,
   LogOut,
   X,
 } from "lucide-react";
@@ -27,12 +30,15 @@ import { useSiteImages } from "@/lib/hooks/useSiteImages";
 const navItems = [
   { label: "לוח בקרה", href: "/admin", icon: LayoutDashboard },
   { label: "הזמנות", href: "/admin/bookings", icon: Calendar },
+  { label: "דוחות", href: "/admin/reports", icon: BarChart3 },
   { label: "שירותים", href: "/admin/services", icon: Settings2 },
   { label: "זמינות", href: "/admin/availability", icon: Clock },
   { label: "בלוג", href: "/admin/blog", icon: BookOpen },
   { label: "תמונות", href: "/admin/images", icon: ImageIcon },
   { label: "תוכן האתר", href: "/admin/content", icon: FileText },
+  { label: "מדריך", href: "/admin/help", icon: BookMarked },
   { label: "פניות", href: "/admin/leads", icon: MessageSquare },
+  { label: "אנשי קשר", href: "/admin/contacts", icon: Users },
   { label: "המלצות", href: "/admin/reviews", icon: Star },
   { label: "גיפט קארד", href: "/admin/gift-cards", icon: Gift },
   { label: "חסומים", href: "/admin/blacklist", icon: ShieldBan },
@@ -48,6 +54,32 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
   const { images } = useSiteImages();
   const logoSrc = images.logo?.imagePath || LOGO_PATH;
   const [pendingCount, setPendingCount] = useState(0);
+
+  // Keep latest onClose without re-running the drawer effect (same pattern as Modal)
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  // Mobile drawer open: lock body scroll + close on Escape (mirrors Modal's mechanism)
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onCloseRef.current();
+    };
+    // Close if the viewport crosses into desktop (rotation/resize) — otherwise
+    // the scroll-lock would persist while overlay and X are lg:hidden
+    const mql = window.matchMedia("(min-width: 1024px)");
+    const handleMqlChange = (e: MediaQueryListEvent) => {
+      if (e.matches) onCloseRef.current();
+    };
+    mql.addEventListener("change", handleMqlChange);
+    document.addEventListener("keydown", handleKeyDown);
+    document.body.style.overflow = "hidden";
+    return () => {
+      mql.removeEventListener("change", handleMqlChange);
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     fetch("/api/admin/bookings?status=PENDING")
@@ -73,6 +105,8 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
 
       {/* Sidebar */}
       <aside
+        role={isOpen ? "dialog" : undefined}
+        aria-label="תפריט ניהול"
         className={cn(
           "fixed top-0 right-0 z-50 h-full w-64 bg-white border-l border-border flex flex-col transition-transform duration-300 lg:translate-x-0 lg:static lg:z-auto",
           isOpen ? "translate-x-0" : "translate-x-full"
@@ -92,7 +126,8 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
           </Link>
           <button
             onClick={onClose}
-            className="lg:hidden p-1 rounded text-text-muted hover:text-text"
+            className="lg:hidden p-3 rounded-lg text-text-muted hover:text-text"
+            aria-label="סגירת תפריט"
           >
             <X className="h-5 w-5" />
           </button>
@@ -118,7 +153,7 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
                 <Icon className="h-5 w-5" strokeWidth={1.5} />
                 {item.label}
                 {item.href === "/admin/bookings" && pendingCount > 0 && (
-                  <span className="mr-auto bg-warning text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                  <span className="mr-auto bg-warning text-white text-[11px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
                     {pendingCount}
                   </span>
                 )}

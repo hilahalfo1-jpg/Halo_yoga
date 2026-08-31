@@ -7,6 +7,7 @@ import Spinner from "@/components/ui/Spinner";
 import EmptyState from "@/components/ui/EmptyState";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { localDateToKey } from "@/lib/time";
 import type { TimeSlot } from "@/types";
 
 interface StepTimeSelectProps {
@@ -33,11 +34,7 @@ export default function StepTimeSelect({
     async function fetchSlots() {
       setIsLoading(true);
       try {
-        // Use local date parts to avoid timezone shift (toISOString converts to UTC)
-        const y = date.getFullYear();
-        const m = String(date.getMonth() + 1).padStart(2, "0");
-        const d = String(date.getDate()).padStart(2, "0");
-        const dateStr = `${y}-${m}-${d}`;
+        const dateStr = localDateToKey(date);
         const res = await fetch(
           `/api/bookings?date=${dateStr}&serviceId=${serviceId}`
         );

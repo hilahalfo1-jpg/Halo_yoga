@@ -80,12 +80,47 @@ model Booking {
   medicalForm        MedicalForm?
   cancelToken        String    @unique @default(cuid())
   cancelledAt        DateTime?
+  // WhatsApp send stamps (idempotency lives here, per playbook)
+  waReceivedSentAt   DateTime?
+  waApprovedSentAt   DateTime?
+  waRejectedSentAt   DateTime?
+  waReviewSentAt     DateTime?
+  waReminderSentAt   DateTime?
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
-  @@unique([startAt, endAt])
   @@index([status])
   @@index([startAt])
+}
+
+// ─── BOOKING ATTEMPTS (failed bookings — for follow-up) ───
+model BookingAttempt {
+  id            String   @id @default(cuid())
+  customerName  String
+  customerPhone String
+  customerEmail String?
+  serviceId     String?
+  serviceName   String?
+  requestedAt   DateTime?
+  reason        String?
+  createdAt     DateTime @default(now())
+
+  @@index([customerPhone])
+  @@index([createdAt])
+}
+
+// ─── CONTACTS (admin overlay on the derived contacts list) ───
+model Contact {
+  id            String   @id @default(cuid())
+  normalizedKey String   @unique // normalizeIdentifier(phone) or lowercased email — same key space as the derived list
+  name          String
+  phone         String   // display format
+  email         String?
+  notes         String?
+  isManual      Boolean  @default(false)
+  isHidden      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 // ─── LEADS ───────────────────────────────
@@ -134,9 +169,17 @@ model GiftCard {
   senderName    String?
   serviceName   String
   message       String
+  template      String   @default("botanical")
   code          String   @unique @default(cuid())
   isRedeemed    Boolean  @default(false)
   redeemedAt    DateTime?
+  status         String    @default("ACTIVE") // ACTIVE | PENDING (public orders start PENDING until Hila approves)
+  expiresAt      DateTime?                    // admin-created: set at creation (+1y); public orders: null while PENDING, set at approval (+1y)
+  purchaserName  String?
+  purchaserPhone String?
+  purchaserEmail String?
+  bookingId      String?                      // PENDING Booking created when the buyer picked a date (plain id, no FK)
+  waApprovedSentAt DateTime?                  // purchaser notified the card is ready
   createdAt     DateTime @default(now())
 }
 
@@ -159,6 +202,7 @@ model MedicalForm {
   conditionDetails String?
   signatureUrl     String?
   medicalDocUrl    String?
+  termsVersion     String?
   agreedAt         DateTime @default(now())
   createdAt        DateTime @default(now())
 }

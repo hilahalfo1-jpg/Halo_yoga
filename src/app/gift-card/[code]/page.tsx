@@ -12,7 +12,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     where: { code: params.code },
   });
 
-  if (!giftCard) return { title: "גיפט קארד - HALO" };
+  // PENDING orders are not public — the link is shared only after approval
+  if (!giftCard || giftCard.status === "PENDING") {
+    return { title: "גיפט קארד - HALO" };
+  }
 
   return {
     title: `גיפט קארד עבור ${giftCard.recipientName} - HALO`,
@@ -25,7 +28,13 @@ export default async function GiftCardPage({ params }: Props) {
     where: { code: params.code },
   });
 
-  if (!giftCard) notFound();
+  // PENDING orders are not public — the link is shared only after approval
+  if (!giftCard || giftCard.status === "PENDING") notFound();
+
+  const isExpired =
+    !giftCard.isRedeemed &&
+    !!giftCard.expiresAt &&
+    giftCard.expiresAt < new Date();
 
   return (
     <GiftCardView
@@ -34,6 +43,9 @@ export default async function GiftCardPage({ params }: Props) {
       serviceName={giftCard.serviceName}
       message={giftCard.message}
       isRedeemed={giftCard.isRedeemed}
+      template={giftCard.template}
+      isExpired={isExpired}
+      expiresAt={giftCard.expiresAt?.toISOString() ?? null}
     />
   );
 }

@@ -50,6 +50,8 @@ interface DayDetailPanelProps {
   }) => Promise<void>;
   onDeleteException: (id: string) => Promise<void>;
   onUpdateRule: (dayOfWeek: number, updates: Partial<Rule>) => Promise<void>;
+  /** Hide the panel's own X (when rendered inside a Modal that already has one) */
+  hideClose?: boolean;
 }
 
 function toDateString(d: Date) {
@@ -66,6 +68,7 @@ export default function DayDetailPanel({
   onAddException,
   onDeleteException,
   onUpdateRule,
+  hideClose = false,
 }: DayDetailPanelProps) {
   const [newStart, setNewStart] = useState("09:00");
   const [newEnd, setNewEnd] = useState("18:00");
@@ -209,12 +212,15 @@ export default function DayDetailPanel({
             </span>
           )}
         </div>
-        <button
-          onClick={onClose}
-          className="p-1.5 rounded-lg hover:bg-white text-text-muted"
-        >
-          <X className="h-5 w-5" />
-        </button>
+        {!hideClose && (
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-white text-text-muted"
+            aria-label="סגירה"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
       </div>
 
       <div className="p-4 space-y-4">
@@ -265,10 +271,10 @@ export default function DayDetailPanel({
                   </div>
                   <button
                     onClick={() => onDeleteException(exc.id)}
-                    className="p-1.5 rounded-md text-text-muted hover:text-error hover:bg-error/10 transition-colors"
+                    className="p-2.5 rounded-lg text-text-muted hover:text-error hover:bg-error/10 transition-colors"
                     title="מחק טווח"
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <Trash2 className="h-5 w-5" />
                   </button>
                 </div>
               ))}
@@ -289,10 +295,10 @@ export default function DayDetailPanel({
                   const blocked = relevantExceptions.find((e) => e.type === "BLOCKED");
                   if (blocked) onDeleteException(blocked.id);
                 }}
-                className="p-1.5 rounded-md text-text-muted hover:text-error hover:bg-error/10 transition-colors"
+                className="p-2.5 rounded-lg text-text-muted hover:text-error hover:bg-error/10 transition-colors"
                 title="הסר חסימה"
               >
-                <Trash2 className="h-3.5 w-3.5" />
+                <Trash2 className="h-5 w-5" />
               </button>
             </div>
           ) : hasActiveWeeklyRules ? (
@@ -342,7 +348,7 @@ export default function DayDetailPanel({
                       type="time"
                       value={newStart}
                       onChange={(e) => setNewStart(e.target.value)}
-                      className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-white text-center"
+                      className="w-full px-3 py-2 text-base sm:text-sm rounded-lg border border-border bg-white text-center"
                     />
                   </div>
                   <div>
@@ -353,7 +359,7 @@ export default function DayDetailPanel({
                       type="time"
                       value={newEnd}
                       onChange={(e) => setNewEnd(e.target.value)}
-                      className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-white text-center"
+                      className="w-full px-3 py-2 text-base sm:text-sm rounded-lg border border-border bg-white text-center"
                     />
                   </div>
                 </div>
@@ -362,7 +368,7 @@ export default function DayDetailPanel({
                   placeholder="סיבה (אופציונלי)..."
                   value={rangeReason}
                   onChange={(e) => setRangeReason(e.target.value)}
-                  className="w-full text-sm border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full text-base sm:text-sm border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary"
                 />
                 <div className="flex gap-2">
                   <Button
@@ -403,7 +409,7 @@ export default function DayDetailPanel({
                 placeholder="סיבה לחסימה (אופציונלי)..."
                 value={blockReason}
                 onChange={(e) => setBlockReason(e.target.value)}
-                className="w-full text-sm border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full text-base sm:text-sm border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary"
               />
               <Button
                 variant="outline"

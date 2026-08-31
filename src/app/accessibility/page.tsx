@@ -3,13 +3,21 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Section from "@/components/ui/Section";
 import { SITE_NAME, CONTACT_EMAIL, CONTACT_PHONE } from "@/lib/constants";
+import { getSiteContent } from "@/lib/getSiteContent";
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "הצהרת נגישות",
   description: `הצהרת הנגישות של ${SITE_NAME} — מחויבותנו להנגשת האתר לכלל הציבור.`,
 };
 
-export default function AccessibilityPage() {
+export default async function AccessibilityPage() {
+  const content = await getSiteContent();
+  const info = content["contact_info"] ?? {};
+  const phone = info.phone || CONTACT_PHONE;
+  const email = info.email || CONTACT_EMAIL;
+
   return (
     <>
       <Header />
@@ -58,21 +66,21 @@ export default function AccessibilityPage() {
               <li>
                 אימייל:{" "}
                 <a
-                  href={`mailto:${CONTACT_EMAIL}`}
+                  href={`mailto:${email}`}
                   className="text-primary-dark hover:underline font-medium"
                   dir="ltr"
                 >
-                  {CONTACT_EMAIL}
+                  {email}
                 </a>
               </li>
               <li>
                 טלפון:{" "}
                 <a
-                  href={`tel:${CONTACT_PHONE.replace(/-/g, "")}`}
+                  href={`tel:${phone.replace(/-/g, "")}`}
                   className="text-primary-dark hover:underline font-medium"
                   dir="ltr"
                 >
-                  {CONTACT_PHONE}
+                  {phone}
                 </a>
               </li>
             </ul>

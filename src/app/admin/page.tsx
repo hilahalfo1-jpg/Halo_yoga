@@ -11,15 +11,18 @@ import {
   ArrowLeft,
   AlertCircle,
 } from "lucide-react";
+import { toast } from "sonner";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import Spinner from "@/components/ui/Spinner";
+import BlogReminder from "@/components/admin/BlogReminder";
 import { formatTime } from "@/lib/utils";
 import {
   BOOKING_STATUS_LABELS,
   BOOKING_STATUS_COLORS,
   LEAD_STATUS_LABELS,
   LEAD_STATUS_COLORS,
+  getContactSubjectLabel,
 } from "@/lib/constants";
 
 interface DashboardData {
@@ -56,6 +59,7 @@ export default function AdminDashboard() {
     fetch("/api/admin/dashboard")
       .then((r) => r.json())
       .then((r) => setData(r.data))
+      .catch(() => toast.error("שגיאה בטעינת הנתונים"))
       .finally(() => setIsLoading(false));
   }, []);
 
@@ -120,6 +124,9 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-8">
       <h1 className="text-2xl font-bold text-text">לוח בקרה</h1>
+
+      {/* Blog post reminder (weekly nudge) */}
+      <BlogReminder />
 
       {/* Pending bookings alert */}
       {data.stats.pendingBookings > 0 && (
@@ -243,7 +250,7 @@ export default function AdminDashboard() {
                       {lead.name}
                     </p>
                     <p className="text-xs text-text-muted">
-                      {lead.subject || "כללי"} · {lead.phone}
+                      {lead.subject ? getContactSubjectLabel(lead.subject) : "כללי"} · {lead.phone}
                     </p>
                   </div>
                   <Badge className={LEAD_STATUS_COLORS[lead.status]}>

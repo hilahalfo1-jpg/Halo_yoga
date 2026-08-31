@@ -1,125 +1,84 @@
+import type { Prisma } from "@prisma/client";
 import { prisma } from "./prisma";
 import { SLOT_BUFFER_MINUTES } from "./constants";
+import {
+  israelWallToUtc,
+  toIsraelDateKey,
+  dateKeyDayOfWeek,
+  addDaysToKey,
+} from "./time";
 import type { TimeSlot } from "@/types";
+import { getExternalBusyIntervals } from "./external-calendar";
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
- * Get current time in Israel timezone
+ * Generate slots for a single time window — pure "HH:mm" minute arithmetic.
  */
-function nowInIsrael(): Date {
-  return new Date(
-    new Date().toLocaleString("en-US", { timeZone: "Asia/Jerusalem" })
-  );
-}
-
-/**
- * Format a Date to "YYYY-MM-DD" in Israel timezone
- */
-function toIsraelDateKey(d: Date): string {
-  return new Date(d).toLocaleDateString("en-CA", {
-    timeZone: "Asia/Jerusalem",
-  });
-}
-
-/**
- * Parse "HH:mm" string to { hours, minutes }
- */
-function parseTime(time: string): { hours: number; minutes: number } {
-  const [hours, minutes] = time.split(":").map(Number);
-  return { hours, minutes };
-}
-
-/**
- * Create a Date object at a specific time on a given date
- */
-function setTime(date: Date, timeStr: string): Date {
-  const { hours, minutes } = parseTime(timeStr);
-  const d = new Date(date);
-  d.setHours(hours, minutes, 0, 0);
-  return d;
-}
-
-/**
- * Format Date to "HH:mm"
- */
-function formatTimeStr(date: Date): string {
-  return `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
-}
-
-/**
- * Generate slots for a single time window
- */
-function generateSlotsForWindow(
-  targetDate: Date,
+export function generateSlotsForWindow(
   startTime: string,
   endTime: string,
   slotDuration: number,
   buffer: number
 ): TimeSlot[] {
+  const toMinutes = (t: string) => {
+    const [h, m] = t.split(":").map(Number);
+    return h * 60 + m;
+  };
+  const toTimeStr = (mins: number) =>
+    `${String(Math.floor(mins / 60)).padStart(2, "0")}:${String(mins % 60).padStart(2, "0")}`;
+
+  const windowEnd = toMinutes(endTime);
   const slots: TimeSlot[] = [];
-  const windowStart = setTime(targetDate, startTime);
-  const windowEnd = setTime(targetDate, endTime);
 
-  let current = new Date(windowStart);
-
-  while (true) {
-    const slotEnd = new Date(current.getTime() + slotDuration * 60 * 1000);
-    if (slotEnd > windowEnd) break;
-
+  let current = toMinutes(startTime);
+  while (current + slotDuration <= windowEnd) {
     slots.push({
-      startTime: formatTimeStr(current),
-      endTime: formatTimeStr(slotEnd),
+      startTime: toTimeStr(current),
+      endTime: toTimeStr(current + slotDuration),
       isAvailable: true,
     });
-
-    current = new Date(slotEnd.getTime() + buffer * 60 * 1000);
+    current += slotDuration + buffer;
   }
 
   return slots;
 }
 
 /**
- * Get available time slots for a given date and service.
+ * Get available time slots for a given Israel date key ("YYYY-MM-DD") and service.
  *
  * Supports multiple time windows per day (e.g., 8:00-16:00 and 19:00-21:00).
  */
 export async function getAvailableSlots(
-  date: Date,
+  dateKey: string,
   serviceId: string
 ): Promise<TimeSlot[]> {
-  // 1. Get the service duration and category
-  const service = await prisma.service.findUnique({
-    where: { id: serviceId },
-    select: { duration: true, category: true },
-  });
+  const targetKey = dateKey;
+  const dayOfWeek = dateKeyDayOfWeek(dateKey);
+
+  // Widen exception search window by ±1 day to handle timezone offsets
+  // (dates stored in IST midnight → UTC)
+  const targetDate = new Date(dateKey + "T00:00:00Z");
+  const searchStart = new Date(targetDate.getTime() - DAY_MS);
+  const searchEnd = new Date(targetDate.getTime() + 2 * DAY_MS);
+
+  // 1. Get the service duration and category + exceptions for this date
+  const [service, allExceptions] = await Promise.all([
+    prisma.service.findUnique({
+      where: { id: serviceId },
+      select: { duration: true, category: true },
+    }),
+    prisma.availabilityException.findMany({
+      where: {
+        date: {
+          gte: searchStart,
+          lt: searchEnd,
+        },
+      },
+    }),
+  ]);
 
   if (!service) return [];
-
-  const targetDate = new Date(date);
-  targetDate.setHours(0, 0, 0, 0);
-  const dayOfWeek = targetDate.getDay();
-
-  // Target date key for comparison (e.g., "2026-03-10")
-  const targetKey = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, "0")}-${String(targetDate.getDate()).padStart(2, "0")}`;
-
-  // 2. Check exceptions for this date (category-specific first, then global)
-  // Widen search window by ±1 day to handle timezone offsets (dates stored in IST midnight → UTC)
-  const searchStart = new Date(targetDate);
-  searchStart.setDate(searchStart.getDate() - 1);
-  const searchEnd = new Date(targetDate);
-  searchEnd.setDate(searchEnd.getDate() + 2);
-
-  const allExceptions = await prisma.availabilityException.findMany({
-    where: {
-      date: {
-        gte: searchStart,
-        lt: searchEnd,
-      },
-      OR: [
-        { category: service.category },
-        { category: null },
-      ],
-    },
-  });
 
   // Filter to only exceptions matching the target date in Israel timezone
   const exceptions = allExceptions.filter(
@@ -149,24 +108,18 @@ export async function getAvailableSlots(
     if (overrideWindows.length === 0) return [];
     windows = overrideWindows;
   } else {
-    // 3. Get ALL active rules for this day (category-specific first, then global)
-    const catRules = await prisma.availabilityRule.findMany({
+    // 2. Get ALL active rules for this day (category-specific first, then global)
+    const allRules = await prisma.availabilityRule.findMany({
       where: {
         dayOfWeek,
         isActive: true,
-        category: service.category,
+        OR: [{ category: service.category }, { category: null }],
       },
       orderBy: { startTime: "asc" },
     });
 
-    const globalRules = await prisma.availabilityRule.findMany({
-      where: {
-        dayOfWeek,
-        isActive: true,
-        category: null,
-      },
-      orderBy: { startTime: "asc" },
-    });
+    const catRules = allRules.filter((r) => r.category === service.category);
+    const globalRules = allRules.filter((r) => !r.category);
 
     // Use category-specific rules if any exist, otherwise fall back to global
     const activeRules = catRules.length > 0 ? catRules : globalRules;
@@ -176,96 +129,164 @@ export async function getAvailableSlots(
     windows = activeRules.map((r) => ({ start: r.startTime, end: r.endTime }));
   }
 
-  // 4. Generate slots for all windows
+  // 3. Generate slots for all windows
   const slotDuration = service.duration;
   const buffer = SLOT_BUFFER_MINUTES;
 
   let allSlots: TimeSlot[] = [];
   for (const win of windows) {
-    const windowSlots = generateSlotsForWindow(
-      targetDate,
-      win.start,
-      win.end,
-      slotDuration,
-      buffer
+    allSlots = allSlots.concat(
+      generateSlotsForWindow(win.start, win.end, slotDuration, buffer)
     );
-    allSlots = allSlots.concat(windowSlots);
   }
 
   if (allSlots.length === 0) return [];
 
-  // 5. Get existing bookings for this date (non-cancelled)
-  const earliestStart = windows.reduce(
-    (min, w) => (w.start < min ? w.start : min),
-    windows[0].start
-  );
-  const latestEnd = windows.reduce(
-    (max, w) => (w.end > max ? w.end : max),
-    windows[0].end
-  );
+  // 4. Get existing bookings overlapping the whole Israel day (non-cancelled)
+  const dayStartUtc = israelWallToUtc(dateKey, "00:00");
+  const dayEndUtc = israelWallToUtc(addDaysToKey(dateKey, 1), "00:00");
 
-  const dayStart = setTime(targetDate, earliestStart);
-  const dayEnd = setTime(targetDate, latestEnd);
+  // External (iCloud) busy intervals fetched in parallel — fail-open [] on error
+  const [bookings, externalBusy] = await Promise.all([
+    prisma.booking.findMany({
+      where: {
+        startAt: { lt: dayEndUtc },
+        endAt: { gt: dayStartUtc },
+        status: { notIn: ["CANCELLED", "REJECTED"] },
+      },
+      select: { startAt: true, endAt: true },
+    }),
+    getExternalBusyIntervals(dayStartUtc, dayEndUtc),
+  ]);
 
-  const bookings = await prisma.booking.findMany({
-    where: {
-      startAt: { gte: dayStart },
-      endAt: { lte: dayEnd },
-      status: { not: "CANCELLED" },
-    },
-    select: { startAt: true, endAt: true },
-  });
-
-  // 6. Filter out occupied and past slots
-  // Use Israel time for "now" since slot times represent Israel local times
-  const now = nowInIsrael();
+  // 5. Filter out occupied and past slots
+  const now = new Date();
 
   return allSlots.map((slot) => {
-    const slotStart = setTime(targetDate, slot.startTime);
-    const slotEnd = setTime(targetDate, slot.endTime);
+    const slotStartUtc = israelWallToUtc(dateKey, slot.startTime);
+    const slotEndUtc = israelWallToUtc(dateKey, slot.endTime);
 
-    if (slotStart <= now) {
+    if (slotStartUtc <= now) {
       return { ...slot, isAvailable: false };
     }
 
     const hasConflict = bookings.some((booking) => {
-      return slotStart < booking.endAt && slotEnd > booking.startAt;
+      return slotStartUtc < booking.endAt && slotEndUtc > booking.startAt;
     });
 
-    return { ...slot, isAvailable: !hasConflict };
+    const hasExternalConflict = externalBusy.some((busy) => {
+      return slotStartUtc < busy.end && slotEndUtc > busy.start;
+    });
+
+    return { ...slot, isAvailable: !hasConflict && !hasExternalConflict };
   });
 }
 
+/** Thrown by createBookingInTransaction when the slot was taken concurrently */
+export class SlotTakenError extends Error {}
+
+function isP2034(error: unknown): boolean {
+  return (
+    !!error &&
+    typeof error === "object" &&
+    "code" in error &&
+    (error as { code: string }).code === "P2034"
+  );
+}
+
 /**
- * Check if a specific slot is still available (for booking creation).
- * Checks both booking conflicts AND availability exceptions (BLOCKED dates).
+ * Create a booking inside a Serializable transaction, re-checking overlap
+ * against non-cancelled bookings. Throws SlotTakenError on a real conflict.
+ * Retries ONCE on Prisma P2034 (serialization conflict) — two concurrent
+ * different-slot bookings can spuriously conflict under SSI.
  */
-export async function isSlotAvailable(
+export async function createBookingInTransaction(
+  data: Prisma.BookingUncheckedCreateInput,
+  { startAt, endAt }: { startAt: Date; endAt: Date }
+) {
+  const runOnce = () =>
+    prisma.$transaction(async (tx) => {
+      const conflict = await tx.booking.findFirst({
+        where: {
+          status: { notIn: ["CANCELLED", "REJECTED"] },
+          startAt: { lt: endAt },
+          endAt: { gt: startAt },
+        },
+        select: { id: true },
+      });
+      if (conflict) throw new SlotTakenError();
+
+      return tx.booking.create({
+        data,
+        include: { service: true },
+      });
+    }, { isolationLevel: "Serializable" });
+
+  try {
+    return await runOnce();
+  } catch (error) {
+    if (isP2034(error)) {
+      return await runOnce();
+    }
+    throw error;
+  }
+}
+
+/**
+ * Validate a requested public-booking slot against the live slot grid.
+ * Returns the real UTC start/end instants when the slot exists and is
+ * available, otherwise null. This is THE public-booking gate.
+ */
+export async function validateSlotForBooking(
+  dateKey: string,
+  startTime: string,
+  serviceId: string
+): Promise<{ startAt: Date; endAt: Date } | null> {
+  const slots = await getAvailableSlots(dateKey, serviceId);
+  const slot = slots.find((s) => s.startTime === startTime && s.isAvailable);
+  if (!slot) return null;
+
+  return {
+    startAt: israelWallToUtc(dateKey, slot.startTime),
+    endAt: israelWallToUtc(dateKey, slot.endTime),
+  };
+}
+
+/** Why an admin-created booking is rejected — lets the route pick a distinct message. */
+export type ConflictReason = "booking" | "blocked" | "external";
+
+/**
+ * Check whether a UTC time range conflicts with an existing booking, falls
+ * on a BLOCKED date, or overlaps an external (iCloud) calendar event.
+ * Returns the reason, or null when the range is free.
+ * Used by the admin create route (admin books off-grid).
+ */
+export async function hasBookingConflictOrBlocked(
   startAt: Date,
   endAt: Date,
   serviceId?: string
-): Promise<boolean> {
+): Promise<ConflictReason | null> {
   // 1. Check for booking conflicts
   const conflicting = await prisma.booking.findFirst({
     where: {
-      status: { not: "CANCELLED" },
+      status: { notIn: ["CANCELLED", "REJECTED"] },
       startAt: { lt: endAt },
       endAt: { gt: startAt },
     },
+    select: { id: true },
   });
 
-  if (conflicting) return false;
+  if (conflicting) return "booking";
 
-  // 2. Check for BLOCKED exceptions on this date
-  const targetDate = new Date(startAt);
-  targetDate.setHours(0, 0, 0, 0);
-  const targetKey = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, "0")}-${String(targetDate.getDate()).padStart(2, "0")}`;
-
-  // Widen search window by ±1 day to handle timezone offsets
-  const searchStart = new Date(targetDate);
-  searchStart.setDate(searchStart.getDate() - 1);
-  const searchEnd = new Date(targetDate);
-  searchEnd.setDate(searchEnd.getDate() + 2);
+  // 2. Check for BLOCKED exceptions on this date.
+  // Fetch ALL exception types (BLOCKED and OVERRIDE) so the category-set
+  // selection matches getAvailableSlots — fetching only BLOCKED would make a
+  // category set look empty on a "cat OVERRIDE + global BLOCKED" day and
+  // wrongly block it.
+  const targetKey = toIsraelDateKey(startAt);
+  const targetDate = new Date(targetKey + "T00:00:00Z");
+  const searchStart = new Date(targetDate.getTime() - DAY_MS);
+  const searchEnd = new Date(targetDate.getTime() + 2 * DAY_MS);
 
   // Get service category if serviceId provided
   let serviceCategory: string | null = null;
@@ -280,20 +301,29 @@ export async function isSlotAvailable(
   const allExceptions = await prisma.availabilityException.findMany({
     where: {
       date: { gte: searchStart, lt: searchEnd },
-      type: "BLOCKED",
-      OR: [
-        { category: serviceCategory },
-        { category: null },
-      ],
+      OR: [{ category: serviceCategory }, { category: null }],
     },
   });
 
   // Filter to only exceptions matching the target date in Israel timezone
-  const blockedExceptions = allExceptions.filter(
+  const exceptions = allExceptions.filter(
     (e) => toIsraelDateKey(e.date) === targetKey
   );
 
-  if (blockedExceptions.length > 0) return false;
+  const catExceptions = serviceCategory
+    ? exceptions.filter((e) => e.category === serviceCategory)
+    : [];
+  const globalExceptions = exceptions.filter((e) => !e.category);
+  const relevantExceptions =
+    catExceptions.length > 0 ? catExceptions : globalExceptions;
 
-  return true;
+  if (relevantExceptions.some((e) => e.type === "BLOCKED")) return "blocked";
+
+  // 3. Check external (iCloud) calendar busy intervals — fail-open [] on error
+  const externalBusy = await getExternalBusyIntervals(startAt, endAt);
+  if (externalBusy.some((busy) => startAt < busy.end && endAt > busy.start)) {
+    return "external";
+  }
+
+  return null;
 }

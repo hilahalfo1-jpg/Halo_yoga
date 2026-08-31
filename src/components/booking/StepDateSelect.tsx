@@ -12,13 +12,20 @@ interface StepDateSelectProps {
   onSelect: (date: Date) => void;
   onNext: () => void;
   onBack: () => void;
+  /** Gift mode only: skip choosing a date — the recipient will book themselves */
+  onSkip?: () => void;
+  /** Preselected-service flows only: clear the preselect and pick a service */
+  onChangeService?: () => void;
 }
 
 export default function StepDateSelect({
+  serviceId,
   selected,
   onSelect,
   onNext,
   onBack,
+  onSkip,
+  onChangeService,
 }: StepDateSelectProps) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -32,7 +39,7 @@ export default function StepDateSelect({
 
   // Fetch available days + blocked/opened dates from admin availability settings
   useEffect(() => {
-    fetch("/api/availability-days")
+    fetch(`/api/availability-days?serviceId=${serviceId}`)
       .then((res) => res.json())
       .then((json) => {
         if (json.data) setActiveDays(json.data);
@@ -40,7 +47,7 @@ export default function StepDateSelect({
         if (json.openedDates) setOpenedDates(new Set(json.openedDates));
       })
       .catch(() => {});
-  }, []);
+  }, [serviceId]);
 
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
@@ -89,6 +96,15 @@ export default function StepDateSelect({
     <div>
       <h2 className="text-2xl font-bold text-text mb-2">בחרו תאריך</h2>
       <p className="text-text-secondary mb-6">בחרו יום פנוי מהלוח</p>
+      {onChangeService && (
+        <button
+          type="button"
+          onClick={onChangeService}
+          className="inline-flex items-center min-h-[40px] -mt-4 mb-4 text-sm text-primary underline underline-offset-2 hover:text-primary-dark transition-colors"
+        >
+          שינוי שירות
+        </button>
+      )}
 
       <div className="bg-white rounded-xl border border-border p-6 max-w-md mx-auto">
         {/* Month Navigation */}
@@ -176,6 +192,18 @@ export default function StepDateSelect({
           </div>
         </div>
       </div>
+
+      {onSkip && (
+        <div className="flex justify-center mt-6">
+          <button
+            type="button"
+            onClick={onSkip}
+            className="min-h-[44px] px-4 text-sm text-primary underline underline-offset-4 hover:text-primary-dark transition-colors"
+          >
+            דלגו — ללא תאריך, המקבל/ת יקבעו בעצמם
+          </button>
+        </div>
+      )}
 
       <div className="flex items-center justify-center gap-3 mt-6">
         <Button variant="ghost" onClick={onBack}>

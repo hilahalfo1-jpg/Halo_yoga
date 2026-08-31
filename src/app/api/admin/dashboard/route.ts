@@ -1,34 +1,38 @@
 import { NextResponse } from "next/server";
-// import { getServerSession } from "next-auth";
-// import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import {
+  israelWallToUtc,
+  toIsraelDateKey,
+  dateKeyDayOfWeek,
+  addDaysToKey,
+} from "@/lib/time";
+
+// Always compute live data — without this, Next statically snapshots this GET at build time
+export const dynamic = "force-dynamic";
 
 export async function GET() {
-  // const session = await getServerSession(authOptions);
-  // if (!session) {
-  //   return NextResponse.json({ error: "לא מורשה" }, { status: 401 });
-  // }
-
   try {
     const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
-    const weekStart = new Date(todayStart);
-    weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // Start of week (Sunday)
-    const weekEnd = new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const todayKey = toIsraelDateKey(now);
+    const todayStart = israelWallToUtc(todayKey, "00:00");
+    const todayEnd = israelWallToUtc(addDaysToKey(todayKey, 1), "00:00");
+    // Start of week (Sunday) in Israel time
+    const weekStartKey = addDaysToKey(todayKey, -dateKeyDayOfWeek(todayKey));
+    const weekStart = israelWallToUtc(weekStartKey, "00:00");
+    const weekEnd = israelWallToUtc(addDaysToKey(weekStartKey, 7), "00:00");
 
     const [todayBookings, weekBookings, newLeads, pendingReviews, pendingBookings, todayBookingsList, recentLeads] =
       await Promise.all([
         prisma.booking.count({
           where: {
             startAt: { gte: todayStart, lt: todayEnd },
-            status: { not: "CANCELLED" },
+            status: { notIn: ["CANCELLED", "REJECTED"] },
           },
         }),
         prisma.booking.count({
           where: {
             startAt: { gte: weekStart, lt: weekEnd },
-            status: { not: "CANCELLED" },
+            status: { notIn: ["CANCELLED", "REJECTED"] },
           },
         }),
         prisma.lead.count({ where: { status: "NEW" } }),
@@ -37,7 +41,7 @@ export async function GET() {
         prisma.booking.findMany({
           where: {
             startAt: { gte: todayStart, lt: todayEnd },
-            status: { not: "CANCELLED" },
+            status: { notIn: ["CANCELLED", "REJECTED"] },
           },
           include: { service: true },
           orderBy: { startAt: "asc" },

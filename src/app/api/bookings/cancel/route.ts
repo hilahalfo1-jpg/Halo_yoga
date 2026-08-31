@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { CANCELLATION_CUTOFF_HOURS } from "@/lib/constants";
+import { sendBookingCancelledAdminEmail } from "@/lib/email";
 
 // POST cancel booking by token
 export async function POST(req: Request) {
@@ -32,6 +34,14 @@ export async function POST(req: Request) {
       );
     }
 
+    // Only PENDING/CONFIRMED bookings can be cancelled
+    if (booking.status !== "PENDING" && booking.status !== "CONFIRMED") {
+      return NextResponse.json(
+        { error: "לא ניתן לבטל הזמנה זו" },
+        { status: 400 }
+      );
+    }
+
     // Check if booking is in the past
     if (new Date(booking.startAt) < new Date()) {
       return NextResponse.json(
@@ -40,12 +50,12 @@ export async function POST(req: Request) {
       );
     }
 
-    // Check 24h cancellation window
+    // Check cancellation window
     const hoursUntil =
       (new Date(booking.startAt).getTime() - Date.now()) / (1000 * 60 * 60);
-    if (hoursUntil < 24) {
+    if (hoursUntil < CANCELLATION_CUTOFF_HOURS) {
       return NextResponse.json(
-        { error: "ניתן לבטל עד 24 שעות לפני התור. לביטול צרו קשר טלפוני" },
+        { error: `ניתן לבטל עד ${CANCELLATION_CUTOFF_HOURS} שעות לפני התור. לביטול צרו קשר טלפוני` },
         { status: 400 }
       );
     }
@@ -57,6 +67,20 @@ export async function POST(req: Request) {
         cancelledAt: new Date(),
       },
       include: { service: true },
+    });
+
+    // Notify Hila (awaited — failures logged, never fail the response)
+    const emailResults = await Promise.allSettled([
+      sendBookingCancelledAdminEmail({
+        customerName: booking.customerName,
+        customerEmail: booking.customerEmail || "",
+        customerPhone: booking.customerPhone,
+        serviceName: booking.service.name,
+        startAt: booking.startAt,
+      }),
+    ]);
+    emailResults.forEach((r) => {
+      if (r.status === "rejected") console.error("[EMAIL_CANCEL_ADMIN]", r.reason);
     });
 
     return NextResponse.json({ data: updated });

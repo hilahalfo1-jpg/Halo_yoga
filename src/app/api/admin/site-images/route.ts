@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { MULTI_IMAGE_SECTIONS } from "@/lib/constants";
 
 // GET all site images
 export async function GET() {
@@ -32,14 +34,18 @@ export async function POST(req: NextRequest) {
 
     let image;
     if (id) {
-      // Update existing
+      // Update existing — preserve the current sortOrder when none is sent
       image = await prisma.siteImage.update({
         where: { id },
-        data: { imagePath, alt: alt || "", sortOrder: sortOrder ?? 0 },
+        data: {
+          imagePath,
+          alt: alt || "",
+          ...(typeof sortOrder === "number" && { sortOrder }),
+        },
       });
     } else {
-      // For non-hero sections, upsert (replace existing)
-      if (section !== "hero") {
+      // For single-image sections, upsert (replace existing)
+      if (!MULTI_IMAGE_SECTIONS.includes(section)) {
         const existing = await prisma.siteImage.findFirst({
           where: { section },
         });
@@ -54,14 +60,14 @@ export async function POST(req: NextRequest) {
           });
         }
       } else {
-        // Hero: add new (multiple allowed)
+        // Gallery sections (hero, certifications): add new (multiple allowed)
         const maxSort = await prisma.siteImage.findFirst({
-          where: { section: "hero" },
+          where: { section },
           orderBy: { sortOrder: "desc" },
         });
         image = await prisma.siteImage.create({
           data: {
-            section: "hero",
+            section,
             imagePath,
             alt: alt || "",
             sortOrder: (maxSort?.sortOrder ?? -1) + 1,
@@ -70,6 +76,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    revalidatePath("/", "layout");
     return NextResponse.json({ data: image });
   } catch (error) {
     console.error("[SITE_IMAGES_POST]", error);
@@ -91,6 +98,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     await prisma.siteImage.delete({ where: { id } });
+    revalidatePath("/", "layout");
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[SITE_IMAGES_DELETE]", error);

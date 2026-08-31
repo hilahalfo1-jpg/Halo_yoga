@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/blog-reminder",
+      "schedule": "0 6 * * 0"
+    },
+    {
+      "path": "/api/cron/wa-daily",
+      "schedule": "0 16 * * *"
+    }
+  ]
+}

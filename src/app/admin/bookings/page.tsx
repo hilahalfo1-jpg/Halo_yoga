@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { toast } from "sonner";
-import { Calendar, Phone, FileText, CheckCircle, XCircle, Trash2, Search, Download, Heart } from "lucide-react";
+import { Calendar, Phone, FileText, CheckCircle, XCircle, Trash2, Search, Download, Heart, Plus, CalendarPlus, Home, MessageCircle, Check } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
@@ -11,7 +11,12 @@ import Modal from "@/components/ui/Modal";
 import Spinner from "@/components/ui/Spinner";
 import EmptyState from "@/components/ui/EmptyState";
 import Textarea from "@/components/ui/Textarea";
+import ManualBookingModal from "@/components/admin/ManualBookingModal";
 import { formatDateShort, formatTime, formatPhone } from "@/lib/utils";
+import { downloadCsv } from "@/lib/csv";
+import { toIsraelDateKey } from "@/lib/time";
+import { waMeLink } from "@/lib/phone";
+import { waText, MAPS_REVIEW_FALLBACK } from "@/lib/wa-messages";
 import {
   BOOKING_STATUS_LABELS,
   BOOKING_STATUS_COLORS,
@@ -24,6 +29,7 @@ interface MedicalFormData {
   conditionDetails: string | null;
   signatureUrl: string | null;
   medicalDocUrl: string | null;
+  termsVersion: string | null;
   agreedAt: string;
 }
 
@@ -38,9 +44,35 @@ interface BookingRow {
   notes: string | null;
   adminNotes: string | null;
   customerPhotoUrl: string | null;
-  medicalForm: MedicalFormData | null;
+  isHomeVisit: boolean;
+  homeVisitSurcharge: number | null;
+  medicalForm: { id: string } | null;
   service: { name: string };
+  cancelToken?: string;
+  // WhatsApp send stamps — undefined until WA-A's schema lands, then flow
+  // automatically through the admin GET (findMany with no select).
+  waReceivedSentAt?: string | null;
+  waApprovedSentAt?: string | null;
+  waRejectedSentAt?: string | null;
+  waReviewSentAt?: string | null;
+  waReminderSentAt?: string | null;
 }
+
+// Which WhatsApp message fits each booking status (NO_SHOW → no button)
+const WA_STAMP_FIELD = {
+  received: "waReceivedSentAt",
+  approved: "waApprovedSentAt",
+  rejected: "waRejectedSentAt",
+  review: "waReviewSentAt",
+} as const;
+
+const WA_KIND_BY_STATUS: Record<string, keyof typeof WA_STAMP_FIELD | undefined> = {
+  PENDING: "received",
+  CONFIRMED: "approved",
+  REJECTED: "rejected",
+  CANCELLED: "rejected",
+  COMPLETED: "review",
+};
 
 const STATUS_OPTIONS = [
   { value: "ALL", label: "הכל" },
@@ -49,6 +81,7 @@ const STATUS_OPTIONS = [
   { value: "COMPLETED", label: "הושלם" },
   { value: "CANCELLED", label: "בוטל" },
   { value: "NO_SHOW", label: "לא הגיע" },
+  { value: "REJECTED", label: "נדחה" },
 ];
 
 const STATUS_CHANGE_OPTIONS = [
@@ -57,7 +90,177 @@ const STATUS_CHANGE_OPTIONS = [
   { value: "COMPLETED", label: "הושלם" },
   { value: "CANCELLED", label: "בוטל" },
   { value: "NO_SHOW", label: "לא הגיע" },
+  { value: "REJECTED", label: "נדחה" },
 ];
+
+interface BookingActionsProps {
+  booking: BookingRow;
+  /** Desktop table row sizing; default is the larger mobile-card sizing */
+  compact?: boolean;
+  /** Resolved Google review link (SiteContent setting or Maps fallback) */
+  reviewLink: string;
+  onUpdateStatus: (id: string, status: string) => void;
+  onOpenMedicalForm: (booking: BookingRow) => void;
+  onOpenNotes: (booking: BookingRow) => void;
+  onDelete: (booking: BookingRow) => void;
+  /** Called after the wa-stamp PATCH succeeds so the list refreshes the ✓ */
+  onWaMarked: () => void;
+}
+
+// Approve/reject + status select + medical/notes/delete actions,
+// shared by the mobile card and the desktop table row
+function BookingActions({
+  booking,
+  compact = false,
+  reviewLink,
+  onUpdateStatus,
+  onOpenMedicalForm,
+  onOpenNotes,
+  onDelete,
+  onWaMarked,
+}: BookingActionsProps) {
+  const waKind = WA_KIND_BY_STATUS[booking.status];
+  const waSentAt = waKind ? booking[WA_STAMP_FIELD[waKind]] : undefined;
+
+  const openWhatsApp = async () => {
+    if (!waKind) return;
+    // Popup-blocker rule: open the tab SYNCHRONOUSLY, then point it at wa.me.
+    const win = window.open("", "_blank");
+    if (!win) {
+      toast.error("הדפדפן חסם את פתיחת וואטסאפ — יש לאפשר חלונות קופצים");
+      return;
+    }
+    const text = waText(waKind, {
+      firstName: booking.customerName.trim().split(/\s+/)[0] || booking.customerName,
+      serviceName: booking.service.name,
+      dateTimeStr: `${formatDateShort(booking.startAt)} בשעה ${formatTime(booking.startAt)}`,
+      cancelUrl: booking.cancelToken
+        ? `${window.location.origin}/cancel/${booking.cancelToken}`
+        : undefined,
+      reviewLink,
+    });
+    win.location.href = `${waMeLink(booking.customerPhone)}?text=${encodeURIComponent(text)}`;
+    // Stamp the send via the waMark PATCH contract. A 400 means the server
+    // doesn't support waMark yet — the message still opened, so stay silent.
+    try {
+      const res = await fetch(`/api/admin/bookings/${booking.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ waMark: waKind }),
+      });
+      if (res.ok) onWaMarked();
+    } catch {
+      toast.error("ההודעה נפתחה, אך סימון השליחה נכשל");
+    }
+  };
+
+  return (
+    <>
+      {booking.status === "PENDING" ? (
+        <>
+          <button
+            onClick={() => onUpdateStatus(booking.id, "CONFIRMED")}
+            className={
+              compact
+                ? "flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-success/10 text-success hover:bg-success/20 text-xs font-medium transition-colors"
+                : "flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-success/10 text-success hover:bg-success/20 text-sm font-medium transition-colors"
+            }
+          >
+            <CheckCircle className={compact ? "h-3.5 w-3.5" : "h-4 w-4"} />
+            אישור
+          </button>
+          <button
+            onClick={() => onUpdateStatus(booking.id, "CANCELLED")}
+            className={
+              compact
+                ? "flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-error/10 text-error hover:bg-error/20 text-xs font-medium transition-colors"
+                : "flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-error/10 text-error hover:bg-error/20 text-sm font-medium transition-colors"
+            }
+          >
+            <XCircle className={compact ? "h-3.5 w-3.5" : "h-4 w-4"} />
+            דחייה
+          </button>
+        </>
+      ) : (
+        <select
+          value={booking.status}
+          onChange={(e) => onUpdateStatus(booking.id, e.target.value)}
+          className={
+            compact
+              ? "text-sm px-2.5 py-1.5 rounded border border-border bg-white"
+              : "text-sm px-3 py-2.5 rounded-lg border border-border bg-white flex-1"
+          }
+        >
+          {STATUS_CHANGE_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+      )}
+      {booking.medicalForm && (
+        <button
+          onClick={() => onOpenMedicalForm(booking)}
+          className={
+            compact
+              ? "flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-secondary/10 text-secondary hover:bg-secondary/20 text-xs font-medium transition-colors whitespace-nowrap"
+              : "flex items-center gap-1.5 px-3 py-2 min-h-[40px] rounded-lg bg-secondary/10 text-secondary hover:bg-secondary/20 text-sm font-medium transition-colors whitespace-nowrap"
+          }
+        >
+          <Heart className={compact ? "h-3.5 w-3.5" : "h-4 w-4"} />
+          הצהרת בריאות
+        </button>
+      )}
+      <button
+        onClick={() => onOpenNotes(booking)}
+        className={
+          compact
+            ? "relative p-1 rounded text-text-muted hover:text-text hover:bg-surface"
+            : "relative p-2.5 rounded-lg text-text-muted hover:text-text hover:bg-surface"
+        }
+        title={booking.adminNotes ? "יש הערות אדמין" : "הוסיפו הערה"}
+      >
+        <FileText className={compact ? "h-4 w-4" : "h-5 w-5"} />
+        {booking.adminNotes && (
+          <span
+            className={
+              compact
+                ? "absolute -top-0.5 -right-0.5 w-2 h-2 bg-secondary rounded-full"
+                : "absolute top-1 right-1 w-2 h-2 bg-secondary rounded-full"
+            }
+          />
+        )}
+      </button>
+      {waKind && (
+        <button
+          onClick={openWhatsApp}
+          className={
+            compact
+              ? "relative flex items-center justify-center min-w-[40px] min-h-[40px] rounded-lg text-success hover:bg-success/10 transition-colors"
+              : "relative flex items-center justify-center min-w-[40px] min-h-[40px] p-2.5 rounded-lg bg-success/10 text-success hover:bg-success/20 transition-colors"
+          }
+          title={waSentAt ? "הודעת וואטסאפ נשלחה" : "שליחת הודעת וואטסאפ ללקוח/ה"}
+          aria-label={waSentAt ? "הודעת וואטסאפ נשלחה" : "שליחת הודעת וואטסאפ ללקוח/ה"}
+        >
+          <MessageCircle className={compact ? "h-4 w-4" : "h-5 w-5"} />
+          {waSentAt && (
+            <span className="absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-success text-white flex items-center justify-center">
+              <Check className="h-2.5 w-2.5" strokeWidth={3} />
+            </span>
+          )}
+        </button>
+      )}
+      <button
+        onClick={() => onDelete(booking)}
+        className={
+          compact
+            ? "p-1 rounded text-text-muted hover:text-error hover:bg-error/10"
+            : "p-2.5 rounded-lg text-text-muted hover:text-error hover:bg-error/10"
+        }
+      >
+        <Trash2 className={compact ? "h-4 w-4" : "h-5 w-5"} />
+      </button>
+    </>
+  );
+}
 
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<BookingRow[]>([]);
@@ -69,10 +272,98 @@ export default function BookingsPage() {
   const [selectedBooking, setSelectedBooking] = useState<BookingRow | null>(null);
   const [adminNotes, setAdminNotes] = useState("");
   const [medicalFormBooking, setMedicalFormBooking] = useState<BookingRow | null>(null);
+  const [medicalFormData, setMedicalFormData] = useState<MedicalFormData | null>(null);
+  const [medicalFormLoading, setMedicalFormLoading] = useState(false);
+  // Booking id whose medical form is currently open — guards against a slow
+  // response for form A overwriting form B's data after switching modals
+  const openMedicalFormId = useRef<string | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [deleteTarget, setDeleteTarget] = useState<BookingRow | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // ── New booking (admin-created) ──
+  const [isNewOpen, setIsNewOpen] = useState(false);
+
+  // ── iPhone calendar subscription ──
+  const [isSyncingCalendar, setIsSyncingCalendar] = useState(false);
+
+  // ── Google review link for WhatsApp review messages ──
+  // Fetched once on mount from SiteContent settings/google_review_link;
+  // until Hila sets one, the Maps-search fallback is used.
+  const [reviewLink, setReviewLink] = useState<string>(MAPS_REVIEW_FALLBACK);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/admin/site-content");
+        const json = await res.json();
+        const row = (json.data || []).find(
+          (item: { section: string; key: string; value: string }) =>
+            item.section === "settings" && item.key === "google_review_link"
+        );
+        if (!cancelled && row?.value?.trim()) setReviewLink(row.value.trim());
+      } catch {
+        // Keep the Maps fallback
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const subscribeToCalendar = async () => {
+    setIsSyncingCalendar(true);
+    try {
+      const res = await fetch("/api/admin/calendar-feed-url");
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "שגיאה בקבלת הקישור ליומן");
+        return;
+      }
+      // Copy the https link as a fallback (desktop / if webcal doesn't open).
+      try {
+        await navigator.clipboard.writeText(data.httpsUrl);
+        toast.info("אם היומן לא נפתח אוטומטית — הקישור הועתק, הדביקי אותו ביומן באייפון.");
+      } catch {
+        // Clipboard may be unavailable — ignore gracefully.
+      }
+      // On iOS Safari this opens Apple Calendar's subscription dialog.
+      window.location.href = data.webcalUrl;
+    } catch {
+      toast.error("שגיאה בקבלת הקישור ליומן");
+    } finally {
+      setIsSyncingCalendar(false);
+    }
+  };
+
+  // The list endpoint returns only medicalForm: { id } — fetch the full form on modal open
+  const openMedicalForm = async (booking: BookingRow) => {
+    openMedicalFormId.current = booking.id;
+    setMedicalFormBooking(booking);
+    setMedicalFormData(null);
+    setMedicalFormLoading(true);
+    try {
+      const res = await fetch(`/api/admin/bookings/${booking.id}/medical-form`);
+      const result = await res.json();
+      // Ignore stale responses (modal closed or another form opened meanwhile)
+      if (openMedicalFormId.current !== booking.id) return;
+      if (res.ok) {
+        setMedicalFormData(result.data);
+      } else {
+        toast.error(result.error || "שגיאה בטעינת הטופס הרפואי");
+      }
+    } catch {
+      if (openMedicalFormId.current === booking.id) {
+        toast.error("שגיאה בטעינת הטופס הרפואי");
+      }
+    } finally {
+      if (openMedicalFormId.current === booking.id) {
+        setMedicalFormLoading(false);
+      }
+    }
+  };
 
   const fetchBookings = useCallback(async () => {
     try {
@@ -146,11 +437,11 @@ export default function BookingsPage() {
           return false;
       }
       if (dateFrom) {
-        const bookingDate = new Date(b.startAt).toISOString().slice(0, 10);
+        const bookingDate = toIsraelDateKey(new Date(b.startAt));
         if (bookingDate < dateFrom) return false;
       }
       if (dateTo) {
-        const bookingDate = new Date(b.startAt).toISOString().slice(0, 10);
+        const bookingDate = toIsraelDateKey(new Date(b.startAt));
         if (bookingDate > dateTo) return false;
       }
       return true;
@@ -169,15 +460,12 @@ export default function BookingsPage() {
       BOOKING_STATUS_LABELS[b.status] || b.status,
       b.notes || "",
     ]);
-    const bom = "\uFEFF";
-    const csv = bom + [headers, ...rows].map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `bookings-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadCsv(`bookings-${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
+  };
+
+  const openNotes = (booking: BookingRow) => {
+    setSelectedBooking(booking);
+    setAdminNotes(booking.adminNotes || "");
   };
 
   const saveAdminNotes = async () => {
@@ -210,12 +498,25 @@ export default function BookingsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold text-text">ניהול הזמנות</h1>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Button size="sm" onClick={() => setIsNewOpen(true)}>
+            <Plus className="h-4 w-4 ml-1" />
+            תיאום תור חדש
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={subscribeToCalendar}
+            isLoading={isSyncingCalendar}
+          >
+            <CalendarPlus className="h-4 w-4 ml-1" />
+            הוסף ליומן אייפון
+          </Button>
           <Button variant="outline" size="sm" onClick={exportCSV}>
             <Download className="h-4 w-4 ml-1" />
             CSV
           </Button>
-          <div className="w-40">
+          <div className="w-full sm:w-40">
             <Select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -234,27 +535,27 @@ export default function BookingsPage() {
             placeholder="חיפוש לפי שם, טלפון או שירות..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pr-10 pl-3 py-2 text-sm rounded-lg border border-border bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+            className="w-full pr-10 pl-3 py-2 text-base sm:text-sm rounded-lg border border-border bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
           />
         </div>
         <div className="flex gap-2 items-center">
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-text-muted">מתאריך</label>
+            <label className="text-sm text-text-muted">מתאריך</label>
             <input
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="px-3 py-2 text-sm rounded-lg border border-border bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+              className="px-3 py-2 text-base sm:text-sm rounded-lg border border-border bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
               dir="ltr"
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-text-muted">עד תאריך</label>
+            <label className="text-sm text-text-muted">עד תאריך</label>
             <input
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className="px-3 py-2 text-sm rounded-lg border border-border bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+              className="px-3 py-2 text-base sm:text-sm rounded-lg border border-border bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
               dir="ltr"
             />
           </div>
@@ -295,6 +596,15 @@ export default function BookingsPage() {
                   <span dir="ltr">{formatDateShort(booking.startAt)}</span>
                   <span dir="ltr">{formatTime(booking.startAt)}</span>
                 </div>
+                {booking.isHomeVisit && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-secondary/10 text-secondary border border-secondary/20">
+                    <Home className="h-3 w-3" />
+                    ביקור בית
+                    {(booking.homeVisitSurcharge || 0) > 0 && (
+                      <span dir="ltr">+₪{booking.homeVisitSurcharge}</span>
+                    )}
+                  </span>
+                )}
                 <a
                   href={`tel:${booking.customerPhone}`}
                   className="text-sm text-secondary hover:underline flex items-center gap-1"
@@ -308,63 +618,16 @@ export default function BookingsPage() {
                     {booking.notes}
                   </p>
                 )}
-                <div className="flex items-center gap-2 pt-2 border-t border-border">
-                  {booking.status === "PENDING" ? (
-                    <>
-                      <button
-                        onClick={() => updateStatus(booking.id, "CONFIRMED")}
-                        className="flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-success/10 text-success hover:bg-success/20 text-sm font-medium transition-colors"
-                      >
-                        <CheckCircle className="h-4 w-4" />
-                        אישור
-                      </button>
-                      <button
-                        onClick={() => updateStatus(booking.id, "CANCELLED")}
-                        className="flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-error/10 text-error hover:bg-error/20 text-sm font-medium transition-colors"
-                      >
-                        <XCircle className="h-4 w-4" />
-                        דחייה
-                      </button>
-                    </>
-                  ) : (
-                    <select
-                      value={booking.status}
-                      onChange={(e) => updateStatus(booking.id, e.target.value)}
-                      className="text-sm px-3 py-2.5 rounded-lg border border-border bg-white flex-1"
-                    >
-                      {STATUS_CHANGE_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                      ))}
-                    </select>
-                  )}
-                  {booking.medicalForm && (
-                    <button
-                      onClick={() => setMedicalFormBooking(booking)}
-                      className="p-2 rounded-lg text-primary hover:text-primary hover:bg-primary/10"
-                      title="טופס רפואי"
-                    >
-                      <Heart className="h-5 w-5" />
-                    </button>
-                  )}
-                  <button
-                    onClick={() => {
-                      setSelectedBooking(booking);
-                      setAdminNotes(booking.adminNotes || "");
-                    }}
-                    className="relative p-2 rounded-lg text-text-muted hover:text-text hover:bg-surface"
-                    title={booking.adminNotes ? "יש הערות אדמין" : "הוסיפו הערה"}
-                  >
-                    <FileText className="h-5 w-5" />
-                    {booking.adminNotes && (
-                      <span className="absolute top-1 right-1 w-2 h-2 bg-secondary rounded-full" />
-                    )}
-                  </button>
-                  <button
-                    onClick={() => setDeleteTarget(booking)}
-                    className="p-2 rounded-lg text-text-muted hover:text-error hover:bg-error/10"
-                  >
-                    <Trash2 className="h-5 w-5" />
-                  </button>
+                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border">
+                  <BookingActions
+                    booking={booking}
+                    reviewLink={reviewLink}
+                    onUpdateStatus={updateStatus}
+                    onOpenMedicalForm={openMedicalForm}
+                    onOpenNotes={openNotes}
+                    onDelete={setDeleteTarget}
+                    onWaMarked={fetchBookings}
+                  />
                 </div>
               </Card>
             ))}
@@ -396,7 +659,18 @@ export default function BookingsPage() {
                     <td className="p-3 text-text">
                       <span dir="ltr" className="inline-block">{formatTime(booking.startAt)}</span>
                     </td>
-                    <td className="p-3 text-text">{booking.service.name}</td>
+                    <td className="p-3 text-text">
+                      {booking.service.name}
+                      {booking.isHomeVisit && (
+                        <span className="mr-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-secondary/10 text-secondary border border-secondary/20">
+                          <Home className="h-3 w-3" />
+                          ביקור בית
+                          {(booking.homeVisitSurcharge || 0) > 0 && (
+                            <span dir="ltr">+₪{booking.homeVisitSurcharge}</span>
+                          )}
+                        </span>
+                      )}
+                    </td>
                     <td className="p-3">
                       <div className="flex items-center gap-2">
                         {booking.customerPhotoUrl && (
@@ -433,62 +707,16 @@ export default function BookingsPage() {
                     </td>
                     <td className="p-3">
                       <div className="flex items-center gap-2">
-                        {booking.status === "PENDING" ? (
-                          <>
-                            <button
-                              onClick={() => updateStatus(booking.id, "CONFIRMED")}
-                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-success/10 text-success hover:bg-success/20 text-xs font-medium transition-colors"
-                            >
-                              <CheckCircle className="h-3.5 w-3.5" />
-                              אישור
-                            </button>
-                            <button
-                              onClick={() => updateStatus(booking.id, "CANCELLED")}
-                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-error/10 text-error hover:bg-error/20 text-xs font-medium transition-colors"
-                            >
-                              <XCircle className="h-3.5 w-3.5" />
-                              דחייה
-                            </button>
-                          </>
-                        ) : (
-                          <select
-                            value={booking.status}
-                            onChange={(e) => updateStatus(booking.id, e.target.value)}
-                            className="text-sm px-2.5 py-1.5 rounded border border-border bg-white"
-                          >
-                            {STATUS_CHANGE_OPTIONS.map((opt) => (
-                              <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            ))}
-                          </select>
-                        )}
-                        {booking.medicalForm && (
-                          <button
-                            onClick={() => setMedicalFormBooking(booking)}
-                            className="p-1 rounded text-primary hover:bg-primary/10"
-                            title="טופס רפואי"
-                          >
-                            <Heart className="h-4 w-4" />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => {
-                            setSelectedBooking(booking);
-                            setAdminNotes(booking.adminNotes || "");
-                          }}
-                          className="relative p-1 rounded text-text-muted hover:text-text hover:bg-surface"
-                          title={booking.adminNotes ? "יש הערות אדמין" : "הוסיפו הערה"}
-                        >
-                          <FileText className="h-4 w-4" />
-                          {booking.adminNotes && (
-                            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-secondary rounded-full" />
-                          )}
-                        </button>
-                        <button
-                          onClick={() => setDeleteTarget(booking)}
-                          className="p-1 rounded text-text-muted hover:text-error hover:bg-error/10"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        <BookingActions
+                          booking={booking}
+                          compact
+                          reviewLink={reviewLink}
+                          onUpdateStatus={updateStatus}
+                          onOpenMedicalForm={openMedicalForm}
+                          onOpenNotes={openNotes}
+                          onDelete={setDeleteTarget}
+                          onWaMarked={fetchBookings}
+                        />
                       </div>
                     </td>
                   </tr>
@@ -565,12 +793,21 @@ export default function BookingsPage() {
       {/* Medical Form Modal */}
       <Modal
         isOpen={!!medicalFormBooking}
-        onClose={() => setMedicalFormBooking(null)}
+        onClose={() => {
+          openMedicalFormId.current = null;
+          setMedicalFormBooking(null);
+          setMedicalFormData(null);
+        }}
         title={`טופס רפואי — ${medicalFormBooking?.customerName || ""}`}
         size="lg"
       >
-        {medicalFormBooking?.medicalForm && (() => {
-          const form = medicalFormBooking.medicalForm;
+        {medicalFormLoading && (
+          <div className="py-8">
+            <Spinner label="טוען טופס רפואי..." />
+          </div>
+        )}
+        {!medicalFormLoading && medicalFormData && (() => {
+          const form = medicalFormData;
           let conditionsList: string[] = [];
           try {
             conditionsList = JSON.parse(form.conditions);
@@ -640,20 +877,34 @@ export default function BookingsPage() {
                 </div>
               )}
 
-              {/* Agreement Date */}
+              {/* Agreement Date + terms version */}
               <p className="text-xs text-text-muted text-center">
-                נחתם בתאריך: {new Date(form.agreedAt).toLocaleDateString("he-IL", {
+                נחתם ב-{new Date(form.agreedAt).toLocaleDateString("he-IL", {
                   day: "numeric",
                   month: "long",
                   year: "numeric",
                   hour: "2-digit",
                   minute: "2-digit",
+                  timeZone: "Asia/Jerusalem",
                 })}
+                {form.termsVersion && (
+                  <>
+                    {" "}· גרסת תקנון{" "}
+                    <span dir="ltr">{form.termsVersion}</span>
+                  </>
+                )}
               </p>
             </div>
           );
         })()}
       </Modal>
+
+      {/* New Booking Modal */}
+      <ManualBookingModal
+        open={isNewOpen}
+        onClose={() => setIsNewOpen(false)}
+        onSuccess={fetchBookings}
+      />
     </div>
   );
 }

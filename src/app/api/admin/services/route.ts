@@ -1,16 +1,10 @@
 import { NextResponse } from "next/server";
-// import { getServerSession } from "next-auth";
-// import { authOptions } from "@/lib/auth";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { serviceSchema } from "@/lib/validations";
 
 // GET all services (admin)
 export async function GET() {
-  // const session = await getServerSession(authOptions);
-  // if (!session) {
-  //   return NextResponse.json({ error: "לא מורשה" }, { status: 401 });
-  // }
-
   try {
     const services = await prisma.service.findMany({
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
@@ -25,11 +19,6 @@ export async function GET() {
 
 // POST create service
 export async function POST(req: Request) {
-  // const session = await getServerSession(authOptions);
-  // if (!session) {
-  //   return NextResponse.json({ error: "לא מורשה" }, { status: 401 });
-  // }
-
   try {
     const body = await req.json();
     const validated = serviceSchema.safeParse(body);
@@ -69,6 +58,7 @@ export async function POST(req: Request) {
       },
     });
 
+    revalidatePath("/", "layout");
     return NextResponse.json({ data: service }, { status: 201 });
   } catch (error) {
     console.error("[ADMIN_SERVICES_POST]", error);

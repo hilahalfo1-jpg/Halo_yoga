@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-// import { getServerSession } from "next-auth";
-// import { authOptions } from "@/lib/auth";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { serviceSchema } from "@/lib/validations";
 
@@ -9,11 +8,6 @@ export async function PATCH(
   req: Request,
   { params }: { params: { id: string } }
 ) {
-  // const session = await getServerSession(authOptions);
-  // if (!session) {
-  //   return NextResponse.json({ error: "לא מורשה" }, { status: 401 });
-  // }
-
   try {
     const { id } = params;
 
@@ -81,6 +75,7 @@ export async function PATCH(
       },
     });
 
+    revalidatePath("/", "layout");
     return NextResponse.json({ data: service });
   } catch (error) {
     console.error("[ADMIN_SERVICES_PATCH]", error);
@@ -93,11 +88,6 @@ export async function DELETE(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
-  // const session = await getServerSession(authOptions);
-  // if (!session) {
-  //   return NextResponse.json({ error: "לא מורשה" }, { status: 401 });
-  // }
-
   try {
     const { id } = params;
 
@@ -123,6 +113,7 @@ export async function DELETE(
 
     await prisma.service.delete({ where: { id } });
 
+    revalidatePath("/", "layout");
     return NextResponse.json({ data: { success: true } });
   } catch (error) {
     console.error("[ADMIN_SERVICES_DELETE]", error);

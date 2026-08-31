@@ -27,6 +27,7 @@ export default function ServicesHero() {
             src={bgImage}
             alt="רקע עמוד שירותים"
             fill
+            priority
             className="object-cover"
           />
           <div className="absolute inset-0 bg-black/45" />

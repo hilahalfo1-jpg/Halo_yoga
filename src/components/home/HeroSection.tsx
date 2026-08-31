@@ -7,7 +7,8 @@ import { ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
-import { THERAPIST_TITLE, CONTACT_PHONE } from "@/lib/constants";
+import { THERAPIST_TITLE } from "@/lib/constants";
+import { useContactInfo } from "@/lib/hooks/useContactInfo";
 import { useSiteContent } from "@/lib/hooks/useSiteContent";
 
 interface HeroImage {
@@ -21,6 +22,7 @@ export default function HeroSection() {
   const [heroImages, setHeroImages] = useState<HeroImage[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const { t } = useSiteContent();
+  const { phone } = useContactInfo();
 
   useEffect(() => {
     fetch("/api/site-images", { cache: "no-store" })
@@ -136,7 +138,7 @@ export default function HeroSection() {
               {t("hero", "buttonText", "קביעת תור")}
             </Button>
           </Link>
-          <a href={`tel:${CONTACT_PHONE.replace(/-/g, "")}`}>
+          <a href={`tel:${phone.replace(/-/g, "")}`}>
             <Button variant="outline" size="lg" className="border-0 ring-2 ring-inset ring-white text-white hover:bg-white hover:text-secondary text-base">
               {t("hero", "buttonText2", "שיחת ייעוץ")}
             </Button>

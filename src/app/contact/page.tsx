@@ -10,15 +10,31 @@ import {
   CONTACT_EMAIL,
   CONTACT_ADDRESS,
   CONTACT_WHATSAPP,
-  WORKING_HOURS,
 } from "@/lib/constants";
+import { getSiteContent } from "@/lib/getSiteContent";
+import { getWorkingHours } from "@/lib/working-hours";
+import { normalizeWhatsAppNumber } from "@/lib/phone";
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "צור קשר",
   description: "צרו קשר עם הילה לשאלות, ייעוץ או קביעת תור. טלפון, וואטסאפ, אימייל.",
 };
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const [content, workingHours] = await Promise.all([
+    getSiteContent(),
+    getWorkingHours(),
+  ]);
+
+  const info = content["contact_info"] ?? {};
+  const phone = info.phone || CONTACT_PHONE;
+  // CMS value may be typed as "054-3135182" — wa.me links need bare 972… digits
+  const whatsapp = normalizeWhatsAppNumber(info.whatsapp || "") || CONTACT_WHATSAPP;
+  const email = info.email || CONTACT_EMAIL;
+  const address = info.address || CONTACT_ADDRESS;
+
   return (
     <>
       <Header />
@@ -44,7 +60,7 @@ export default function ContactPage() {
 
                 {/* Contact cards */}
                 <a
-                  href={`tel:${CONTACT_PHONE.replace(/-/g, "")}`}
+                  href={`tel:${phone.replace(/-/g, "")}`}
                   className="flex items-center gap-4 p-4 rounded-xl bg-white border border-border hover:shadow-md transition-shadow"
                 >
                   <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
@@ -53,13 +69,13 @@ export default function ContactPage() {
                   <div>
                     <p className="font-medium text-text">טלפון</p>
                     <p className="text-sm text-text-secondary" dir="ltr">
-                      {CONTACT_PHONE}
+                      {phone}
                     </p>
                   </div>
                 </a>
 
                 <a
-                  href={`https://wa.me/${CONTACT_WHATSAPP}`}
+                  href={`https://wa.me/${whatsapp}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-4 p-4 rounded-xl bg-white border border-border hover:shadow-md transition-shadow"
@@ -74,7 +90,7 @@ export default function ContactPage() {
                 </a>
 
                 <a
-                  href={`mailto:${CONTACT_EMAIL}`}
+                  href={`mailto:${email}`}
                   className="flex items-center gap-4 p-4 rounded-xl bg-white border border-border hover:shadow-md transition-shadow"
                 >
                   <div className="w-12 h-12 rounded-full bg-info/10 flex items-center justify-center">
@@ -83,13 +99,13 @@ export default function ContactPage() {
                   <div>
                     <p className="font-medium text-text">אימייל</p>
                     <p className="text-sm text-text-secondary" dir="ltr">
-                      {CONTACT_EMAIL}
+                      {email}
                     </p>
                   </div>
                 </a>
 
                 <a
-                  href={`https://maps.google.com/?q=${encodeURIComponent(CONTACT_ADDRESS)}`}
+                  href={`https://maps.google.com/?q=${encodeURIComponent(address)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-start gap-4 p-4 rounded-xl bg-white border border-border hover:shadow-md transition-shadow"
@@ -100,7 +116,7 @@ export default function ContactPage() {
                   <div>
                     <p className="font-medium text-text">כתובת</p>
                     <p className="text-sm text-text-secondary">
-                      {CONTACT_ADDRESS}
+                      {address}
                     </p>
                   </div>
                 </a>
@@ -113,7 +129,7 @@ export default function ContactPage() {
                   </div>
                   <table className="w-full text-sm">
                     <tbody>
-                      {WORKING_HOURS.map((item) => (
+                      {workingHours.map((item) => (
                         <tr key={item.day} className="border-b border-border/50 last:border-0">
                           <td className="py-2 text-text font-medium">
                             {item.day}
@@ -132,7 +148,7 @@ export default function ContactPage() {
             {/* Map */}
             <div className="mt-10 lg:mt-16 rounded-xl overflow-hidden border border-border">
               <iframe
-                src={`https://maps.google.com/maps?q=${encodeURIComponent(CONTACT_ADDRESS)}&output=embed&hl=he`}
+                src={`https://maps.google.com/maps?q=${encodeURIComponent(address)}&output=embed&hl=he`}
                 width="100%"
                 height="350"
                 className="lg:h-[400px]"

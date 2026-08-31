@@ -11,7 +11,7 @@ import Badge from "@/components/ui/Badge";
 import { formatPrice, formatDuration } from "@/lib/utils";
 import { CATEGORY_LABELS } from "@/lib/constants";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 interface PageProps {
   params: { slug: string };

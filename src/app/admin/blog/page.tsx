@@ -12,6 +12,8 @@ import {
   EyeOff,
   FileText,
   ArrowRight,
+  Crop,
+  ImagePlus,
 } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
@@ -22,6 +24,9 @@ import Textarea from "@/components/ui/Textarea";
 import Select from "@/components/ui/Select";
 import Spinner from "@/components/ui/Spinner";
 import EmptyState from "@/components/ui/EmptyState";
+import ImageCropModal from "@/components/admin/ImageCropModal";
+import BlogReminder from "@/components/admin/BlogReminder";
+import { formatDateShort } from "@/lib/utils";
 
 interface BlogPost {
   id: string;
@@ -62,8 +67,13 @@ export default function AdminBlogPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<BlogPost | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Cover crop + inline image state
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [isInlineUploading, setIsInlineUploading] = useState(false);
+  const inlineFileInputRef = useRef<HTMLInputElement>(null);
+  const contentRef = useRef<HTMLTextAreaElement>(null);
 
   // Form state
   const [title, setTitle] = useState("");
@@ -72,6 +82,14 @@ export default function AdminBlogPage() {
   const [category, setCategory] = useState("HEALTH");
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [isPublished, setIsPublished] = useState(false);
+
+  // AI draft state
+  const [isAiOpen, setIsAiOpen] = useState(false);
+  const [aiTopic, setAiTopic] = useState("");
+  const [aiCategory, setAiCategory] = useState("HEALTH");
+  const [isGenerating, setIsGenerating] = useState(false);
+  // Set when the AI modal is dismissed — an in-flight generation result is then dropped
+  const aiDismissedRef = useRef(false);
 
   // ─── Fetch Posts ──────────────────────────────────
   const fetchPosts = useCallback(async () => {
@@ -126,14 +144,119 @@ export default function AdminBlogPage() {
     resetForm();
   };
 
-  // ─── Upload Image ─────────────────────────────────
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // ─── AI Draft ─────────────────────────────────────
+  const closeAiModal = () => {
+    if (isGenerating) return; // don't allow Escape/overlay-close mid-generation
+    aiDismissedRef.current = true;
+    setIsAiOpen(false);
+  };
+
+  const generateAiDraft = async () => {
+    if (!aiTopic.trim()) {
+      toast.error("נא להזין נושא למאמר");
+      return;
+    }
+    aiDismissedRef.current = false;
+    setIsGenerating(true);
+    try {
+      const res = await fetch("/api/admin/blog/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic: aiTopic.trim(), category: aiCategory }),
+      });
+      const json = await res.json();
+      // Modal dismissed meanwhile — drop the result instead of overwriting the editor
+      if (aiDismissedRef.current) return;
+      if (!res.ok) {
+        toast.error(json.error || "שגיאה ביצירת תוכן עם AI");
+        return;
+      }
+      // Fill the editor with the generated draft (kept as draft, not published)
+      resetForm();
+      setTitle(json.data.title || "");
+      setContent(json.data.content || "");
+      setExcerpt(json.data.excerpt || "");
+      setCategory(aiCategory);
+      setIsPublished(false);
+      setIsAiOpen(false);
+      setAiTopic("");
+      setIsEditing(true);
+      toast.success("הטיוטה נוצרה — עברו עליה ושמרו");
+    } catch {
+      toast.error("שגיאת שרת, אנא נסו שוב");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  // ─── Cover Image (pick → crop → upload) ───────────
+  const handleCoverFilePick = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setIsUploading(true);
+    setCropSrc(URL.createObjectURL(file));
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const closeCropModal = () => {
+    if (cropSrc?.startsWith("blob:")) URL.revokeObjectURL(cropSrc);
+    setCropSrc(null);
+  };
+
+  const handleCropped = (url: string) => {
+    setCoverImage(url);
+    closeCropModal();
+  };
+
+  // ─── Inline Article Images (upload without crop) ──
+  // Downscale to max 1600px wide client-side; fall back to the original file
+  const capImageWidth = async (file: File): Promise<Blob> => {
+    const url = URL.createObjectURL(file);
     try {
+      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const i = new Image();
+        i.onload = () => resolve(i);
+        i.onerror = () => reject(new Error("image load failed"));
+        i.src = url;
+      });
+      if (!img.naturalWidth || img.naturalWidth <= 1600) return file;
+      const canvas = document.createElement("canvas");
+      canvas.width = 1600;
+      canvas.height = Math.round((img.naturalHeight / img.naturalWidth) * 1600);
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return file;
+      // Flatten transparency onto white — JPEG has no alpha channel
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, "image/jpeg", 0.85)
+      );
+      return blob ?? file;
+    } catch {
+      return file;
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  const handleInlineImagePick = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsInlineUploading(true);
+    try {
+      const blob = await capImageWidth(file);
       const formData = new FormData();
-      formData.append("file", file);
+      // Always upload under a unique name — Vercel Blob rejects duplicate
+      // pathnames (e.g. every iPhone photo arriving as "image.jpeg")
+      formData.append(
+        "file",
+        blob,
+        blob === file
+          ? `inline-${Date.now()}-${file.name}`
+          : `inline-${Date.now()}.jpg`
+      );
       const res = await fetch("/api/admin/upload", {
         method: "POST",
         body: formData,
@@ -143,13 +266,17 @@ export default function AdminBlogPage() {
         toast.error(json.error || "שגיאה בהעלאת התמונה");
         return;
       }
-      setCoverImage(json.path);
-      toast.success("התמונה הועלתה בהצלחה");
+      // Blank lines around the token are mandatory — the renderer splits
+      // paragraphs on blank lines and the token must be its own paragraph
+      const token = `\n\n[תמונה: ${json.path}]\n\n`;
+      const pos = contentRef.current?.selectionStart ?? content.length;
+      setContent((prev) => prev.slice(0, pos) + token + prev.slice(pos));
+      toast.success("התמונה נוספה לכתבה");
     } catch {
       toast.error("שגיאה בהעלאת התמונה");
     } finally {
-      setIsUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      setIsInlineUploading(false);
+      if (inlineFileInputRef.current) inlineFileInputRef.current.value = "";
     }
   };
 
@@ -272,13 +399,45 @@ export default function AdminBlogPage() {
           />
 
           {/* Content */}
-          <Textarea
-            label="תוכן המאמר"
-            placeholder="כתבו כאן את תוכן המאמר... פסקאות מופרדות בשורה ריקה"
-            rows={14}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-          />
+          <div>
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+              <label
+                htmlFor="blog-content"
+                className="block text-sm font-medium text-text"
+              >
+                תוכן המאמר
+              </label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                isLoading={isInlineUploading}
+                onClick={() => inlineFileInputRef.current?.click()}
+              >
+                <ImagePlus className="h-4 w-4" />
+                הוסף תמונה לכתבה
+              </Button>
+            </div>
+            <Textarea
+              ref={contentRef}
+              id="blog-content"
+              placeholder="כתבו כאן את תוכן המאמר... פסקאות מופרדות בשורה ריקה"
+              rows={14}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+            />
+            <p className="text-xs text-text-muted mt-1.5">
+              התמונה תתווסף במיקום הסמן בטקסט. אפשר להוסיף כיתוב מתחת לתמונה
+              כך: ‎[תמונה: כתובת | כיתוב]
+            </p>
+            <input
+              ref={inlineFileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleInlineImagePick}
+              className="hidden"
+            />
+          </div>
 
           {/* Cover Image */}
           <div>
@@ -289,35 +448,58 @@ export default function AdminBlogPage() {
               ref={fileInputRef}
               type="file"
               accept="image/jpeg,image/png,image/webp"
-              onChange={handleImageUpload}
+              onChange={handleCoverFilePick}
               className="hidden"
             />
             {coverImage ? (
-              <div className="relative w-full h-40 rounded-lg overflow-hidden border border-border">
-                <img
-                  src={coverImage}
-                  alt="תצוגה מקדימה"
-                  className="w-full h-full object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={() => setCoverImage(null)}
-                  className="absolute top-2 left-2 p-1 bg-white/80 rounded-full hover:bg-white"
-                >
-                  <X className="h-4 w-4" />
-                </button>
+              <div>
+                <div className="relative w-full h-40 rounded-lg overflow-hidden border border-border">
+                  <img
+                    src={coverImage}
+                    alt="תצוגה מקדימה"
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setCoverImage(null)}
+                    className="absolute top-2 left-2 p-1 bg-white/80 rounded-full hover:bg-white"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 mt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCropSrc(coverImage)}
+                  >
+                    <Crop className="h-4 w-4" />
+                    ערוך חיתוך
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="h-4 w-4" />
+                    החלף תמונה
+                  </Button>
+                </div>
+                <p className="text-xs text-text-muted mt-1.5">
+                  עריכת החיתוך פועלת על התמונה החתוכה — להתחלה מחדש מהתמונה
+                  המקורית השתמשו ב&quot;החלף תמונה&quot;.
+                </p>
               </div>
             ) : (
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
-                className="w-full h-32 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center gap-2 text-text-muted hover:text-primary transition-colors disabled:opacity-50"
+                className="w-full h-32 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center gap-2 text-text-muted hover:text-primary transition-colors"
               >
                 <Upload className="h-8 w-8" />
-                <span className="text-sm">
-                  {isUploading ? "מעלה..." : "העלאת תמונת נושא"}
-                </span>
+                <span className="text-sm">העלאת תמונת נושא</span>
               </button>
             )}
           </div>
@@ -349,6 +531,13 @@ export default function AdminBlogPage() {
           </div>
         </Card>
 
+        {/* Cover Crop Modal */}
+        <ImageCropModal
+          isOpen={!!cropSrc}
+          imageSrc={cropSrc}
+          onClose={closeCropModal}
+          onCropped={handleCropped}
+        />
       </div>
     );
   }
@@ -356,13 +545,21 @@ export default function AdminBlogPage() {
   // ─── Posts List ────────────────────────────────────
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
+      {/* Weekly blog reminder */}
+      <BlogReminder />
+
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold text-text">ניהול בלוג</h1>
-        <Button size="sm" onClick={openCreate}>
-          <Plus className="h-4 w-4" />
-          מאמר חדש
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setIsAiOpen(true)}>
+            ✨ צור טיוטה עם AI
+          </Button>
+          <Button size="sm" onClick={openCreate}>
+            <Plus className="h-4 w-4" />
+            מאמר חדש
+          </Button>
+        </div>
       </div>
 
       {/* Posts */}
@@ -381,7 +578,60 @@ export default function AdminBlogPage() {
           />
         </Card>
       ) : (
-        <Card className="overflow-hidden p-0">
+        <>
+          {/* Mobile: Card Layout */}
+          <div className="space-y-3 lg:hidden">
+            {posts.map((post) => (
+              <Card key={post.id} className="p-4 space-y-3">
+                <div>
+                  <p className="font-semibold text-text">{post.title}</p>
+                  {post.excerpt && (
+                    <p className="text-xs text-text-muted mt-0.5 line-clamp-2">
+                      {post.excerpt}
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-2 text-xs text-text-muted">
+                  <Badge>
+                    {CATEGORY_LABELS[post.category] || post.category}
+                  </Badge>
+                  <Badge variant={post.isPublished ? "success" : "warning"}>
+                    {post.isPublished ? (
+                      <span className="flex items-center gap-1">
+                        <Eye className="h-3 w-3" />
+                        מפורסם
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1">
+                        <EyeOff className="h-3 w-3" />
+                        טיוטה
+                      </span>
+                    )}
+                  </Badge>
+                  <span>{formatDateShort(post.createdAt)}</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border">
+                  <button
+                    onClick={() => openEdit(post)}
+                    className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg bg-secondary/10 text-secondary hover:bg-secondary/20 text-sm font-medium transition-colors"
+                  >
+                    <Pencil className="h-4 w-4" />
+                    עריכה
+                  </button>
+                  <button
+                    onClick={() => setDeleteTarget(post)}
+                    className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg bg-error/10 text-error hover:bg-error/20 text-sm font-medium transition-colors ms-auto"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    מחיקה
+                  </button>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          {/* Desktop: Table Layout */}
+          <Card className="overflow-hidden p-0 hidden lg:block">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -440,7 +690,7 @@ export default function AdminBlogPage() {
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-text-muted text-xs">
-                      {new Date(post.createdAt).toLocaleDateString("he-IL")}
+                      {formatDateShort(post.createdAt)}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
@@ -465,8 +715,48 @@ export default function AdminBlogPage() {
               </tbody>
             </table>
           </div>
-        </Card>
+          </Card>
+        </>
       )}
+
+      {/* AI Draft Modal */}
+      <Modal
+        isOpen={isAiOpen}
+        onClose={closeAiModal}
+        title="✨ צור טיוטה עם AI"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <Input
+            label="נושא המאמר"
+            placeholder="למשל: יתרונות עיסוי תאילנדי לספורטאים"
+            value={aiTopic}
+            onChange={(e) => setAiTopic(e.target.value)}
+          />
+          <Select
+            label="קטגוריה"
+            options={BLOG_CATEGORIES}
+            value={aiCategory}
+            onChange={(e) => setAiCategory(e.target.value)}
+          />
+          <p className="text-xs text-text-muted">
+            הטיוטה תיפתח בעורך לבדיקה ועריכה — היא לא תפורסם אוטומטית.
+          </p>
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={closeAiModal}
+              disabled={isGenerating}
+            >
+              ביטול
+            </Button>
+            <Button size="sm" isLoading={isGenerating} onClick={generateAiDraft}>
+              יצירת טיוטה
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Delete Confirmation Modal */}
       <Modal

@@ -118,7 +118,7 @@ export default function Modal({
           "animate-in fade-in zoom-in-95 duration-200",
           size === "lg"
             ? "h-full sm:h-auto sm:max-h-[90vh] sm:rounded-xl max-w-none sm:max-w-2xl"
-            : cn("max-h-[90vh] rounded-xl", sizeStyles[size]),
+            : cn("max-h-[85dvh] rounded-xl", sizeStyles[size]),
           className
         )}
       >

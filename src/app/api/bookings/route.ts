@@ -1,8 +1,16 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getAvailableSlots, isSlotAvailable } from "@/lib/slots";
+import {
+  getAvailableSlots,
+  validateSlotForBooking,
+  createBookingInTransaction,
+  SlotTakenError,
+} from "@/lib/slots";
+import { israelWallToUtc } from "@/lib/time";
 import { bookingSchema } from "@/lib/validations";
+import { normalizeIdentifier } from "@/lib/phone";
 import { sendNewBookingAdminEmail, sendBookingReceivedEmail } from "@/lib/email";
+import { sendWaFlow, splitName, formatWaDateTime, boundWaSend } from "@/lib/manychat";
 
 // GET available slots for a date + service
 export async function GET(req: Request) {
@@ -18,15 +26,17 @@ export async function GET(req: Request) {
       );
     }
 
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) {
+    if (
+      !/^\d{4}-\d{2}-\d{2}$/.test(dateStr) ||
+      isNaN(new Date(dateStr + "T00:00:00Z").getTime())
+    ) {
       return NextResponse.json(
         { error: "תאריך לא תקין" },
         { status: 400 }
       );
     }
 
-    const slots = await getAvailableSlots(date, serviceId);
+    const slots = await getAvailableSlots(dateStr, serviceId);
     return NextResponse.json({ data: slots });
   } catch (error) {
     console.error("[BOOKINGS_GET]", error);
@@ -50,14 +60,14 @@ export async function POST(req: Request) {
       );
     }
 
-    const { serviceId, startAt, customerName, customerPhone, customerEmail, notes, isHomeVisit: homeVisitFlag, customerPhotoUrl } =
+    const { serviceId, date, startTime, customerName, customerPhone, customerEmail, notes, isHomeVisit: homeVisitFlag, customerPhotoUrl } =
       validated.data;
 
     const isHomeVisit = homeVisitFlag === true;
 
     // Shadow ban check — silently reject blocked users with fake success
-    const normalizedPhone = customerPhone.replace(/\D/g, "");
-    const normalizedEmail = customerEmail ? customerEmail.toLowerCase().trim() : null;
+    const normalizedPhone = normalizeIdentifier(customerPhone);
+    const normalizedEmail = customerEmail ? normalizeIdentifier(customerEmail) : null;
 
     const blockedEntry = await prisma.blacklist.findFirst({
       where: {
@@ -76,14 +86,14 @@ export async function POST(req: Request) {
         data: {
           id: `shadow_${Date.now()}`,
           serviceId,
-          startAt,
+          startAt: israelWallToUtc(date, startTime),
           customerName,
           status: "PENDING",
         },
       }, { status: 201 });
     }
 
-    // Get service for duration
+    // Get service for name + surcharge
     const service = await prisma.service.findUnique({
       where: { id: serviceId },
       select: { duration: true, name: true, homeVisitSurcharge: true },
@@ -96,57 +106,118 @@ export async function POST(req: Request) {
       );
     }
 
-    const startDate = new Date(startAt);
-    const endDate = new Date(startDate.getTime() + service.duration * 60 * 1000);
+    const logBookingAttempt = () =>
+      prisma.bookingAttempt
+        .create({
+          data: {
+            customerName,
+            customerPhone,
+            customerEmail: customerEmail || null,
+            serviceId,
+            serviceName: service.name,
+            requestedAt: israelWallToUtc(date, startTime),
+            reason: "מועד לא זמין",
+          },
+        })
+        .catch((e) => console.error("[BOOKING_ATTEMPT_SAVE]", e));
 
-    // Re-check availability inside transaction (includes BLOCKED date check)
-    const available = await isSlotAvailable(startDate, endDate, serviceId);
-    if (!available) {
+    // Validate the requested slot against the live slot grid
+    const slot = await validateSlotForBooking(date, startTime, serviceId);
+    if (!slot) {
+      await logBookingAttempt();
       return NextResponse.json(
         { error: "הזמן שבחרת כבר לא פנוי, אנא בחרו זמן אחר" },
         { status: 409 }
       );
     }
 
-    const booking = await prisma.booking.create({
-      data: {
-        serviceId,
-        startAt: startDate,
-        endAt: endDate,
-        customerName,
-        customerPhone,
-        customerEmail: customerEmail || null,
-        notes: notes || null,
-        status: "PENDING",
-        isHomeVisit,
-        homeVisitSurcharge: isHomeVisit ? (service.homeVisitSurcharge || 0) : null,
-        customerPhotoUrl: customerPhotoUrl || null,
-      },
-      include: { service: true },
-    });
+    let booking;
+    try {
+      booking = await createBookingInTransaction(
+        {
+          serviceId,
+          startAt: slot.startAt,
+          endAt: slot.endAt,
+          customerName,
+          customerPhone,
+          customerEmail: customerEmail || null,
+          notes: notes || null,
+          status: "PENDING",
+          isHomeVisit,
+          homeVisitSurcharge: isHomeVisit ? (service.homeVisitSurcharge || 0) : null,
+          customerPhotoUrl: customerPhotoUrl || null,
+        },
+        { startAt: slot.startAt, endAt: slot.endAt }
+      );
+    } catch (txError) {
+      const isSlotTaken =
+        txError instanceof SlotTakenError ||
+        (txError &&
+          typeof txError === "object" &&
+          "code" in txError &&
+          (txError as { code: string }).code === "P2034");
+      if (isSlotTaken) {
+        await logBookingAttempt();
+        return NextResponse.json(
+          { error: "הזמן שבחרת כבר לא פנוי, אנא בחרו זמן אחר" },
+          { status: 409 }
+        );
+      }
+      throw txError;
+    }
 
-    // Send email notifications (fire-and-forget — don't block the response)
+    // Send email notifications (awaited — failures logged, never fail the response)
     const emailData = {
       customerName,
       customerEmail: customerEmail || "",
       customerPhone,
       serviceName: service.name,
-      startAt: startDate,
+      startAt: slot.startAt,
       notes: notes || null,
       isHomeVisit,
     };
-    sendNewBookingAdminEmail(emailData).catch((e) =>
-      console.error("[EMAIL_ADMIN]", e)
-    );
-    if (customerEmail) {
-      sendBookingReceivedEmail(emailData).catch((e) =>
-        console.error("[EMAIL_CUSTOMER]", e)
+
+    // WhatsApp "request received" (best-effort — sendWaFlow never throws).
+    // Gift-linked bookings are structurally excluded: they are created in
+    // /api/gift-cards, a different route — no exclusion code is needed here.
+    const createdBooking = booking;
+    const waReceivedTask = async () => {
+      if (createdBooking.waReceivedSentAt) return; // once-only per stamp
+      const { firstName, lastName } = splitName(customerName);
+      const result = await sendWaFlow(
+        "received",
+        customerPhone,
+        firstName,
+        lastName,
+        {
+          booking_service: service.name,
+          booking_datetime: formatWaDateTime(slot.startAt),
+        },
+        customerEmail || null
       );
-    }
+      if (result.sent) {
+        await prisma.booking.update({
+          where: { id: createdBooking.id },
+          data: { waReceivedSentAt: new Date() },
+        });
+      }
+    };
+
+    const emailResults = await Promise.allSettled([
+      sendNewBookingAdminEmail(emailData),
+      ...(customerEmail ? [sendBookingReceivedEmail(emailData)] : []),
+      // 8s-bounded: a degraded ManyChat must never hold the booking submit
+      boundWaSend(waReceivedTask(), `received ${booking.id}`),
+    ]);
+    emailResults.forEach((r) => {
+      if (r.status === "rejected") console.error("[EMAIL_BOOKING]", r.reason);
+    });
 
     return NextResponse.json({ data: booking }, { status: 201 });
   } catch (error) {
     // Handle unique constraint violation (double booking)
+    // Dead once the [startAt, endAt] unique index is dropped at deploy —
+    // kept to protect the rollout window.
     if (
       error &&
       typeof error === "object" &&

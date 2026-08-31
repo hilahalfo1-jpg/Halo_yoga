@@ -7,14 +7,12 @@ import Section from "@/components/ui/Section";
 import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
 import Button from "@/components/ui/Button";
-import {
-  CONTACT_PHONE,
-  CONTACT_WHATSAPP,
-  CONTACT_ADDRESS,
-  WORKING_HOURS,
-} from "@/lib/constants";
+import { useContactInfo } from "@/lib/hooks/useContactInfo";
+import { useWorkingHours } from "@/lib/hooks/useWorkingHours";
 
 export default function QuickContact() {
+  const { phone, whatsapp, address } = useContactInfo();
+  const { workingHours } = useWorkingHours();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -103,7 +101,7 @@ export default function QuickContact() {
           {/* Quick Actions */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <a
-              href={`https://wa.me/${CONTACT_WHATSAPP}`}
+              href={`https://wa.me/${whatsapp}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-3 p-4 rounded-xl bg-white border border-border hover:shadow-md transition-shadow"
@@ -117,7 +115,7 @@ export default function QuickContact() {
               </div>
             </a>
             <a
-              href={`tel:${CONTACT_PHONE.replace(/-/g, "")}`}
+              href={`tel:${phone.replace(/-/g, "")}`}
               className="flex items-center gap-3 p-4 rounded-xl bg-white border border-border hover:shadow-md transition-shadow"
             >
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -126,7 +124,7 @@ export default function QuickContact() {
               <div>
                 <p className="font-medium text-text text-sm">התקשרו</p>
                 <p className="text-xs text-text-muted" dir="ltr">
-                  {CONTACT_PHONE}
+                  {phone}
                 </p>
               </div>
             </a>
@@ -138,14 +136,14 @@ export default function QuickContact() {
               <MapPin className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
               <div>
                 <p className="font-medium text-text text-sm">כתובת</p>
-                <p className="text-sm text-text-secondary">{CONTACT_ADDRESS}</p>
+                <p className="text-sm text-text-secondary">{address}</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
               <Clock className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
               <div>
                 <p className="font-medium text-text text-sm mb-1">שעות פעילות</p>
-                {WORKING_HOURS.map((item) => (
+                {workingHours.map((item) => (
                   <p key={item.day} className="text-sm text-text-secondary">
                     {item.day}: {item.hours}
                   </p>

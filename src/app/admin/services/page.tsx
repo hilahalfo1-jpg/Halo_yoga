@@ -294,7 +294,71 @@ export default function AdminServicesPage() {
           />
         </Card>
       ) : (
-        <Card className="overflow-hidden p-0">
+        <>
+          {/* Mobile: Card Layout */}
+          <div className="space-y-3 lg:hidden">
+            {services.map((service) => (
+              <Card key={service.id} className="p-4 space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-text">{service.name}</p>
+                    <p className="text-xs text-text-muted mt-0.5 truncate" dir="ltr">
+                      /{service.slug}
+                    </p>
+                  </div>
+                  <Badge variant={service.isActive ? "success" : "error"}>
+                    {service.isActive ? "פעיל" : "מושבת"}
+                  </Badge>
+                </div>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-text-muted">
+                  <Badge>
+                    {CATEGORY_LABELS[service.category] || service.category}
+                  </Badge>
+                  <span>{formatDuration(service.duration)}</span>
+                  <span className="font-medium text-text" dir="ltr">
+                    {formatPrice(service.price)}
+                  </span>
+                  {service.homeVisitSurcharge != null && (
+                    <span className="text-xs">
+                      <span dir="ltr">+{formatPrice(service.homeVisitSurcharge)}</span>{" "}
+                      ביקור בית
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border">
+                  <button
+                    onClick={() => toggleActive(service)}
+                    disabled={isToggling === service.id}
+                    className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg bg-surface text-text-secondary hover:text-text text-sm font-medium transition-colors disabled:opacity-50"
+                  >
+                    {service.isActive ? (
+                      <ToggleRight className="h-4 w-4 text-success" />
+                    ) : (
+                      <ToggleLeft className="h-4 w-4" />
+                    )}
+                    {service.isActive ? "השבתה" : "הפעלה"}
+                  </button>
+                  <button
+                    onClick={() => openEditModal(service)}
+                    className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg bg-secondary/10 text-secondary hover:bg-secondary/20 text-sm font-medium transition-colors"
+                  >
+                    <Pencil className="h-4 w-4" />
+                    עריכה
+                  </button>
+                  <button
+                    onClick={() => setDeleteTarget(service)}
+                    className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg bg-error/10 text-error hover:bg-error/20 text-sm font-medium transition-colors ms-auto"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    מחיקה
+                  </button>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          {/* Desktop: Table Layout */}
+          <Card className="overflow-hidden p-0 hidden lg:block">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -392,7 +456,8 @@ export default function AdminServicesPage() {
               </tbody>
             </table>
           </div>
-        </Card>
+          </Card>
+        </>
       )}
 
       {/* Create / Edit Modal */}

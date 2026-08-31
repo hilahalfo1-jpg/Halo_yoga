@@ -25,11 +25,13 @@
     --color-info: #3B82F6;
   }
 
-  html, body {
-    overflow-x: hidden;
-  }
-
+  /* On html only (not body): prevents horizontal overflow without turning
+     body into a scroll container, which broke position: sticky. hidden is
+     the fallback (sticky-safe on the root — overflow propagates to the
+     viewport); clip overrides it where supported */
   html {
+    overflow-x: hidden;
+    overflow-x: clip;
     font-family: 'Heebo', sans-serif;
     scroll-behavior: smooth;
   }

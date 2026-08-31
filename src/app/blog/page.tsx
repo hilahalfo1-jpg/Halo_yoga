@@ -5,7 +5,7 @@ import Footer from "@/components/layout/Footer";
 import BlogHero from "@/components/blog/BlogHero";
 import BlogListClient from "./BlogListClient";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "בלוג | HALO יוגה ועיסוי",
@@ -17,12 +17,19 @@ async function getPublishedPosts() {
   const posts = await prisma.blogPost.findMany({
     where: { isPublished: true },
     orderBy: { publishedAt: "desc" },
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+      excerpt: true,
+      category: true,
+      coverImage: true,
+      publishedAt: true,
+    },
   });
   return posts.map((p) => ({
     ...p,
     publishedAt: p.publishedAt?.toISOString() || null,
-    createdAt: p.createdAt.toISOString(),
-    updatedAt: p.updatedAt.toISOString(),
   }));
 }
 

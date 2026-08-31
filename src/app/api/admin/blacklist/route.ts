@@ -1,15 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-
-/** Normalize identifier: for phones strip all non-digits, for emails lowercase+trim */
-function normalize(val: string): string {
-  const trimmed = val.trim();
-  if (trimmed.includes("@")) {
-    return trimmed.toLowerCase();
-  }
-  // Phone: strip all non-digit characters
-  return trimmed.replace(/\D/g, "");
-}
+import { normalizeIdentifier } from "@/lib/phone";
 
 // GET — list all blacklisted entries
 export async function GET() {
@@ -33,7 +24,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "יש להזין טלפון או אימייל תקין" }, { status: 400 });
     }
 
-    const normalized = normalize(identifier.trim());
+    const normalized = normalizeIdentifier(identifier.trim());
     const isEmail = normalized.includes("@");
     const type = isEmail ? "EMAIL" : "PHONE";
 

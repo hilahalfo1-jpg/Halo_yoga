@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import { formatPrice, formatDuration } from "@/lib/utils";
+import { localDateToKey } from "@/lib/time";
+import { CANCELLATION_CUTOFF_HOURS } from "@/lib/constants";
 import type { BookingData } from "./BookingWizard";
 
 interface StepConfirmationProps {
@@ -41,17 +43,13 @@ export default function StepConfirmation({
         }
       }
 
-      // Build the startAt datetime
-      const [hours, minutes] = data.timeSlot.startTime.split(":").map(Number);
-      const startAt = new Date(data.date);
-      startAt.setHours(hours, minutes, 0, 0);
-
       const res = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           serviceId: data.service.id,
-          startAt: startAt.toISOString(),
+          date: localDateToKey(data.date),
+          startTime: data.timeSlot.startTime,
           customerName: data.customerName,
           customerPhone: data.customerPhone,
           customerEmail: data.customerEmail,
@@ -99,9 +97,9 @@ export default function StepConfirmation({
               <span>{formatDuration(data.service?.duration || 0)}</span>
               <span>{formatPrice(data.service?.price || 0)}</span>
             </div>
-            {data.isHomeVisit && data.service?.homeVisitSurcharge && (
+            {data.isHomeVisit && (data.service?.homeVisitSurcharge ?? 0) > 0 && (
               <p className="text-sm text-secondary mt-1">
-                + ביקור בית: {formatPrice(data.service.homeVisitSurcharge)}
+                + ביקור בית: {formatPrice(data.service?.homeVisitSurcharge ?? 0)}
               </p>
             )}
           </div>
@@ -172,7 +170,7 @@ export default function StepConfirmation({
 
       {/* Cancellation policy */}
       <p className="text-xs text-text-muted text-center max-w-md mx-auto mt-4">
-        ניתן לבטל תור עד 24 שעות לפני המועד ללא חיוב. ביטול מאוחר יותר עלול להיות כרוך בתשלום מלא.
+        ניתן לבטל תור עד {CANCELLATION_CUTOFF_HOURS} שעות לפני המועד ללא חיוב. ביטול מאוחר יותר עלול להיות כרוך בתשלום מלא.
       </p>
 
       <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto mt-4">

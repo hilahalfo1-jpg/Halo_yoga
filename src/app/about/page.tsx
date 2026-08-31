@@ -8,21 +8,17 @@ import Section from "@/components/ui/Section";
 import Button from "@/components/ui/Button";
 import AboutImage from "@/components/about/AboutImage";
 import { prisma } from "@/lib/prisma";
+import { getSiteContent } from "@/lib/getSiteContent";
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "אודות",
   description: "הכירו את הילה חלפון — מטפלת בעיסוי תאילנדי ומדריכת יוגה, מתוך חיבור עמוק לגוף ולאנרגיה שבו.",
 };
 
-const certifications = [
-  { icon: <Award className="h-6 w-6" />, title: "עיסוי תאילנדי מוסמך" },
-  { icon: <GraduationCap className="h-6 w-6" />, title: "הדרכת יוגה" },
-  { icon: <Heart className="h-6 w-6" />, title: "חיבור לגוף ולאנרגיה" },
-  { icon: <Leaf className="h-6 w-6" />, title: "איזון גוף ונפש" },
-];
-
 export default async function AboutPage() {
-  const [certImages, aboutImage] = await Promise.all([
+  const [certImages, aboutImage, content] = await Promise.all([
     prisma.siteImage.findMany({
       where: { section: "certifications" },
       orderBy: { sortOrder: "asc" },
@@ -30,7 +26,27 @@ export default async function AboutPage() {
     prisma.siteImage.findFirst({
       where: { section: "about" },
     }),
+    getSiteContent(),
   ]);
+
+  const c = content["about_page"] ?? {};
+  const t = (key: string, fallback: string) => c[key] || fallback;
+
+  // Bio paragraphs: editable as one textarea, paragraphs split by blank line.
+  const bioFallback =
+    "אני מטפלת בעיסוי תאילנדי ומדריכת יוגה ופילאטיס, מתוך חיבור עמוק לגוף\nולאנרגיה שבו.\n\nבעיסוי אני שואפת לעזור לגוף לשחרר ולפרק אנרגיות שלא משרתות\nאותו, לפתוח חסימות ולהחזיר תחושת זרימה טבעית.\n\nביוגה אני מתמקדת בהכנסת אנרגיה חדשה, דרך תנועה, נשימה ונוכחות,\nשמחזקת ומאזנת את הגוף והנפש.\n\nדרך פילאטיס נלמד לחזק את הגוף בלי לקצר אותו, לחבר אותנו\nלעבודה ממוקדת, פעולות שיסייעו לנו ביום יום וישמרו עלינו בריאים וחזקים.";
+  const bioParagraphs = t("bio", bioFallback)
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+  const certifications = [
+    { icon: <Award className="h-6 w-6" />, title: t("cert1", "עיסוי תאילנדי מוסמך") },
+    { icon: <GraduationCap className="h-6 w-6" />, title: t("cert2", "הדרכת יוגה") },
+    { icon: <Heart className="h-6 w-6" />, title: t("cert3", "חיבור לגוף ולאנרגיה") },
+    { icon: <Leaf className="h-6 w-6" />, title: t("cert4", "איזון גוף ונפש") },
+  ];
+
   return (
     <>
       <Header />
@@ -39,10 +55,10 @@ export default async function AboutPage() {
         <div className="relative h-[40vh] min-h-[260px] sm:min-h-[300px] bg-gradient-to-br from-[#566668] via-[#637577] to-[#454f50] flex items-end">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12 pt-20 sm:pt-24 w-full">
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3">
-              אודות
+              {t("heroTitle", "אודות")}
             </h1>
             <p className="text-white/90 text-base md:text-lg">
-              הסיפור שלי, הדרך שלי, הגישה שלי
+              {t("heroSubtitle", "הסיפור שלי, הדרך שלי, הגישה שלי")}
             </p>
           </div>
         </div>
@@ -58,38 +74,24 @@ export default async function AboutPage() {
 
               {/* Text */}
               <div className="lg:col-span-3 space-y-6">
-                <h2 className="text-3xl font-bold text-text">שלום, אני הילה חלפון</h2>
+                <h2 className="text-3xl font-bold text-text">{t("bioTitle", "שלום, אני הילה חלפון")}</h2>
 
                 <div className="space-y-4 text-text-secondary leading-relaxed">
-                  <p>
-                    אני מטפלת בעיסוי תאילנדי ומדריכת יוגה ופילאטיס, מתוך חיבור עמוק לגוף
-                    ולאנרגיה שבו.
-                  </p>
-                  <p>
-                    בעיסוי אני שואפת לעזור לגוף לשחרר ולפרק אנרגיות שלא משרתות
-                    אותו, לפתוח חסימות ולהחזיר תחושת זרימה טבעית.
-                  </p>
-                  <p>
-                    ביוגה אני מתמקדת בהכנסת אנרגיה חדשה, דרך תנועה, נשימה ונוכחות,
-                    שמחזקת ומאזנת את הגוף והנפש.
-                  </p>
-                  <p>
-                    דרך פילאטיס נלמד לחזק את הגוף בלי לקצר אותו, לחבר אותנו
-                    לעבודה ממוקדת, פעולות שיסייעו לנו ביום יום וישמרו עלינו בריאים וחזקים.
-                  </p>
+                  {bioParagraphs.map((para, i) => (
+                    <p key={i}>{para}</p>
+                  ))}
                 </div>
 
                 {/* Quote */}
                 <blockquote className="border-r-4 border-primary pr-6 py-2 my-8">
                   <p className="text-lg text-text italic leading-relaxed">
-                    &ldquo;עבורי, האיזון של הגוף הוא אלמנט מרכזי וחשוב מאוד
-                    בדרך לבריאות ולהרגשה טובה.&rdquo;
+                    &ldquo;{t("quote", "עבורי, האיזון של הגוף הוא אלמנט מרכזי וחשוב מאוד בדרך לבריאות ולהרגשה טובה.")}&rdquo;
                   </p>
                 </blockquote>
 
                 {/* Approach */}
                 <h3 className="text-2xl font-semibold text-text pt-4">
-                  הגישה שלי
+                  {t("approachTitle", "הגישה שלי")}
                 </h3>
                 <div className="space-y-4 text-text-secondary leading-relaxed">
                   <ul className="space-y-3">
@@ -133,7 +135,7 @@ export default async function AboutPage() {
         <Section bg="surface">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-3xl font-bold text-text text-center mb-10">
-              הכשרות והסמכות
+              {t("certTitle", "הכשרות והסמכות")}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
               {certifications.map((cert, index) => (
@@ -175,13 +177,13 @@ export default async function AboutPage() {
         <Section>
           <div className="text-center">
             <h2 className="text-3xl font-bold text-text mb-4">
-              מוכנים להתחיל?
+              {t("ctaTitle", "מוכנים להתחיל?")}
             </h2>
             <p className="text-text-secondary mb-8 max-w-lg mx-auto">
-              קבעו את הטיפול הראשון שלכם ותרגישו את ההבדל
+              {t("ctaText", "קבעו את הטיפול הראשון שלכם ותרגישו את ההבדל")}
             </p>
             <Link href="/booking">
-              <Button size="lg">קביעת תור ראשון</Button>
+              <Button size="lg">{t("ctaButton", "קביעת תור ראשון")}</Button>
             </Link>
           </div>
         </Section>

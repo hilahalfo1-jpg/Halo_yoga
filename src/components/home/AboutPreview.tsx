@@ -85,7 +85,7 @@ export default function AboutPreview() {
         >
           <p className="text-sm font-medium text-primary tracking-wide mb-2">קצת עליי</p>
           <h2 className="text-3xl md:text-4xl font-bold text-text mb-6">
-            הילה חלפון
+            {t("about", "title", "הילה חלפון")}
           </h2>
 
           <div className="space-y-4 text-text-secondary leading-relaxed mb-8">

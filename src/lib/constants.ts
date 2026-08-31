@@ -2,10 +2,7 @@ import type { NavLink } from "@/types";
 
 // ─── Site Info ───────────────────────────────────────
 export const SITE_NAME = "HALO";
-export const SITE_NAME_HE = "הילה חלפון";
 export const SITE_TAGLINE = "Yoga & Massage";
-export const SITE_TAGLINE_HE = "יוגה ועיסוי";
-export const THERAPIST_NAME = "הילה חלפון";
 export const THERAPIST_TITLE = "מעסה תאילנדי מוסמכת, מדריכת יוגה ופילאטיס";
 export const LOGO_PATH = "/images/logo.png";
 
@@ -26,18 +23,6 @@ export const NAV_LINKS: NavLink[] = [
   { label: "המלצות", href: "/reviews" },
   { label: "בלוג", href: "/blog" },
   { label: "צור קשר", href: "/contact" },
-];
-
-export const ADMIN_NAV_LINKS: NavLink[] = [
-  { label: "לוח בקרה", href: "/admin" },
-  { label: "הזמנות", href: "/admin/bookings" },
-  { label: "שירותים", href: "/admin/services" },
-  { label: "זמינות", href: "/admin/availability" },
-  { label: "תמונות", href: "/admin/images" },
-  { label: "פניות", href: "/admin/leads" },
-  { label: "המלצות", href: "/admin/reviews" },
-  { label: "בלוג", href: "/admin/blog" },
-  { label: "גיפט קארד", href: "/admin/gift-cards" },
 ];
 
 // ─── Categories ──────────────────────────────────────
@@ -61,6 +46,7 @@ export const BOOKING_STATUS_LABELS: Record<string, string> = {
   CANCELLED: "בוטל",
   COMPLETED: "הושלם",
   NO_SHOW: "לא הגיע",
+  REJECTED: "נדחה",
 };
 
 export const BOOKING_STATUS_COLORS: Record<string, string> = {
@@ -69,6 +55,7 @@ export const BOOKING_STATUS_COLORS: Record<string, string> = {
   CANCELLED: "bg-error/10 text-error border-error/20",
   COMPLETED: "bg-info/10 text-info border-info/20",
   NO_SHOW: "bg-gray-100 text-gray-500 border-gray-200",
+  REJECTED: "bg-error/10 text-error border-error/20",
 };
 
 // ─── Lead Status ─────────────────────────────────────
@@ -92,6 +79,11 @@ export const CONTACT_SUBJECTS = [
   { value: "pilates", label: "פילאטיס" },
   { value: "other", label: "אחר" },
 ];
+
+/** Map a lead subject value to its Hebrew label; legacy free-text subjects pass through as-is. */
+export function getContactSubjectLabel(subject: string): string {
+  return CONTACT_SUBJECTS.find((s) => s.value === subject)?.label || subject;
+}
 
 // ─── Days of Week (Hebrew, starting Sunday) ──────────
 export const DAYS_OF_WEEK_HE = [
@@ -141,12 +133,19 @@ export const SERVICE_ICON_OPTIONS = [
 // ─── Slot Configuration ─────────────────────────────
 export const SLOT_BUFFER_MINUTES = 15;
 
+// ─── Site Images ────────────────────────────────────
+// Sections that hold multiple images (galleries) instead of a single image
+export const MULTI_IMAGE_SECTIONS: string[] = ["hero", "certifications"];
+
+// ─── Cancellation Policy ────────────────────────────
+export const CANCELLATION_CUTOFF_HOURS = 24;
+
 // ─── FAQ ─────────────────────────────────────────────
 export const FAQ_ITEMS = [
   {
     question: "מה מדיניות הביטולים?",
     answer:
-      "ביטול תור של פחות מ-24 שעות יהיה כרוך בתשלום מלא.",
+      `ביטול תור של פחות מ-${CANCELLATION_CUTOFF_HOURS} שעות יהיה כרוך בתשלום מלא.`,
   },
   {
     question: "האם אפשר לשלם בכרטיס אשראי?",

@@ -10,22 +10,10 @@ import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
 import Button from "@/components/ui/Button";
 import { formatPrice, cn } from "@/lib/utils";
+import { customerDetailsSchema } from "@/lib/validations";
 import type { BookingData } from "./BookingWizard";
 
-const detailsSchema = z.object({
-  customerName: z.string().min(2, "שם חייב להכיל לפחות 2 תווים"),
-  customerPhone: z
-    .string()
-    .regex(/^05\d[-]?\d{7}$/, "מספר טלפון לא תקין (05X-XXXXXXX)"),
-  customerEmail: z
-    .string()
-    .email("כתובת אימייל לא תקינה")
-    .optional()
-    .or(z.literal("")),
-  notes: z.string().max(500, "ההערה ארוכה מדי").optional(),
-});
-
-type DetailsFormData = z.infer<typeof detailsSchema>;
+type DetailsFormData = z.infer<typeof customerDetailsSchema>;
 
 interface StepDetailsFormProps {
   data: BookingData;
@@ -45,7 +33,7 @@ export default function StepDetailsForm({
     handleSubmit,
     formState: { errors },
   } = useForm<DetailsFormData>({
-    resolver: zodResolver(detailsSchema),
+    resolver: zodResolver(customerDetailsSchema),
     defaultValues: {
       customerName: data.customerName,
       customerPhone: data.customerPhone,

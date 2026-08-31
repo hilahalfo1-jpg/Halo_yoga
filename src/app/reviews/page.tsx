@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { getGoogleReviews } from "@/lib/google-reviews";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Section from "@/components/ui/Section";
@@ -19,6 +19,7 @@ async function getReviews(): Promise<ReviewItem[]> {
   const reviews = await prisma.review.findMany({
     where: { isApproved: true },
     orderBy: { createdAt: "desc" },
+    take: 60,
   });
   return reviews.map((r) => ({
     ...r,

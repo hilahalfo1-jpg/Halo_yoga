@@ -1,13 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { getGoogleReviews, getGoogleRatingInfo } from "@/lib/google-reviews";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import HeroSection from "@/components/home/HeroSection";
 import ServicesGrid from "@/components/home/ServicesGrid";
 import HowItWorks from "@/components/home/HowItWorks";
+import GiftCardPromo from "@/components/home/GiftCardPromo";
 import AboutPreview from "@/components/home/AboutPreview";
 import ReviewsCarousel from "@/components/home/ReviewsCarousel";
 import BlogPreview from "@/components/home/BlogPreview";
@@ -32,11 +33,22 @@ async function getApprovedReviews(): Promise<ReviewItem[]> {
   const reviews = await prisma.review.findMany({
     where: { isApproved: true },
     orderBy: { createdAt: "desc" },
+    take: 12,
   });
   return reviews.map((r) => ({
     ...r,
     createdAt: r.createdAt.toISOString(),
   }));
+}
+
+// Aggregate over ALL approved reviews (for the JSON-LD rating), without fetching them
+async function getReviewStats(): Promise<{ count: number; avgRating: number }> {
+  const agg = await prisma.review.aggregate({
+    where: { isApproved: true },
+    _avg: { rating: true },
+    _count: true,
+  });
+  return { count: agg._count, avgRating: agg._avg.rating ?? 0 };
 }
 
 async function getLatestBlogPosts() {
@@ -99,20 +111,16 @@ function getJsonLd(reviewCount: number, avgRating: number) {
 }
 
 export default async function HomePage() {
-  const [services, reviews, googleReviews, latestPosts, googleRatingInfo] = await Promise.all([
+  const [services, reviews, googleReviews, latestPosts, googleRatingInfo, reviewStats] = await Promise.all([
     getServices(),
     getApprovedReviews(),
-    getGoogleReviews(),
+    getGoogleReviews(12),
     getLatestBlogPosts(),
     getGoogleRatingInfo(),
+    getReviewStats(),
   ]);
 
-  const avgRating =
-    reviews.length > 0
-      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-      : 0;
-
-  const jsonLd = getJsonLd(reviews.length, avgRating);
+  const jsonLd = getJsonLd(reviewStats.count, reviewStats.avgRating);
 
   return (
     <>
@@ -125,6 +133,7 @@ export default async function HomePage() {
         <HeroSection />
         <ServicesGrid services={services} />
         <HowItWorks />
+        <GiftCardPromo />
         <AboutPreview />
         <ReviewsCarousel reviews={reviews} googleReviews={googleReviews} googleRating={googleRatingInfo.rating} googleTotalReviews={googleRatingInfo.totalReviews} />
         <BlogPreview posts={latestPosts} />

@@ -33,6 +33,27 @@ export async function POST(req: Request) {
       );
     }
 
+    // Throttle: max 3 reviews per name per hour, max 30 reviews globally per hour
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const [nameCount, globalCount] = await Promise.all([
+      prisma.review.count({
+        where: {
+          name: validated.data.name,
+          createdAt: { gte: oneHourAgo },
+        },
+      }),
+      prisma.review.count({ where: { createdAt: { gte: oneHourAgo } } }),
+    ]);
+    if (nameCount >= 3 || globalCount >= 30) {
+      console.warn(
+        `[THROTTLE] reviews POST blocked (nameCount=${nameCount}, globalCount=${globalCount})`
+      );
+      return NextResponse.json(
+        { error: "יותר מדי בקשות, אנא נסו שוב מאוחר יותר" },
+        { status: 429 }
+      );
+    }
+
     const review = await prisma.review.create({
       data: {
         name: validated.data.name,

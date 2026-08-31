@@ -71,6 +71,10 @@ export default function AdminImagesPage() {
     .filter((img) => img.section === "hero" && img.imagePath)
     .sort((a, b) => a.sortOrder - b.sortOrder);
 
+  const certImages = images
+    .filter((img) => img.section === "certifications" && img.imagePath)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+
   const getImageForSection = (section: string) =>
     images.find((img) => img.section === section && img.imagePath);
 
@@ -103,8 +107,8 @@ export default function AdminImagesPage() {
     }
   };
 
-  const handleHeroUpload = async (file: File) => {
-    setUploading("hero");
+  const handleGalleryUpload = async (section: "hero" | "certifications", file: File) => {
+    setUploading(section);
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -120,10 +124,10 @@ export default function AdminImagesPage() {
       const saveRes = await fetch("/api/admin/site-images", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ section: "hero", imagePath, alt: "" }),
+        body: JSON.stringify({ section, imagePath, alt: "" }),
       });
       if (!saveRes.ok) throw new Error("שגיאה בשמירה");
-      toast.success("התמונה נוספה לקרוסלה");
+      toast.success(section === "hero" ? "התמונה נוספה לקרוסלה" : "התעודה נוספה בהצלחה");
       fetchImages();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "שגיאה בהעלאה");
@@ -152,13 +156,18 @@ export default function AdminImagesPage() {
     setDeleteTargetId(img.id);
   };
 
-  const handleAltChange = async (id: string, imagePath: string, alt: string) => {
+  const handleAltChange = async (id: string, imagePath: string, alt: string, sortOrder: number) => {
     try {
-      await fetch("/api/admin/site-images", {
+      // sortOrder is sent along so the update never resets the gallery order
+      const res = await fetch("/api/admin/site-images", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, section: "any", imagePath, alt }),
+        body: JSON.stringify({ id, section: "any", imagePath, alt, sortOrder }),
       });
+      if (!res.ok) {
+        toast.error("שגיאה בעדכון");
+        return;
+      }
       fetchImages();
     } catch {
       toast.error("שגיאה בעדכון");
@@ -194,9 +203,10 @@ export default function AdminImagesPage() {
                     <div key={img.id} className="relative group rounded-lg overflow-hidden border border-border">
                       <div className="aspect-video relative">
                         <Image src={img.imagePath} alt={img.alt || `תמונה ${index + 1}`} fill className="object-cover" />
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
-                          <button onClick={() => setDeleteTargetId(img.id)} className="p-2 bg-white rounded-full text-error shadow-lg">
-                            <Trash2 className="h-4 w-4" />
+                        {/* Delete always reachable on touch; hover-reveal only on desktop */}
+                        <div className="absolute inset-0 lg:bg-black/40 transition-all flex items-center justify-center opacity-100 lg:opacity-0 lg:group-hover:opacity-100">
+                          <button onClick={() => setDeleteTargetId(img.id)} className="p-2.5 bg-black/60 rounded-full text-white shadow-lg" aria-label="מחיקת תמונה">
+                            <Trash2 className="h-5 w-5" />
                           </button>
                         </div>
                       </div>
@@ -207,8 +217,8 @@ export default function AdminImagesPage() {
                         type="text"
                         placeholder={`כיתוב תמונה ${index + 1}`}
                         defaultValue={img.alt}
-                        onBlur={(e) => handleAltChange(img.id, img.imagePath, e.target.value)}
-                        className="w-full text-xs border-t border-border px-2 py-1.5 focus:outline-none focus:bg-primary/5"
+                        onBlur={(e) => handleAltChange(img.id, img.imagePath, e.target.value, img.sortOrder)}
+                        className="w-full text-base sm:text-xs border-t border-border px-2 py-1.5 focus:outline-none focus:bg-primary/5"
                       />
                     </div>
                   ))}
@@ -221,7 +231,7 @@ export default function AdminImagesPage() {
                       className="hidden"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
-                        if (file) handleHeroUpload(file);
+                        if (file) handleGalleryUpload("hero", file);
                         e.target.value = "";
                       }}
                       disabled={uploading === "hero"}
@@ -247,7 +257,7 @@ export default function AdminImagesPage() {
                       className="hidden"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
-                        if (file) handleHeroUpload(file);
+                        if (file) handleGalleryUpload("hero", file);
                         e.target.value = "";
                       }}
                       disabled={uploading === "hero"}
@@ -255,6 +265,91 @@ export default function AdminImagesPage() {
                     <Button variant="outline" size="sm" className="gap-2 pointer-events-none">
                       <Upload className="h-4 w-4" />
                       העלה תמונה
+                    </Button>
+                  </label>
+                </div>
+              )}
+            </div>
+          </Card>
+
+          {/* Certifications Gallery */}
+          <Card className="p-0 overflow-hidden">
+            <div className="px-4 py-3 bg-surface/50 border-b border-border">
+              <h3 className="font-semibold text-text">תעודות והסמכות (עמוד אודות)</h3>
+              <p className="text-sm text-text-muted">
+                תמונות התעודות מוצגות בסקציית ההכשרות וההסמכות בעמוד האודות
+              </p>
+            </div>
+
+            <div className="p-4">
+              {certImages.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
+                  {certImages.map((img, index) => (
+                    <div key={img.id} className="relative group rounded-lg overflow-hidden border border-border">
+                      <div className="aspect-[3/4] relative">
+                        <Image src={img.imagePath} alt={img.alt || `תעודה ${index + 1}`} fill className="object-cover" />
+                        {/* Delete always reachable on touch; hover-reveal only on desktop */}
+                        <div className="absolute inset-0 lg:bg-black/40 transition-all flex items-center justify-center opacity-100 lg:opacity-0 lg:group-hover:opacity-100">
+                          <button onClick={() => setDeleteTargetId(img.id)} className="p-2.5 bg-black/60 rounded-full text-white shadow-lg" aria-label="מחיקת תעודה">
+                            <Trash2 className="h-5 w-5" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="absolute top-2 right-2 w-6 h-6 bg-black/60 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                        {index + 1}
+                      </div>
+                      <input
+                        type="text"
+                        placeholder={`כיתוב תעודה ${index + 1}`}
+                        defaultValue={img.alt}
+                        onBlur={(e) => handleAltChange(img.id, img.imagePath, e.target.value, img.sortOrder)}
+                        className="w-full text-base sm:text-xs border-t border-border px-2 py-1.5 focus:outline-none focus:bg-primary/5"
+                      />
+                    </div>
+                  ))}
+
+                  {/* Add more */}
+                  <label className="aspect-[3/4] rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center cursor-pointer transition-colors">
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleGalleryUpload("certifications", file);
+                        e.target.value = "";
+                      }}
+                      disabled={uploading === "certifications"}
+                    />
+                    {uploading === "certifications" ? (
+                      <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <Plus className="h-6 w-6 text-text-muted mb-1" />
+                        <span className="text-xs text-text-muted">הוסף תעודה</span>
+                      </>
+                    )}
+                  </label>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <ImageIcon className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                  <p className="text-sm text-text-muted mb-4">לא הועלו תעודות</p>
+                  <label>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleGalleryUpload("certifications", file);
+                        e.target.value = "";
+                      }}
+                      disabled={uploading === "certifications"}
+                    />
+                    <Button variant="outline" size="sm" className="gap-2 pointer-events-none">
+                      <Upload className="h-4 w-4" />
+                      העלה תעודה
                     </Button>
                   </label>
                 </div>
@@ -299,8 +394,8 @@ export default function AdminImagesPage() {
                           type="text"
                           placeholder="טקסט חלופי (alt)"
                           defaultValue={img.alt}
-                          onBlur={(e) => handleAltChange(img.id, img.imagePath, e.target.value)}
-                          className="flex-1 text-sm border border-border rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary"
+                          onBlur={(e) => handleAltChange(img.id, img.imagePath, e.target.value, img.sortOrder)}
+                          className="flex-1 text-base sm:text-sm border border-border rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary"
                         />
                         <Check className="h-4 w-4 text-success" />
                       </div>

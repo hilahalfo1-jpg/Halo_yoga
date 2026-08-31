@@ -1,45 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { createCachedFetchHook } from "@/lib/hooks/createCachedFetchHook";
 
 type SiteContent = Record<string, Record<string, string>>;
 
-let cachedContent: SiteContent | null = null;
-let fetchPromise: Promise<SiteContent> | null = null;
+const EMPTY_CONTENT: SiteContent = {};
 
-function fetchSiteContent(): Promise<SiteContent> {
-  if (cachedContent) return Promise.resolve(cachedContent);
-  if (fetchPromise) return fetchPromise;
-
-  fetchPromise = fetch("/api/site-content", { cache: "no-store" })
-    .then((r) => r.json())
-    .then((json) => {
-      cachedContent = json.data || {};
-      fetchPromise = null;
-      return cachedContent!;
-    })
-    .catch(() => {
-      fetchPromise = null;
-      return {} as SiteContent;
-    });
-
-  return fetchPromise;
-}
+const useSiteContentData = createCachedFetchHook<SiteContent>(
+  "/api/site-content",
+  (json) => json?.data ?? null
+);
 
 export function useSiteContent() {
-  const [content, setContent] = useState<SiteContent>(cachedContent || {});
-  const [loaded, setLoaded] = useState(!!cachedContent);
-
-  useEffect(() => {
-    fetchSiteContent().then((data) => {
-      setContent(data);
-      setLoaded(true);
-    });
-  }, []);
+  const { data, loaded } = useSiteContentData();
+  const content = data ?? EMPTY_CONTENT;
 
   /** Get a value for section.key with a fallback default */
   const t = (section: string, key: string, fallback: string): string => {
-    return content[section]?.[key] ?? fallback;
+    // Empty/whitespace values count as unset — legacy "" rows must fall back (hiding-by-emptying was never a feature)
+    const v = content[section]?.[key];
+    return v && v.trim() ? v : fallback;
   };
 
   return { content, loaded, t };
